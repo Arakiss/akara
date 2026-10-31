@@ -14,6 +14,16 @@ namespace Akara.Desktop;
 internal static class NativeDialogs
 {
     static readonly string[] ClassNames=["Amazon","Sorceress","Necromancer","Paladin","Barbarian","Druid","Assassin","Warlock"];
+    internal static void About(Window? owner)
+    {
+        var form=new Form(owner,"Jamella · Tributo","Editor local de personajes de Diablo II: Resurrected · 0.6",600,440);
+        form.Body.Children.Add(new TextBlock{Text="Un tributo independiente al editor de Jamella de 2001: árbol de objetos, equipo, inventario y propiedades en una mesa de trabajo. El autor original firmaba como Jamella. Este proyecto no es una continuación oficial ni utiliza su código.",TextWrapping=TextWrapping.Wrap,LineHeight=23});
+        form.Body.Children.Add(new TextBlock{Text="Los gráficos y las tablas del juego se leen de tu instalación. El proyecto abierto conserva el nombre técnico AKARA y su carpeta de datos para mantener tus perfiles y copias de seguridad.",TextWrapping=TextWrapping.Wrap,LineHeight=23,Margin=new Thickness(0,16,0,0)});
+        var link=new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Código y documentación · Arakiss/akara")){NavigateUri=new Uri("https://github.com/Arakiss/akara")};
+        link.RequestNavigate+=(_,e)=>{System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri){UseShellExecute=true});e.Handled=true;};
+        form.Body.Children.Add(new TextBlock(link){Margin=new Thickness(0,18,0,0)});
+        form.AcceptButton.Content="Cerrar";form.ShowDialog();
+    }
     internal static async Task ChooseCharacterAsync(Window? owner,MainViewModel vm)
     {
         if(!vm.CanChooseSave)return;

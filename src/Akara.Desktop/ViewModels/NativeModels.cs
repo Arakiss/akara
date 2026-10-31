@@ -28,7 +28,10 @@ public sealed class NativeCommand(Func<object?, Task> execute, Func<object?, boo
 
 public sealed record NavEntry(string Key, string Title, string Glyph);
 public sealed record ChoiceEntry(string Value, string Label);
-public sealed record SaveEntry(string Name, string Path, string? ProfileId);
+public sealed record SaveEntry(string Name, string Path, string? ProfileId)
+{
+    public string FolderLabel => System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(Path)) ?? "Archivo local";
+}
 public sealed record ProfileEntry(string Id, string Name, string ExcelPath);
 public sealed record PresetEntry(string Id, string Name, string Description, int ClassId, string ClassName, string GuideText = "")
 {

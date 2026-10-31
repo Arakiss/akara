@@ -1,4 +1,4 @@
-AKARA 0.5.1
+Jamella · Tributo 0.6.0 (proyecto AKARA)
 Editor nativo de personajes de Diablo II: Resurrected para Windows
 
 Abre Akara.exe. Se abre la aplicación de escritorio en su propia ventana.

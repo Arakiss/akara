@@ -34,6 +34,7 @@ internal static class SaveOpeningChecks
         var vm = new MainViewModel(dataRoot: Path.Combine(evidenceRoot, "fixture-ui"), core: core, fileDialogs: dialogs);
         await vm.InitializeAsync(); Healthy(vm);
         Require(vm.Saves.Count == 1 && SamePath(vm.Saves[0].Path, discovered), "Opening checks escaped the injected discovery directory.");
+        await WorkbenchChecks.WelcomeAsync(vm,checks);
         var entryA = new SaveEntry("External A", externalA, profileId);
         var entryB = new SaveEntry("External B", externalB, profileId);
         vm.SelectedProfile = vm.Profiles.Single(profile => profile.Id == alternateId);

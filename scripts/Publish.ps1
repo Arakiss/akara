@@ -27,6 +27,7 @@ Copy-Item -LiteralPath (Join-Path $sourceRoot 'LEEME.txt') -Destination $OutputD
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'LICENSE') -Destination $OutputDirectory -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'licenses') -Destination $OutputDirectory -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs\cli.md') -Destination (Join-Path $OutputDirectory 'CLI.md') -Force
+Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs\JAMELLA-TRIBUTE.md') -Destination (Join-Path $OutputDirectory 'TRIBUTO.md') -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'examples') -Destination $OutputDirectory -Recurse -Force
 $application = Join-Path $OutputDirectory 'Akara.exe'
 $cliApplication = Join-Path $OutputDirectory 'akara-cli.exe'

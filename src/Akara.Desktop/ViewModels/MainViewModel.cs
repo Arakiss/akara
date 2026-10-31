@@ -125,7 +125,7 @@ public sealed partial class MainViewModel : ObservableModel
     }
     public bool HasSaves => Saves.Count > 0;
     public string SavesSummary => Saves.Count == 1 ? "1 personaje local" : Saves.Count + " personajes locales";
-    public string SaveSelectionText => SelectedSave?.Name ?? "Elegir personaje";
+    public string SaveSelectionText => SelectedSave?.Name ?? (HasCharacter ? CharacterName : "Elegir personaje");
     public ProfileEntry? SelectedProfile { get => selectedProfile; set { Set(ref selectedProfile, value); Raise(nameof(ProfileLabel)); } }
     public PresetEntry? SelectedPreset { get => selectedPreset; set { Set(ref selectedPreset, value); Raise(nameof(SelectedPresetGuide)); Requery(); } }
     public string SelectedPresetGuide => SelectedPreset?.GuideText ?? "";
@@ -346,8 +346,8 @@ public sealed partial class MainViewModel : ObservableModel
     public Task SearchCatalogAsync(string? type = null, string? query = null) => RunAsync(async () =>
     {
         CatalogType = type ?? CatalogType; CatalogQuery = query ?? CatalogQuery;
-        var result = await bridge.CallAsync(c => c.Catalog(sessionId, CatalogType, CatalogQuery, 0, 150));
-        Replace(CatalogEntries, result.Array("entries").OfType<JsonObject>().Select(n => new CatalogEntry(n.Text("id"), n.Text("name"), n.Text("type", CatalogType), n.Text("code"), n.Bool("supported", true), n.Int("levelRequired"), n)));
+        var entries = await GetCatalogAsync(CatalogType, CatalogQuery, allPages: true);
+        Replace(CatalogEntries, entries);
         StatusText = CatalogEntries.Count + " objetos en el catálogo local.";
     });
     public async Task AddCatalogItemAsync(CatalogEntry item, ItemDestination? destination = null)

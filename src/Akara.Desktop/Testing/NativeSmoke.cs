@@ -82,6 +82,7 @@ public static class NativeSmoke
                 vm.SelectedProfile = vm.Profiles.First(p => p.Id == profileId);
                 await vm.OpenPathAsync(copy); Healthy(vm, "fixture open");
                 Check(vm.HasCharacter && !vm.CanCommit, "private-fixture-open-is-read-only");
+                await WorkbenchChecks.EquipmentAsync(vm,checks); Healthy(vm,"production workbench");
                 Check(Hash(await File.ReadAllBytesAsync(copy)) == fixtureHash, "opening-keeps-source-bytes");
                 await CheckOriginalGameArtAsync(vm, excelPath, root, checks, omissions);
                 await CheckItemHoverAsync(vm, copy, fixtureHash, root, checks);

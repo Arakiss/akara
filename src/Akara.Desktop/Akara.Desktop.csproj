@@ -7,10 +7,10 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Akara</AssemblyName>
     <RootNamespace>Akara.Desktop</RootNamespace>
-    <Product>AKARA</Product>
-    <Title>AKARA</Title>
+    <Product>Jamella · Tributo</Product>
+    <Title>Jamella · Tributo</Title>
     <Description>Editor nativo de personajes de Diablo II: Resurrected</Description>
-    <Version>0.5.1</Version>
+    <Version>0.6.0</Version>
     <ApplicationIcon>../../assets/akara-native.ico</ApplicationIcon>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

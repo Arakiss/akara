@@ -1,10 +1,8 @@
-<p><img src="assets/akara-mark.png" width="96" alt="AKARA" /></p>
+# Jamella · Tributo
 
-# AKARA
+A native Windows character editor for Diablo II: Resurrected, inspired by Jamella's 2001 editor. This independent tribute uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly. The repository, executable and CLI keep their AKARA identifiers for compatibility. See the [tribute and attribution](docs/JAMELLA-TRIBUTE.md).
 
-A native Windows character editor for Diablo II: Resurrected. AKARA uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly.
-
-Version **0.5.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.6.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
@@ -16,7 +14,7 @@ Version **0.5.1**. Developed against **D2R Reimagined 3.1**, using data from you
 - Edits level, experience, base attributes, gold, and skills, with native budgets, requirements, prerequisites, and encoding checks. Base resources update from native progression and attribute scaling.
 - Offers nine Reimagined presets: one per class, including a Frozen Orb/lightning Sorceress, plus the original Frozen Orb/Tal Rasha preset. Guides explain attacks, buffs, weapon switching, and immunities.
 - Uses a Diablo-inspired native visual system: locally loaded Exocet display type, obsidian surfaces, restrained bronze details, a crimson save action, an enlarged original-item inspector and adaptive UI scaling.
-- Uses a compact Jamella-inspired workbench: horizontal tabs, resizable catalog and property panes, equipment and containers together. Item and skill images are read from your installed game and mod; no generated item artwork is shipped. Unresolved graphics use an explicit neutral marker.
+- Opens with a searchable list of discovered local characters. Uses a compact Jamella-inspired workbench: desktop menus, a categorized item tree, horizontal tabs, resizable panes, equipment and containers together, a personal-stash gallery, and a full property inspector. Item and skill images are read from your installed game and mod; no generated item artwork is shipped. Unresolved graphics use an explicit neutral marker.
 - Shows item cards on hover across equipment, containers, item tables and mercenary pieces, without changing the selection. Cards retain full properties and socket contents, with scrolling for long descriptions.
 - Arranges inventory, personal stash, cube, belt, both weapon sets, and mercenary equipment. Reimagined supports nine equipped mercenary pieces; a two-handed weapon reserves the off hand without adding a duplicate item. Inventory actions have controls that do not require dragging.
 - Edits quests and waypoints by difficulty, progression, and rewards through **Mundo**.

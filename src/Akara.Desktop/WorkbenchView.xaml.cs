@@ -2,8 +2,12 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
+using Akara.Desktop.Controls;
 using Akara.Desktop.ViewModels;
 using ForjaHoradrica;
 
@@ -13,11 +17,19 @@ public partial class WorkbenchView : UserControl
 {
     MainViewModel? attached;
     bool objectContext,catalogExpanded=true,skillsQueued,catalogInitialized,catalogQueued;
-    double catalogWidth=235,inspectorWidth=300;
+    double catalogWidth=240,inspectorWidth=370;
+    readonly CatalogBranch[] catalogBranches=[new("unique","Únicos"),new("set","Conjuntos"),new("runeword","Palabras rúnicas"),new("base","Bases")];
+    CatalogBranch? activeBranch;
+    ICollectionView? welcomeView;
     double presentationScale=1;
     double? requestedScale;
     public double AppearanceScale=>presentationScale;
-    public WorkbenchView()=>InitializeComponent();
+    public WorkbenchView()
+    {
+        InitializeComponent();
+        CatalogTree.ItemsSource=catalogBranches;
+        CatalogTree.AddHandler(TreeViewItem.ExpandedEvent,new RoutedEventHandler(OnCatalogExpanded));
+    }
     void OnDataContextChanged(object sender,DependencyPropertyChangedEventArgs e)
     {
         if(attached is not null)
@@ -27,19 +39,67 @@ public partial class WorkbenchView : UserControl
         }
         attached=e.NewValue as MainViewModel;
         catalogInitialized=false;
+        if(welcomeView is not null)welcomeView.Filter=null;
+        welcomeView=null;
+        ResetCatalogBranches();
+        catalogInitialized=attached?.CatalogEntries.Count>0;
         if(attached is not null)
         {
             attached.RequestCreate+=Create;attached.RequestClone+=Clone;attached.RequestMove+=Move;attached.RequestDesign+=Design;attached.RequestCatalogDesign+=DesignCatalog;
             attached.PropertyChanged+=OnViewModelChanged;attached.Skills.CollectionChanged+=OnSkillsChanged;
+            welcomeView=CollectionViewSource.GetDefaultView(attached.Saves);
+            welcomeView.Filter=WelcomeMatches;
+            WelcomeSavesList.SelectedItem=attached.Saves.FirstOrDefault(save=>save.ProfileId is not null)??attached.Saves.FirstOrDefault();
         }
-        UpdateContext();RefreshSkillColumns();
+        UpdateContext();RefreshSkillColumns();RefreshInspector();
     }
     void OnViewModelChanged(object? sender,PropertyChangedEventArgs e)
     {
         if(e.PropertyName is nameof(MainViewModel.SelectedView) or nameof(MainViewModel.HasCharacter))UpdateContext();
         if(e.PropertyName==nameof(MainViewModel.SelectedStorage))UpdateCanvasScale();
-        if(e.PropertyName==nameof(MainViewModel.SourceHash))catalogInitialized=false;
+        if(e.PropertyName==nameof(MainViewModel.SelectedItem))RefreshInspector();
+        if(e.PropertyName==nameof(MainViewModel.SourceHash)){catalogInitialized=false;ResetCatalogBranches();}
         if(e.PropertyName is nameof(MainViewModel.IsBusy) or nameof(MainViewModel.SourceHash))QueueCatalogLoad();
+    }
+    bool WelcomeMatches(object value)=>value is SaveEntry save&&(WelcomeSearch.Text.Trim() is not {Length:>0} query||save.Name.Contains(query,StringComparison.CurrentCultureIgnoreCase)||save.FolderLabel.Contains(query,StringComparison.CurrentCultureIgnoreCase));
+    void OnWelcomeSearchChanged(object sender,TextChangedEventArgs e)
+    {
+        welcomeView?.Refresh();
+        if(WelcomeSavesList is not null&&WelcomeSavesList.SelectedItem is null)WelcomeSavesList.SelectedIndex=0;
+    }
+    async void OnWelcomeDoubleClick(object sender,MouseButtonEventArgs e)
+    {
+        if(attached is null||e.OriginalSource is not DependencyObject source||ItemsControl.ContainerFromElement(WelcomeSavesList,source) is not ListBoxItem||WelcomeSavesList.SelectedItem is not SaveEntry save)return;
+        await attached.OpenSaveAsync(save);
+    }
+    void RefreshInspector()
+    {
+        if(InspectorCardHost is null)return;
+        InspectorCardHost.Content=attached?.SelectedItem is { } item?new ItemTooltipCard(item){Width=double.NaN,MaxHeight=double.PositiveInfinity,BorderThickness=new Thickness(0),CornerRadius=new CornerRadius(0),Background=FindResource("InsetBrush") as Brush}:null;
+    }
+    void ResetCatalogBranches()
+    {
+        foreach(var branch in catalogBranches){branch.Entries=[];branch.IsExpanded=false;}
+        activeBranch=catalogBranches.FirstOrDefault(branch=>branch.Key==attached?.CatalogType)??catalogBranches[0];
+        activeBranch.Entries=attached?.CatalogEntries??[];activeBranch.IsExpanded=true;
+    }
+    async void OnCatalogNodeSelected(object sender,RoutedPropertyChangedEventArgs<object> e)
+    {
+        if(attached is null)return;
+        if(e.NewValue is CatalogEntry entry)attached.SelectedCatalogEntry=entry;
+        else if(e.NewValue is CatalogBranch branch)await SelectCatalogBranchAsync(branch);
+    }
+    async void OnCatalogExpanded(object sender,RoutedEventArgs e)
+    {
+        if(e.OriginalSource is TreeViewItem{DataContext:CatalogBranch branch})await SelectCatalogBranchAsync(branch);
+    }
+    async Task SelectCatalogBranchAsync(CatalogBranch branch)
+    {
+        if(attached is null||attached.IsBusy||branch==activeBranch)return;
+        if(activeBranch is not null){activeBranch.Entries=attached.CatalogEntries.ToArray();activeBranch.IsExpanded=false;}
+        activeBranch=branch;branch.IsExpanded=true;branch.Entries=attached.CatalogEntries;
+        attached.SelectedCatalogEntry=null;catalogInitialized=true;
+        await attached.SearchCatalogAsync(branch.Key);
     }
     void OnSkillsChanged(object? sender,NotifyCollectionChangedEventArgs e)
     {
@@ -75,8 +135,8 @@ public partial class WorkbenchView : UserControl
         CatalogPane.Visibility=CatalogSplitter.Visibility=next&&catalogExpanded?Visibility.Visible:Visibility.Collapsed;
         InspectorPane.Visibility=InspectorSplitter.Visibility=CatalogToggle.Visibility=next?Visibility.Visible:Visibility.Collapsed;
         CatalogColumn.MinWidth=next&&catalogExpanded?190:0;CatalogColumn.Width=new GridLength(next&&catalogExpanded?Math.Max(190,catalogWidth):0);
-        CatalogSplitterColumn.Width=new GridLength(next&&catalogExpanded?5:0);
-        InspectorColumn.MinWidth=next?260:0;InspectorColumn.Width=new GridLength(next?Math.Max(260,inspectorWidth):0);InspectorSplitterColumn.Width=new GridLength(next?5:0);
+        CatalogSplitterColumn.Width=new GridLength(next&&catalogExpanded?4:0);
+        InspectorColumn.MinWidth=next?290:0;InspectorColumn.Width=new GridLength(next?Math.Max(290,inspectorWidth):0);InspectorSplitterColumn.Width=new GridLength(next?4:0);
         Grid.SetColumn(MainPane,next?2:0);Grid.SetColumnSpan(MainPane,next?1:5);
         UpdateCanvasScale();QueueCatalogLoad();
     }
@@ -94,21 +154,28 @@ public partial class WorkbenchView : UserControl
     void UpdateCanvasScale()
     {
         if(EquipmentDoll is null||InventoryCells is null)return;
-        double logicalHeight=ActualHeight/presentationScale;
-        double center=MainPane.ActualWidth>0?MainPane.ActualWidth:Math.Max(520,ActualWidth/presentationScale-(objectContext?(catalogExpanded?catalogWidth+5:0)+inspectorWidth+5:0));
-        bool wide=center>=950,compact=center<700;
-        EquipmentDoll.Width=compact?240:wide?330:280;
-        EquipmentDoll.Height=Math.Min(compact?290:wide?420:330,Math.Max(240,logicalHeight-580));
-        double targetCell=center>=1350?48:wide?44:compact?28:32;
-        InventoryCells.CellSize=Math.Min(targetCell,Math.Max(28,Math.Floor((logicalHeight-520)/Math.Max(1,attached?.GridRows??8))));
-        ContainerViewport.MaxWidth=Math.Max(280,center-EquipmentDoll.Width-48);
-        ContainerViewport.MaxHeight=Math.Max(220,Math.Min(410,logicalHeight-520));
-        bool showStash=center>=1450&&attached?.SelectedView=="equipment"&&attached.SelectedStorage!="stash";
-        ExtraStashPane.Visibility=showStash?Visibility.Visible:Visibility.Collapsed;
-        StashCanvasColumn.Width=showStash?new GridLength(1,GridUnitType.Star):new GridLength(0);
-        var inventoryColumn=EquipmentCanvas.ColumnDefinitions[1];
-        inventoryColumn.Width=showStash?new GridLength(Math.Max(360,(attached?.GridColumns??10)*InventoryCells.CellSize+12)):new GridLength(1,GridUnitType.Star);
-        ExtraStashScroll.MaxHeight=Math.Max(220,Math.Min(650,logicalHeight-520));
+        double center=MainPane.ActualWidth>0?MainPane.ActualWidth:Math.Max(470,ActualWidth/presentationScale-(catalogExpanded?catalogWidth+4:0)-inspectorWidth-32);
+        double paneHeight=MainPane.ActualHeight>0?MainPane.ActualHeight:ActualHeight/presentationScale-172;
+        double dollWidth=Math.Clamp((center-40)*.43,195,386);
+        double availableInventory=Math.Max(210,center-dollWidth-42);
+        bool wide=center>=1450&&attached?.SelectedStorage!="stash";
+        WideStashPane.Visibility=wide?Visibility.Visible:Visibility.Collapsed;
+        EquipmentCanvas.ColumnDefinitions[1].Width=wide?new GridLength((attached?.GridColumns??10)*48+18):new GridLength(1,GridUnitType.Star);
+        EquipmentCanvas.ColumnDefinitions[2].Width=wide?new GridLength(1,GridUnitType.Star):new GridLength(0);
+        if(wide)availableInventory=(attached?.GridColumns??10)*48;
+        double maxCanvasHeight=Math.Max(270,Math.Min(440,paneHeight-245-(ObjectListExpander?.IsExpanded==true?170:0)));
+        EquipmentDoll.Width=dollWidth;EquipmentDoll.Height=Math.Min(maxCanvasHeight,dollWidth*1.14);
+        InventoryCells.CellSize=48;
+        ContainerViewport.MaxWidth=availableInventory;
+        ContainerViewport.MaxHeight=Math.Max(180,maxCanvasHeight-72);
+        WideStashViewport.MaxHeight=ContainerViewport.MaxHeight;
+        double inventoryHeight=Math.Min(ContainerViewport.MaxHeight,(attached?.GridRows??8)*48*Math.Min(1,availableInventory/((attached?.GridColumns??10)*48)));
+        ArmoryRow.Height=new GridLength(Math.Max(EquipmentDoll.Height+54,inventoryHeight+116));
+    }
+    void OnObjectListToggled(object sender,RoutedEventArgs e)=>UpdateCanvasScale();
+    void OnStashDoubleClick(object sender,MouseButtonEventArgs e)
+    {
+        if(e.OriginalSource is DependencyObject source&&ItemsControl.ContainerFromElement(StashTray,source) is ListBoxItem&&attached?.SelectedItem is { } item)Design(item);
     }
     void OnToggleCatalog(object sender,RoutedEventArgs e)
     {
@@ -139,7 +206,8 @@ public partial class WorkbenchView : UserControl
     async void OnMercenary(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.MercenaryAsync(Window.GetWindow(this),attached);}
     async void OnChooseSave(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.ChooseCharacterAsync(Window.GetWindow(this),attached);}
     async void OnAddProfile(object sender,RoutedEventArgs e){if(attached is null)return;var dialog=new Microsoft.Win32.OpenFolderDialog{Title="Carpeta de tablas del juego o del mod"};if(dialog.ShowDialog()==true)await attached.RegisterProfileAsync(dialog.FolderName);}
-    void OnTitleDrag(object sender,MouseButtonEventArgs e){if(Window.GetWindow(this) is not { } window)return;if(e.ClickCount==2){window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;return;}try{window.DragMove();}catch(InvalidOperationException){}}
+    void OnTitleDrag(object sender,MouseButtonEventArgs e){for(DependencyObject? source=e.OriginalSource as DependencyObject;source is not null&&source!=sender;source=source is Visual?VisualTreeHelper.GetParent(source):null)if(source is ButtonBase or MenuItem)return;if(Window.GetWindow(this) is not { } window)return;if(e.ClickCount==2){window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;return;}try{window.DragMove();}catch(InvalidOperationException){}}
+    void OnAbout(object sender,RoutedEventArgs e)=>NativeDialogs.About(Window.GetWindow(this));
     void OnMinimize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is { } window)SystemCommands.MinimizeWindow(window);}
     void OnMaximize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is not { } window)return;if(window.WindowState==WindowState.Maximized)SystemCommands.RestoreWindow(window);else SystemCommands.MaximizeWindow(window);}
     void OnClose(object sender,RoutedEventArgs e){Window.GetWindow(this)?.Close();}

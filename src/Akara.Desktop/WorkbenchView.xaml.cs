@@ -137,6 +137,7 @@ public partial class WorkbenchView : UserControl
         if(e.NewValue is true)Dispatcher.BeginInvoke(DispatcherPriority.Loaded,new Action(()=>SizeItemTable((DataGrid)sender)));
     }
     async void OnMercenary(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.MercenaryAsync(Window.GetWindow(this),attached);}
+    async void OnChooseSave(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.ChooseCharacterAsync(Window.GetWindow(this),attached);}
     async void OnAddProfile(object sender,RoutedEventArgs e){if(attached is null)return;var dialog=new Microsoft.Win32.OpenFolderDialog{Title="Carpeta de tablas del juego o del mod"};if(dialog.ShowDialog()==true)await attached.RegisterProfileAsync(dialog.FolderName);}
     void OnTitleDrag(object sender,MouseButtonEventArgs e){if(Window.GetWindow(this) is not { } window)return;if(e.ClickCount==2){window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;return;}try{window.DragMove();}catch(InvalidOperationException){}}
     void OnMinimize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is { } window)SystemCommands.MinimizeWindow(window);}

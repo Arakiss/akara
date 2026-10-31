@@ -4,7 +4,7 @@
 
 A native Windows character editor for Diablo II: Resurrected. AKARA uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly.
 
-Version **0.5.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.5.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
@@ -17,6 +17,7 @@ Version **0.5.0**. Developed against **D2R Reimagined 3.1**, using data from you
 - Offers nine Reimagined presets: one per class, including a Frozen Orb/lightning Sorceress, plus the original Frozen Orb/Tal Rasha preset. Guides explain attacks, buffs, weapon switching, and immunities.
 - Uses a Diablo-inspired native visual system: locally loaded Exocet display type, obsidian surfaces, restrained bronze details, a crimson save action, an enlarged original-item inspector and adaptive UI scaling.
 - Uses a compact Jamella-inspired workbench: horizontal tabs, resizable catalog and property panes, equipment and containers together. Item and skill images are read from your installed game and mod; no generated item artwork is shipped. Unresolved graphics use an explicit neutral marker.
+- Shows item cards on hover across equipment, containers, item tables and mercenary pieces, without changing the selection. Cards retain full properties and socket contents, with scrolling for long descriptions.
 - Arranges inventory, personal stash, cube, belt, both weapon sets, and mercenary equipment. Reimagined supports nine equipped mercenary pieces; a two-handed weapon reserves the off hand without adding a duplicate item. Inventory actions have controls that do not require dragging.
 - Edits quests and waypoints by difficulty, progression, and rewards through **Mundo**.
 - Builds items in **Constructor** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.

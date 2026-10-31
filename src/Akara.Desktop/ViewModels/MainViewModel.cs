@@ -16,6 +16,7 @@ public sealed partial class MainViewModel : ObservableModel
     readonly NativeEditorBridge bridge;
     readonly IFileDialogs dialogs;
     readonly List<EditorState> undo = [], redo = [];
+    readonly HashSet<string> discoveredSavePaths = new(StringComparer.OrdinalIgnoreCase);
     PreviewRequest draft = new();
     bool loading, busy, dirty, reviewed, validPlan, basicTouched, skillsTouched;
     string planId = "", sessionId = "", error = "", status = "Elige un personaje para empezar.", selectedView = "equipment", selectedStorage = "inventory";
@@ -40,6 +41,7 @@ public sealed partial class MainViewModel : ObservableModel
     {
         bridge = new(dataRoot, core); dialogs = fileDialogs ?? new WindowsFileDialogs(); artworkDataRoot = dataRoot;
         OpenCommand = Command(async parameter => { var path = parameter as string ?? dialogs.OpenFile("Abrir personaje", SaveFilter); if (path is not null) await OpenPathAsync(path); });
+        OpenSaveCommand = Command(parameter => parameter is SaveEntry save ? OpenSaveAsync(save) : SelectedSave is { } selected ? OpenSaveAsync(selected) : Task.CompletedTask, parameter => parameter is SaveEntry || SelectedSave is not null);
         RefreshCommand = Command(_ => InitializeAsync());
         CreateCommand = Command(async parameter => { if (parameter is CreateRequest request) await CreateCharacterAsync(request); else RequestCreate?.Invoke(); });
         CloneCommand = Command(async parameter => { if (parameter is string name && name.Length > 0) await CloneCharacterAsync(name); else RequestClone?.Invoke(); }, _ => HasCharacter);
@@ -107,7 +109,23 @@ public sealed partial class MainViewModel : ObservableModel
     public IReadOnlyList<string> StorageOptions { get; } = ["inventory", "stash", "cube", "belt"];
     public IReadOnlyList<string> QuestStates { get; } = ["notStarted", "started", "completed", "rewarded"];
     public IReadOnlyList<ChoiceEntry> QuestStateChoices { get; } = [new("notStarted", "Sin empezar"), new("started", "En curso"), new("completed", "Completada"), new("rewarded", "Recompensa recibida")];
-    public SaveEntry? SelectedSave { get => selectedSave; set { if (Set(ref selectedSave, value) && !loading && value is not null) _ = OpenPathAsync(value.Path); } }
+    public SaveEntry? SelectedSave
+    {
+        get => selectedSave;
+        set
+        {
+            if (loading) { Set(ref selectedSave, value); return; }
+            if (value is null || value == selectedSave) return;
+            // Selection represents the character that actually opened. A busy operation,
+            // cancelled draft prompt or failed open must not strand the selector on a file
+            // that was never accepted, preventing a subsequent attempt with the same entry.
+            if (!IsBusy) _ = OpenSaveAsync(value);
+            Raise(nameof(SelectedSave));
+        }
+    }
+    public bool HasSaves => Saves.Count > 0;
+    public string SavesSummary => Saves.Count == 1 ? "1 personaje local" : Saves.Count + " personajes locales";
+    public string SaveSelectionText => SelectedSave?.Name ?? "Elegir personaje";
     public ProfileEntry? SelectedProfile { get => selectedProfile; set { Set(ref selectedProfile, value); Raise(nameof(ProfileLabel)); } }
     public PresetEntry? SelectedPreset { get => selectedPreset; set { Set(ref selectedPreset, value); Raise(nameof(SelectedPresetGuide)); Requery(); } }
     public string SelectedPresetGuide => SelectedPreset?.GuideText ?? "";
@@ -120,7 +138,8 @@ public sealed partial class MainViewModel : ObservableModel
     public string SelectedStorage { get => selectedStorage; set { if (Set(ref selectedStorage, value)) RefreshInventory(); foreach (var name in new[] { nameof(StorageLabel), nameof(GridColumns), nameof(GridRows), nameof(StorageColumns), nameof(StorageRows), nameof(GridWidth), nameof(GridHeight) }) Raise(name); } }
     public string StorageLabel => Names.Storage(SelectedStorage);
     public int SelectedWeaponSet { get => selectedWeaponSet; set { if (Set(ref selectedWeaponSet, value is 2 ? 2 : 1)) RefreshInventory(); } }
-    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); Raise(nameof(CanCommit)); Raise(nameof(CanEdit)); Requery(); } }
+    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); Raise(nameof(CanCommit)); Raise(nameof(CanEdit)); Raise(nameof(CanChooseSave)); Raise(nameof(SaveSelectionText)); Requery(); } }
+    public bool CanChooseSave => !IsBusy;
     public bool IsDirty { get => dirty; private set { Set(ref dirty, value); Raise(nameof(CanCommit)); Raise(nameof(DraftLabel)); Requery(); } }
     public bool IsSyntheticDemo { get; private set; }
     public string DemoLabel => IsSyntheticDemo ? "Vista de diseño · sin partida abierta" : "";
@@ -177,7 +196,7 @@ public sealed partial class MainViewModel : ObservableModel
     public bool LoadoutKeepPrevious { get; set; } = true;
     public string LastOutputPath { get; private set; } = "";
 
-    public ICommand OpenCommand { get; } public ICommand RefreshCommand { get; } public ICommand CreateCommand { get; } public ICommand CloneCommand { get; }
+    public ICommand OpenCommand { get; } public ICommand OpenSaveCommand { get; } public ICommand RefreshCommand { get; } public ICommand CreateCommand { get; } public ICommand CloneCommand { get; }
     public ICommand SelectViewCommand { get; } public ICommand SelectItemCommand { get; } public ICommand SelectStorageCommand { get; } public ICommand SelectWeaponSetCommand { get; } public ICommand ActivateWeaponSetCommand { get; }
     public ICommand PreviewCommand { get; } public ICommand SaveCommand { get; } public ICommand ExportCommand { get; } public ICommand UndoCommand { get; } public ICommand RedoCommand { get; } public ICommand ResetCommand { get; }
     public ICommand MoveItemCommand { get; } public ICommand MoveToStashCommand { get; } public ICommand CopyItemCommand { get; } public ICommand DeleteItemCommand { get; } public ICommand DesignItemCommand { get; } public ICommand NewItemCommand { get; }
@@ -195,6 +214,8 @@ public sealed partial class MainViewModel : ObservableModel
             Replace(Profiles, boot.Array("profiles").OfType<JsonObject>().Select(p => new ProfileEntry(p.Text("id"), p.Text("name"), p.Text("excelPath"))));
             SelectedProfile = Profiles.FirstOrDefault(p => p.Id == (HasCharacter ? Snapshot.Text("profileId") : boot.Text("defaultProfileId"))) ?? Profiles.FirstOrDefault();
             Replace(Saves, boot.Array("saves").OfType<JsonObject>().Select(s => new SaveEntry(s.Text("name"), s.Text("path"), s.Text("profileId") is { Length: > 0 } id ? id : null)));
+            discoveredSavePaths.Clear(); foreach (var save in Saves) discoveredSavePaths.Add(Path.GetFullPath(save.Path));
+            SynchronizeSaveSelection();
             if (SelectedProfile is not null) await RefreshPresetsCoreAsync();
         }
         finally { loading = false; }
@@ -206,10 +227,21 @@ public sealed partial class MainViewModel : ObservableModel
         Replace(AvailablePresets, Presets.Where(p => p.ClassName == ClassName));
         SelectedPreset = Presets.FirstOrDefault(p => p.Id == "squad-sorceress" && p.ClassName == ClassName) ?? Presets.FirstOrDefault(p => p.ClassName == ClassName);
     }
-    public Task OpenPathAsync(string path) => RunAsync(async () =>
+    public Task OpenSaveAsync(SaveEntry save) => OpenPathAsync(save.Path, save.ProfileId);
+    public Task OpenPathAsync(string path) => OpenPathAsync(path, null);
+    Task OpenPathAsync(string path, string? profileId) => RunAsync(async () =>
     {
         if (IsDirty && !dialogs.Confirm("Cambiar de personaje", "Hay un borrador sin guardar. ¿Quieres abrir otra partida y descartarlo?")) return;
-        var opened = await bridge.CallAsync(c => c.Open(new(Path.GetFullPath(path), SelectedProfile?.Id)));
+        string fullPath = Path.GetFullPath(path);
+        var knownSave = Saves.FirstOrDefault(s => string.Equals(Path.GetFullPath(s.Path), fullPath, StringComparison.OrdinalIgnoreCase));
+        string? selectedProfileId = profileId ?? knownSave?.ProfileId ?? SelectedProfile?.Id;
+        JsonObject opened;
+        try { opened = await bridge.CallAsync(c => c.Open(new(fullPath, selectedProfileId))); }
+        catch (Exception exception) when (exception is InvalidDataException or EndOfStreamException)
+        {
+            string profileName = Profiles.FirstOrDefault(p => p.Id == selectedProfileId)?.Name ?? "seleccionado";
+            throw new ApiProblem("save_profile_read", "No se pudo leer «" + Path.GetFileName(fullPath) + "» con el perfil «" + profileName + "». El archivo puede estar incompleto o pertenecer a otra versión del juego o del mod. Para abrirlo se necesitan sus tablas compatibles.", details: new { profileId = selectedProfileId, technicalError = exception.Message });
+        }
         await AcceptOpenedAsync(opened); StatusText = "Partida abierta. Los cambios se guardan al revisar y confirmar.";
     });
     public Task RegisterProfileAsync(string excelPath, string? name = null) => RunAsync(async () =>
@@ -234,10 +266,26 @@ public sealed partial class MainViewModel : ObservableModel
     {
         IsSyntheticDemo = false; Raise(nameof(IsSyntheticDemo)); Raise(nameof(DemoLabel)); Raise(nameof(CanEdit));
         sessionId = opened.Text("sessionId"); SourceSnapshot = (JsonObject)opened.DeepClone(); draft = new() { SessionId = sessionId };
+        SelectedProfile = Profiles.FirstOrDefault(p => p.Id == opened.Text("profileId")) ?? SelectedProfile;
         undo.Clear(); redo.Clear(); basicTouched = skillsTouched = reviewed = validPlan = false; planId = ""; ErrorText = ""; IsDirty = opened.Bool("isNew");
         await PrepareArtworkAsync(opened); ApplySnapshot(opened, true); Changes.Clear(); await RefreshPresetsCoreAsync(); await RefreshWorldCoreAsync(); await RefreshBackupsCoreAsync();
         ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage));
         Raise(nameof(HasCharacter)); Raise(nameof(IsCharacterSelected)); Raise(nameof(SourcePath)); Raise(nameof(SourceHash)); Requery();
+        SynchronizeSaveSelection();
+    }
+    void SynchronizeSaveSelection()
+    {
+        string path = SourceSnapshot.Text("sourcePath");
+        string? fullPath = path.Length > 0 ? Path.GetFullPath(path) : null;
+        foreach (var previous in Saves.Where(s => !discoveredSavePaths.Contains(Path.GetFullPath(s.Path)) && !string.Equals(Path.GetFullPath(s.Path), fullPath, StringComparison.OrdinalIgnoreCase)).ToArray()) Saves.Remove(previous);
+        var entry = fullPath is null ? null : Saves.FirstOrDefault(s => string.Equals(Path.GetFullPath(s.Path), fullPath, StringComparison.OrdinalIgnoreCase));
+        if (entry is null && fullPath is not null)
+        {
+            entry = new SaveEntry(SourceSnapshot.Obj("character").Text("name", Path.GetFileNameWithoutExtension(fullPath)), fullPath, SourceSnapshot.Text("profileId"));
+            Saves.Add(entry);
+        }
+        selectedSave = entry;
+        Raise(nameof(SelectedSave)); Raise(nameof(SaveSelectionText)); Raise(nameof(HasSaves)); Raise(nameof(SavesSummary));
     }
     public Task ApplyDraftAsync(PreviewRequest request) => RunAsync(async () => { Remember(); draft = NativeEditorBridge.Clone(request); draft.SessionId = sessionId; basicTouched = skillsTouched = false; MarkDirty(); await PreviewCoreAsync(false); });
     public Task ApplyPresetAsync(string preset) => MutateAndPreviewAsync(request => { request.Preset = preset; basicTouched = skillsTouched = false; });

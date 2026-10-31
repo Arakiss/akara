@@ -11,6 +11,7 @@ namespace Akara.Desktop.Controls;
 
 public sealed class PaperDoll : FrameworkElement
 {
+    internal ItemHover Hover {get;}
     public static readonly DependencyProperty ItemsSourceProperty=DependencyProperty.Register(nameof(ItemsSource),typeof(IEnumerable<EquipmentSlotViewModel>),typeof(PaperDoll),new FrameworkPropertyMetadata(null,FrameworkPropertyMetadataOptions.AffectsRender,Changed));
     public static readonly DependencyProperty SelectedItemProperty=DependencyProperty.Register(nameof(SelectedItem),typeof(ItemViewModel),typeof(PaperDoll),new FrameworkPropertyMetadata(null,FrameworkPropertyMetadataOptions.BindsTwoWayByDefault|FrameworkPropertyMetadataOptions.AffectsRender));
     public IEnumerable<EquipmentSlotViewModel>? ItemsSource{get=>(IEnumerable<EquipmentSlotViewModel>?)GetValue(ItemsSourceProperty);set=>SetValue(ItemsSourceProperty,value);}
@@ -18,11 +19,11 @@ public sealed class PaperDoll : FrameworkElement
     internal void SelectItem(ItemViewModel? item)=>SetCurrentValue(SelectedItemProperty,item);
     public event EventHandler? ItemInvoked;
     static readonly Dictionary<string,Rect> Layout=new(){["helm"]=new(185,10,70,85),["amulet"]=new(262,66,62,56),["weapon"]=new(60,90,92,200),["shield"]=new(290,140,92,180),["armor"]=new(170,120,100,180),["gloves"]=new(64,335,80,90),["belt"]=new(172,325,96,60),["boots"]=new(295,335,80,90),["ring1"]=new(161,436,48,56),["ring2"]=new(231,436,48,56)};
-    public PaperDoll(){Focusable=true;Cursor=Cursors.Hand;UseLayoutRounding=true;SnapsToDevicePixels=true;ToolTip="Selecciona una pieza. Flechas para recorrer el equipo; Intro para editar.";AutomationProperties.SetName(this,"Equipo. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla.");}
+    public PaperDoll(){Focusable=true;Cursor=Cursors.Hand;UseLayoutRounding=true;SnapsToDevicePixels=true;Hover=new ItemHover(this);AutomationProperties.SetName(this,"Equipo. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla.");}
     protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,"Equipo");
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?"Equipo: "+item.Name:"Equipo. Sin pieza seleccionada.");}
-    static void Changed(DependencyObject target,DependencyPropertyChangedEventArgs e){var doll=(PaperDoll)target;if(e.OldValue is INotifyCollectionChanged old)old.CollectionChanged-=doll.CollectionChanged;if(e.NewValue is INotifyCollectionChanged current)current.CollectionChanged+=doll.CollectionChanged;doll.InvalidateVisual();}
-    void CollectionChanged(object? sender,NotifyCollectionChangedEventArgs e)=>InvalidateVisual();
+    static void Changed(DependencyObject target,DependencyPropertyChangedEventArgs e){var doll=(PaperDoll)target;if(e.OldValue is INotifyCollectionChanged old)old.CollectionChanged-=doll.CollectionChanged;if(e.NewValue is INotifyCollectionChanged current)current.CollectionChanged+=doll.CollectionChanged;doll.Hover?.Invalidate();doll.InvalidateVisual();}
+    void CollectionChanged(object? sender,NotifyCollectionChangedEventArgs e){Hover.Invalidate();InvalidateVisual();}
     protected override Size MeasureOverride(Size availableSize)=>new(Math.Min(440,availableSize.Width),Math.Min(500,availableSize.Height));
     protected override void OnRender(DrawingContext d)
     {
@@ -68,15 +69,15 @@ public sealed class PaperDoll : FrameworkElement
         d.Pop();d.Pop();
     }
     static void DrawContained(DrawingContext d,ImageSource image,Rect area){double ratio=image.Width/image.Height;double width=area.Width,height=area.Height;if(width/height>ratio)width=height*ratio;else height=width/ratio;d.DrawImage(image,new Rect(area.X+(area.Width-width)/2,area.Y+(area.Height-height)/2,width,height));}
-    protected override void OnMouseMove(MouseEventArgs e)
+    internal ItemViewModel? HitItem(Point point)
     {
-        base.OnMouseMove(e);double scale=Math.Min(ActualWidth/440,ActualHeight/500);if(scale<=0)return;
-        var point=e.GetPosition(this);point=new((point.X-(ActualWidth-440*scale)/2)/scale,point.Y/scale);
+        double scale=Math.Min(ActualWidth/440,ActualHeight/500);if(scale<=0)return null;
+        point=new((point.X-(ActualWidth-440*scale)/2)/scale,point.Y/scale);
         var hit=Layout.FirstOrDefault(p=>p.Value.Contains(point));
-        var slot=ItemsSource?.FirstOrDefault(s=>s.Slot==hit.Key);
-        ToolTip=slot is null?"Selecciona una pieza. Flechas para recorrer el equipo; Intro para editar.":slot.Item is { } item?item.Name+Environment.NewLine+slot.Label:slot.Label+" · vacío";
+        return ItemsSource?.FirstOrDefault(s=>s.Slot==hit.Key)?.Item;
     }
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e){base.OnMouseLeftButtonDown(e);Focus();double scale=Math.Min(ActualWidth/440,ActualHeight/500);var point=e.GetPosition(this);point=new((point.X-(ActualWidth-440*scale)/2)/scale,point.Y/scale);var hit=Layout.FirstOrDefault(p=>p.Value.Contains(point));SelectItem(ItemsSource?.FirstOrDefault(s=>s.Slot==hit.Key)?.Item);if(e.ClickCount==2&&SelectedItem is not null)ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}
+    protected override void OnMouseMove(MouseEventArgs e){base.OnMouseMove(e);Hover.Track(HitItem(e.GetPosition(this)));}
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e){base.OnMouseLeftButtonDown(e);Hover.Close();Focus();SelectItem(HitItem(e.GetPosition(this)));if(e.ClickCount==2&&SelectedItem is not null)ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);

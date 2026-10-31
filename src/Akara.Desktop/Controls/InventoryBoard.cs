@@ -10,6 +10,7 @@ namespace Akara.Desktop.Controls;
 
 public sealed class InventoryBoard : FrameworkElement
 {
+    internal ItemHover Hover {get;}
     protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,"Inventario");
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?"Inventario: "+item.Name:"Inventario. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla.");}
     public static readonly DependencyProperty ItemsSourceProperty=DependencyProperty.Register(nameof(ItemsSource),typeof(IEnumerable<ItemViewModel>),typeof(InventoryBoard),new FrameworkPropertyMetadata(null,FrameworkPropertyMetadataOptions.AffectsRender,ItemsChanged));
@@ -24,11 +25,19 @@ public sealed class InventoryBoard : FrameworkElement
     public ItemViewModel? SelectedItem {get=>(ItemViewModel?)GetValue(SelectedItemProperty);set=>SetValue(SelectedItemProperty,value);}
     internal void SelectItem(ItemViewModel? item)=>SetCurrentValue(SelectedItemProperty,item);
     public event EventHandler? ItemInvoked;
-    public InventoryBoard(){Focusable=true;SnapsToDevicePixels=true;UseLayoutRounding=true;Cursor=Cursors.Hand;ToolTip="Selecciona un objeto para ver sus propiedades. Las flechas recorren los objetos.";}
-    static void ItemsChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e){var board=(InventoryBoard)sender;if(e.OldValue is INotifyCollectionChanged old)old.CollectionChanged-=board.CollectionChanged;if(e.NewValue is INotifyCollectionChanged current)current.CollectionChanged+=board.CollectionChanged;board.InvalidateVisual();}
-    void CollectionChanged(object? sender,NotifyCollectionChangedEventArgs e)=>InvalidateVisual();
+    public InventoryBoard(){Focusable=true;SnapsToDevicePixels=true;UseLayoutRounding=true;Cursor=Cursors.Hand;Hover=new ItemHover(this);}
+    static void ItemsChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e){var board=(InventoryBoard)sender;if(e.OldValue is INotifyCollectionChanged old)old.CollectionChanged-=board.CollectionChanged;if(e.NewValue is INotifyCollectionChanged current)current.CollectionChanged+=board.CollectionChanged;board.Hover?.Invalidate();board.InvalidateVisual();}
+    void CollectionChanged(object? sender,NotifyCollectionChangedEventArgs e){Hover.Invalidate();InvalidateVisual();}
     protected override Size MeasureOverride(Size availableSize)=>new(Math.Max(1,Columns)*CellSize,Math.Max(1,Rows)*CellSize);
     Rect Bounds(ItemViewModel item)=>new(item.GridX*CellSize+2,item.GridY*CellSize+2,item.Width*CellSize-4,item.Height*CellSize-4);
+    internal ItemViewModel? HitItem(Point point)
+    {
+        if(CellSize<=0||point.X<0||point.Y<0||point.X>=Columns*CellSize||point.Y>=Rows*CellSize)return null;
+        int x=Math.Min(Math.Max(0,Columns-1),(int)Math.Floor(point.X/CellSize));
+        int y=Math.Min(Math.Max(0,Rows-1),(int)Math.Floor(point.Y/CellSize));
+        return (ItemsSource??[]).LastOrDefault(item=>x>=item.GridX&&x<item.GridX+item.Width&&y>=item.GridY&&y<item.GridY+item.Height);
+    }
+    protected override void OnMouseMove(MouseEventArgs e){base.OnMouseMove(e);Hover.Track(HitItem(e.GetPosition(this)));}
     protected override void OnRender(DrawingContext d)
     {
         base.OnRender(d);int columns=Math.Max(1,Columns),rows=Math.Max(1,Rows);double width=columns*CellSize,height=rows*CellSize;
@@ -47,7 +56,7 @@ public sealed class InventoryBoard : FrameworkElement
         }
         if(IsKeyboardFocusWithin)d.DrawRectangle(null,new Pen(new SolidColorBrush(Color.FromRgb(195,166,109)),1),new Rect(.5,.5,width-1,height-1));
     }
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e){base.OnMouseLeftButtonDown(e);Focus();var point=e.GetPosition(this);SelectItem((ItemsSource??[]).LastOrDefault(i=>Bounds(i).Contains(point)));if(e.ClickCount==2&&SelectedItem is not null)ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e){base.OnMouseLeftButtonDown(e);Hover.Close();Focus();SelectItem(HitItem(e.GetPosition(this)));if(e.ClickCount==2&&SelectedItem is not null)ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}
     protected override void OnKeyDown(KeyEventArgs e){base.OnKeyDown(e);if(e.Key is Key.Left or Key.Right or Key.Up or Key.Down){var items=(ItemsSource??[]).OrderBy(i=>i.Y).ThenBy(i=>i.X).ToList();if(items.Count==0)return;int index=items.FindIndex(i=>i.Id==SelectedItem?.Id);index=e.Key is Key.Left or Key.Up?Math.Max(0,index-1):Math.Min(items.Count-1,index+1);SelectItem(items[index]);e.Handled=true;}else if(e.Key==Key.Enter&&SelectedItem is not null){ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}}
 }
 internal sealed class ItemBoardAutomationPeer(FrameworkElement owner,string className):FrameworkElementAutomationPeer(owner)

@@ -7,6 +7,9 @@
     <controls:BrushConverter x:Key="ColorBrush" />
     <controls:SelectionMatchConverter x:Key="SelectionMatch" />
     <controls:SkillImageConverter x:Key="SkillImage" />
+    <Style x:Key="ItemRowHover" TargetType="DataGridRow">
+      <Setter Property="controls:ItemHover.Item" Value="{Binding}" />
+    </Style>
     <Style x:Key="Section" TargetType="StackPanel">
       <Setter Property="Visibility" Value="Collapsed" />
       <Setter Property="Margin" Value="16" />
@@ -117,7 +120,14 @@
             </StackPanel>
           </Button>
           <Button Content="Nuevo" Command="{Binding CreateCommand}" Style="{StaticResource QuietButton}" Margin="0,0,8,0" />
-          <ComboBox Width="220" ItemsSource="{Binding Saves}" SelectedItem="{Binding SelectedSave}" DisplayMemberPath="Name" IsEditable="True" IsReadOnly="True" Text="{Binding CharacterName,Mode=OneWay}" ToolTip="Cambiar de personaje local" FontSize="14" />
+          <Button Width="220" Click="OnChooseSave" IsEnabled="{Binding CanChooseSave}" ToolTip="{Binding SavesSummary}" AutomationProperties.Name="Elegir personaje local" Padding="9,5">
+            <Grid Width="196">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <TextBlock Text="{Binding SaveSelectionText}" TextTrimming="CharacterEllipsis" FontSize="14" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1" Text="{Binding Saves.Count}" Foreground="{StaticResource MutedBrush}" Margin="8,0" VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="2" Text="⌄" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
           <TextBlock Text="{Binding ClassLabel}" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="10,0,5,0" />
           <TextBlock Text="{Binding LevelText,StringFormat=· {0}}" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
           <Button Command="{Binding CloneCommand}" Style="{StaticResource QuietButton}" AutomationProperties.Name="Clonar">
@@ -342,9 +352,9 @@
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
               <TextBlock Text="Objetos del personaje" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,6" />
-              <DataGrid x:Name="CharacterItemTable" Loaded="OnItemTableLoaded" SizeChanged="OnItemTableSizeChanged" IsVisibleChanged="OnItemTableVisibleChanged" Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="25" AlternationCount="0">
+              <DataGrid x:Name="CharacterItemTable" Loaded="OnItemTableLoaded" SizeChanged="OnItemTableSizeChanged" IsVisibleChanged="OnItemTableVisibleChanged" Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="25" AlternationCount="0" RowStyle="{StaticResource ItemRowHover}">
                 <DataGrid.Columns>
-                  <DataGridTextColumn Header="Objeto" Binding="{Binding Name}" Width="300" MinWidth="160"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="ToolTip" Value="{Binding Name}"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                  <DataGridTextColumn Header="Objeto" Binding="{Binding Name}" Width="300" MinWidth="160"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
                   <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />
                   <DataGridTextColumn Header="Calidad" Binding="{Binding QualityLabel}" Width="90" MinWidth="90" MaxWidth="90" />
                 </DataGrid.Columns>
@@ -492,7 +502,7 @@
                 <ListBox ItemsSource="{Binding MercenaryItems}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}">
                   <ListBox.ItemTemplate>
                     <DataTemplate>
-                      <StackPanel>
+                      <StackPanel controls:ItemHover.Item="{Binding}" Background="Transparent">
                         <TextBlock Text="{Binding Name}" Foreground="{Binding Accent,Converter={StaticResource ColorBrush}}" />
                         <TextBlock Text="{Binding SlotLabel}" FontSize="12" Foreground="{StaticResource MutedBrush}" />
                       </StackPanel>
@@ -563,7 +573,7 @@
               <TextBlock Text="{Binding SelectedCatalogEntry.Code}" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
               <Button Content="Añadir selección al alijo" Command="{Binding AddCatalogItemCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
             </StackPanel>
-            <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28">
+            <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28" RowStyle="{StaticResource ItemRowHover}">
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Objetos actuales" Binding="{Binding Name}" Width="2*" />
                 <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />

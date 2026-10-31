@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,33 @@ namespace Akara.Desktop;
 internal static class NativeDialogs
 {
     static readonly string[] ClassNames=["Amazon","Sorceress","Necromancer","Paladin","Barbarian","Druid","Assassin","Warlock"];
+    internal static async Task ChooseCharacterAsync(Window? owner,MainViewModel vm)
+    {
+        if(!vm.CanChooseSave)return;
+        await ((NativeCommand)vm.RefreshCommand).ExecuteAsync(null);
+        var choices=vm.Saves.Select(save=>new CharacterChoice(save,
+            vm.Profiles.FirstOrDefault(profile=>profile.Id==save.ProfileId)?.Name??"Perfil por elegir",
+            Path.GetFileName(Path.GetDirectoryName(save.Path))??"Archivo local")).OrderBy(choice=>choice.Profile).ThenBy(choice=>choice.Save.Name,StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var form=new Form(owner,"Tus personajes",vm.SavesSummary+". Elige una partida para abrirla; tus cambios se revisan antes de guardar.",760,700);
+        form.AcceptButton.Content="Abrir personaje";
+        var search=Field(form.Body,"Buscar por nombre o perfil",new TextBox{Margin=new Thickness(0,0,0,12)});
+        var list=new ListBox{DisplayMemberPath="Display",FontSize=15,Height=350,ItemsSource=choices,SelectedItem=choices.FirstOrDefault(choice=>choice.Save.Path==vm.SelectedSave?.Path)??choices.FirstOrDefault()};
+        form.Body.Children.Add(list);
+        var count=new TextBlock{Text=choices.Length+" personajes disponibles",Margin=new Thickness(0,12,0,0)};count.SetResourceReference(TextBlock.ForegroundProperty,"MutedBrush");form.Body.Children.Add(count);
+        search.TextChanged+=(_,_)=>
+        {
+            var filtered=choices.Where(choice=>choice.Display.Contains(search.Text.Trim(),StringComparison.CurrentCultureIgnoreCase)).ToArray();
+            var previous=list.SelectedItem;list.ItemsSource=filtered;list.SelectedItem=filtered.Contains(previous)?previous:filtered.FirstOrDefault();
+            count.Text=filtered.Length+" de "+choices.Length+" personajes";
+        };
+        form.Validate=()=>list.SelectedItem is CharacterChoice?null:"Selecciona un personaje. También puedes abrir un archivo.d2s desde «Abrir».";
+        form.Loaded+=(_,_)=>search.Focus();
+        if(form.ShowDialog()==true&&list.SelectedItem is CharacterChoice chosen)await vm.OpenSaveAsync(chosen.Save);
+    }
+    sealed record CharacterChoice(SaveEntry Save,string Profile,string Folder)
+    {
+        public string Display=>Save.Name+Environment.NewLine+Profile+" · "+Folder;
+    }
     internal static async Task CreateAsync(Window? owner,MainViewModel vm)
     {
         var form=new Form(owner,"Un nuevo personaje","Elige su clase y una configuración. La partida se guarda después de revisar los cambios.",650,610);
@@ -110,6 +138,7 @@ internal static class NativeDialogs
     sealed class Form:Window
     {
         public StackPanel Body{get;}=new();public Func<string?>? Validate{get;set;}
+        public Button AcceptButton{get;}=new(){Content="Preparar cambios",MinWidth=150,IsDefault=true};
         public Form(Window? owner,string title,string description,double width,double height)
         {
             Title=title;Width=width;Height=height;MinWidth=480;MinHeight=300;WindowStartupLocation=owner is null?WindowStartupLocation.CenterScreen:WindowStartupLocation.CenterOwner;Owner=owner;ShowInTaskbar=false;ResizeMode=ResizeMode.CanResize;
@@ -117,7 +146,7 @@ internal static class NativeDialogs
             var layout=new Grid{Margin=new Thickness(27)};layout.RowDefinitions.Add(new(){Height=GridLength.Auto});layout.RowDefinitions.Add(new(){Height=new GridLength(1,GridUnitType.Star)});layout.RowDefinitions.Add(new(){Height=GridLength.Auto});
             var header=new StackPanel{Margin=new Thickness(0,0,0,18)};var heading=new TextBlock{Text=title,FontSize=22};heading.SetResourceReference(TextBlock.FontFamilyProperty,"DisplayFont");header.Children.Add(heading);var subtitle=new TextBlock{Text=description,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,9,0,0)};subtitle.SetResourceReference(TextBlock.ForegroundProperty,"MutedBrush");header.Children.Add(subtitle);layout.Children.Add(header);
             var scroll=new ScrollViewer{Content=Body,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};Grid.SetRow(scroll,1);layout.Children.Add(scroll);
-            var footer=new StackPanel{Margin=new Thickness(0,20,0,0)};Grid.SetRow(footer,2);var error=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,10)};error.SetResourceReference(TextBlock.ForegroundProperty,"ErrorBrush");footer.Children.Add(error);var actions=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right};var cancel=new Button{Content="Cancelar",IsCancel=true,MinWidth=100,Margin=new Thickness(0,0,9,0)};var apply=new Button{Content="Preparar cambios",MinWidth=150,IsDefault=true};apply.SetResourceReference(StyleProperty,"PrimaryButton");apply.Click+=(_,_)=>{error.Text=Validate?.Invoke()??"";if(error.Text.Length==0)DialogResult=true;};actions.Children.Add(cancel);actions.Children.Add(apply);footer.Children.Add(actions);layout.Children.Add(footer);Content=layout;
+            var footer=new StackPanel{Margin=new Thickness(0,20,0,0)};Grid.SetRow(footer,2);var error=new TextBlock{TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,10)};error.SetResourceReference(TextBlock.ForegroundProperty,"ErrorBrush");footer.Children.Add(error);var actions=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right};var cancel=new Button{Content="Cancelar",IsCancel=true,MinWidth=100,Margin=new Thickness(0,0,9,0)};var apply=AcceptButton;apply.SetResourceReference(StyleProperty,"PrimaryButton");apply.Click+=(_,_)=>{error.Text=Validate?.Invoke()??"";if(error.Text.Length==0)DialogResult=true;};actions.Children.Add(cancel);actions.Children.Add(apply);footer.Children.Add(actions);layout.Children.Add(footer);Content=layout;
         }
     }
     sealed class PropertyRow

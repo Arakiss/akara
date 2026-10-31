@@ -10,7 +10,7 @@
     <Product>AKARA</Product>
     <Title>AKARA</Title>
     <Description>Editor nativo de personajes de Diablo II: Resurrected</Description>
-    <Version>0.5.0</Version>
+    <Version>0.5.1</Version>
     <ApplicationIcon>../../assets/akara-native.ico</ApplicationIcon>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

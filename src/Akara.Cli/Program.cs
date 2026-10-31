@@ -32,7 +32,7 @@ internal static class Cli
             if (options.Flag("help") || command is "--help" or "-h") command = "help";
             if (command == "help") { Console.WriteLine(Help()); return 0; }
             ValidateOptions(command, options);
-            if (command == "version") { Write(new { name = "AKARA CLI", version = "0.3.0", planSchemaVersion = 1 }); return 0; }
+            if (command == "version") { Write(new { name = "AKARA CLI", version = "0.3.1", planSchemaVersion = 1 }); return 0; }
             var service = new EditorService(options.Get("data-dir"));
             string? profileId = null;
             if (options.Get("excel") is { } excel)
@@ -44,7 +44,7 @@ internal static class Cli
                 case "doctor":
                     options.Allow("data-dir", "excel", "strings", "profile-name", "profile", "verbose");
                     var boot = Node(service.Bootstrap());
-                    result = new { application = "AKARA CLI", version = "0.3.0", runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, os = System.Runtime.InteropServices.RuntimeInformation.OSDescription, gameRunning = EditorService.GameRunning(), profileCount = boot["profiles"]?.AsArray().Count ?? 0, profiles = boot["profiles"], saveCount = boot["saves"]?.AsArray().Count ?? 0, standalone = true, capabilities = new[] { "native-txt-profiles", "byte-exact-roundtrip", "persistent-plans", "preview-diff", "hash-conflict-guards", "verified-backups", "atomic-replace", "json-stdin-stdout" } };
+                    result = new { application = "AKARA CLI", version = "0.3.1", runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription, os = System.Runtime.InteropServices.RuntimeInformation.OSDescription, gameRunning = EditorService.GameRunning(), profileCount = boot["profiles"]?.AsArray().Count ?? 0, profiles = boot["profiles"], saveCount = boot["saves"]?.AsArray().Count ?? 0, standalone = true, capabilities = new[] { "native-txt-profiles", "byte-exact-roundtrip", "persistent-plans", "preview-diff", "hash-conflict-guards", "verified-backups", "atomic-replace", "json-stdin-stdout" } };
                     break;
                 case "profiles": result = service.Profiles(); break;
                 case "classes": result = service.Classes(profileId); break;
@@ -221,7 +221,7 @@ internal static class Cli
         new { name = "restore", syntax = "restore SAVE --backup ID --expect SHA256", writes = "backup-and-atomic-source-replace", description = "Restore a selected historical save, preserving the displaced state" }
     ];
     static string Help() => """
-    AKARA CLI 0.3 — editor local de personajes D2R
+    AKARA CLI 0.3.1 — editor local de personajes D2R
 
     akara-cli doctor                             Perfiles, juego y diagnóstico
     akara-cli profiles | saves | classes | presets

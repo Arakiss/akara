@@ -17,6 +17,21 @@ public static class ItemArt
     {
         key=key switch{"purpleArmor"=>"mageArmor","steelArmor"=>"plateArmor","demonMask"=>"mask","shield"=>"kiteShield","bookBlue"=>"blueBook","bookGold"=>"brownBook",_=>key};
         if (Cache.TryGetValue(key, out var image)) return image;
+        if(key=="unknown")
+        {
+            // An unrecognised base gets an explicit neutral marker, never a
+            // fabricated charm based only on its inventory dimensions.
+            var drawing=new DrawingGroup();
+            using(var context=drawing.Open())
+            {
+                context.DrawRectangle(Brushes.Transparent,null,new Rect(0,0,120,160));
+                var line=new Pen(new SolidColorBrush(Color.FromRgb(128,123,103)),1.5);
+                context.DrawGeometry(new SolidColorBrush(Color.FromRgb(26,31,30)),line,Geometry.Parse("M60,27 L98,51 98,107 60,132 22,107 22,51 Z"));
+                context.DrawGeometry(null,line,Geometry.Parse("M49,60 C48,45 76,45 75,62 C75,72 60,72 60,85"));
+                context.DrawEllipse(line.Brush,null,new Point(60,97),1.8,1.8);
+            }
+            drawing.Freeze();var marker=new DrawingImage(drawing);marker.Freeze();Cache[key]=marker;return marker;
+        }
         LoadAtlas();
         if (atlas is not null && crops?.TryGetValue(key, out var rectangle) == true)
         {
@@ -48,24 +63,45 @@ public static class ItemArt
     }
     public static string Category(ItemViewModel item)
     {
-        string code=item.Code.ToLowerInvariant(), name=item.Name.ToLowerInvariant();
+        // Kind contains the occupied slot for equipped items. Read the native
+        // base type instead, so moving the same piece never changes its art.
+        return Category(item.Code,item.Data.Text("itemType"),item.Name,
+            item.Data.Array("equipSlots").Select(value=>value?.ToString()??""));
+    }
+    internal static string Category(string code,string nativeType,string name,IEnumerable<string> equipSlots)
+    {
+        code=code.ToLowerInvariant();nativeType=nativeType.ToLowerInvariant();name=name.ToLowerInvariant();
+        var slots=equipSlots.ToHashSet(StringComparer.OrdinalIgnoreCase);
         if(code is "tbk")return "bookBlue";if(code is "ibk")return "bookGold";if(code is "box" or "bag")return "cube";
-        if(code is "cm3")return "grandCharm";if(code is "cm1" or "cm2")return "smallCharm";if(code is "rvl"||item.Kind is "hpot" or "mpot" or "rpot")return "potion";
-        if(code is "rin"||item.Slot is "ring1" or "ring2")return "ring";if(code is "amu"||item.Slot=="amulet")return "amulet";
-        if(item.Slot=="helm")return name.Contains("andariel")?"demonMask":name.Contains("harlequin")?"hood":"helm";
-        if(item.Slot=="armor")return name.Contains("tal rasha")?"purpleArmor":"steelArmor";
-        if(item.Slot=="shield")return name.Contains("stormshield")?"roundShield":"shield";
-        if(item.Slot=="gloves")return "gloves";if(item.Slot=="boots")return "boots";if(item.Slot=="belt")return "belt";
-        if(item.Slot=="weapon"||item.Kind is "weap" or "staf" or "scep")
+        if(code is "cm3"||nativeType=="lcha")return "grandCharm";
+        if(code is "cm1" or "cm2"||nativeType is "char" or "scha" or "mcha")return "smallCharm";
+        if(code is "rvl" or "rvs"||nativeType is "hpot" or "mpot" or "rpot" or "apot" or "wpot" or "vpot")return "potion";
+        if(code=="rin"||nativeType=="ring")return "ring";if(code=="amu"||nativeType=="amul")return "amulet";
+        if(code.StartsWith("ob",StringComparison.Ordinal)||nativeType is "orb" or "staf" or "wand" or "scep")return "orbStaff";
+        if(nativeType is "jave" or "ajav" or "spea" or "aspe")return "javelin";
+        if(nativeType=="pole")return "scythe";
+        if(nativeType is "bow" or "abow" or "xbow")return "bow";
+        if(nativeType is "axe" or "taxe")return "axe";
+        if(nativeType is "swor" or "knif" or "tkni" or "h2h" or "h2h2" or "club" or "mace" or "hamm" or "blun" or "weap")return "sword";
+        if(slots.Contains("weapon"))
         {
-            if(name.Contains("oculus")||name.Contains("fathom")||item.Kind=="orb")return "orbStaff";
-            if(name.Contains("titan")||name.Contains("thunderstroke")||item.Kind.Contains("jave"))return "javelin";
-            if(name.Contains("infinity")||name.Contains("reaper")||item.Kind is "pole" or "spea")return "scythe";
-            if(item.Kind.Contains("bow"))return "bow";if(item.Kind.Contains("axe"))return "axe";
+            if(name.Contains("oculus",StringComparison.Ordinal)||name.Contains("fathom",StringComparison.Ordinal)||name.Contains("eschuta",StringComparison.Ordinal))return "orbStaff";
+            if(name.Contains("titan",StringComparison.Ordinal)||name.Contains("thunderstroke",StringComparison.Ordinal))return "javelin";
+            if(name.Contains("reaper",StringComparison.Ordinal))return "scythe";
             return "sword";
         }
-        if(code.StartsWith('r'))return "smallCharm";
-        return item.Height>1?"grandCharm":"smallCharm";
+        if(nativeType is "helm" or "circ" or "phlm" or "pelt"||slots.Contains("helm"))return name.Contains("andariel",StringComparison.Ordinal)?"demonMask":name.Contains("harlequin",StringComparison.Ordinal)?"hood":"helm";
+        if(nativeType is "tors" or "armo"||slots.Contains("armor"))return name.Contains("tal rasha",StringComparison.Ordinal)?"purpleArmor":"steelArmor";
+        if(nativeType is "shie" or "ashd" or "head"||slots.Contains("shield"))return name.Contains("stormshield",StringComparison.Ordinal)?"roundShield":"shield";
+        if(nativeType=="glov"||slots.Contains("gloves"))return "gloves";
+        if(nativeType=="boot"||slots.Contains("boots"))return "boots";
+        if(nativeType=="belt"||slots.Contains("belt"))return "belt";
+        if(slots.Contains("ring1")||slots.Contains("ring2"))return "ring";
+        if(slots.Contains("amulet"))return "amulet";
+        // Runes share the small token illustration in the current atlas, but a
+        // base such as Ring Mail (rng) must never be mistaken for a rune.
+        if(nativeType=="rune"||code.Length==3&&code[0]=='r'&&char.IsAsciiDigit(code[1])&&char.IsAsciiDigit(code[2]))return "smallCharm";
+        return "unknown";
     }
     static string Fallback(string key)=>key switch{"orbStaff"=>"orb","hood" or "demonMask"=>"helm","purpleArmor" or "steelArmor"=>"armor","roundShield"=>"shield","bookBlue" or "bookGold"=>"tome","grandCharm" or "smallCharm"=>"charm","scythe" or "javelin" or "axe" or "bow"=>"weapon",_=>key};
 }

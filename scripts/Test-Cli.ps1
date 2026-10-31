@@ -34,7 +34,7 @@ function Run-Cli([string[]]$Arguments, [int]$Expected = 0) {
     if (-not $errorObject.error.code) { throw 'Missing machine error code' }
     return $errorObject
 }
-$version = Run-Cli @('version'); if ($version.version -ne '0.3.0') { throw 'Wrong CLI version' }; $checks.Add('standalone-version')
+$version = Run-Cli @('version'); if ($version.version -ne '0.3.1') { throw 'Wrong CLI version' }; $checks.Add('standalone-version')
 $schema = Run-Cli @('schema','preview'); if (-not $schema.'$defs'.PreviewRequest.properties.itemOperations) { throw 'Missing inventory schema' }; $checks.Add('machine-schema')
 $inspection = Run-Cli @('inspect',$fixture)
 if (-not $inspection.validation.roundtrip) { throw 'Fixture must roundtrip' }

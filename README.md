@@ -4,7 +4,7 @@
 
 A native Windows character editor for Diablo II: Resurrected. AKARA uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly.
 
-Version **0.3.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.3.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 

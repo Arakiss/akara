@@ -111,6 +111,24 @@ public static class NativeSmoke
                 Check(vm.IsNew && vm.IsDirty && vm.ValidationMessage.Contains("nuevo", StringComparison.Ordinal) && vm.ValidationMessage.Contains("revisión", StringComparison.Ordinal), "native-new-character-message-requires-review-and-save");
                 Check(vm.Snapshot["character"]!["level"]!.GetValue<int>() == 85 && vm.Skills.Sum(s => s.Points) == 96, "native-create-applies-class-build");
                 Check(vm.Items.Count(i => i.Page == "equipped") == 12 && vm.MercenaryItems.Count == 9, "native-both-sets-and-full-mercenary");
+                var oculus = vm.Items.Single(i => i.Name.Contains("Oculus", StringComparison.OrdinalIgnoreCase));
+                Check(HasSameArtInStorage(oculus, "weapon", "orbStaff"), "native-item-art-oculus-stays-orb-when-stashed");
+                string artSession = vm.Snapshot["sessionId"]!.GetValue<string>();
+                var eschutaUnique = CatalogRows(core, artSession, "unique", "Eschuta").Single(row => row["name"]!.GetValue<string>().Contains("Eschuta", StringComparison.OrdinalIgnoreCase));
+                string eschutaCode = eschutaUnique["code"]!.GetValue<string>();
+                var eschutaBase = (JsonObject)CatalogRows(core, artSession, "base", eschutaCode).Single(row => row["code"]!.GetValue<string>() == eschutaCode).DeepClone();
+                eschutaBase["name"] = eschutaUnique["name"]!.GetValue<string>();
+                Check(HasSameArtInStorage(new ItemViewModel(eschutaBase), "weapon", "orbStaff"), "native-item-art-eschuta-real-base-stays-orb-when-stashed");
+                var realArtCases = new[]
+                {
+                    (Item: vm.Items.Single(i => i.Page == "equipped" && i.Slot == "armor"), Slot: "armor", Art: "purpleArmor"),
+                    (Item: vm.Items.Single(i => i.Page == "equipped" && i.Slot == "helm"), Slot: "helm", Art: "hood"),
+                    (Item: vm.Items.Single(i => i.Page == "equipped" && i.Slot == "weapon" && i.Code == "crs"), Slot: "weapon", Art: "sword"),
+                    (Item: vm.Items.Single(i => i.Page == "equipped" && i.Slot == "belt"), Slot: "belt", Art: "belt")
+                };
+                Check(realArtCases.All(test => HasSameArtInStorage(test.Item, test.Slot, test.Art)), "native-item-art-real-equipment-keeps-category-in-storage");
+                var ringMail = new ItemViewModel((JsonObject)CatalogRows(core, artSession, "base", "rng").Single(row => row["code"]!.GetValue<string>() == "rng").DeepClone());
+                Check(HasSameArtInStorage(ringMail, "armor", "steelArmor") && ItemArt.Category("rng", "", "Ring Mail", []) == "unknown" && ItemArt.Category("zzz", "", "Unknown", []) == "unknown" && ItemArt.Get("unknown") is System.Windows.Media.DrawingImage, "native-item-art-ring-mail-and-unknown-are-not-runes-or-charms");
                 var selectedEquipment = vm.Items.First(i => i.Page == "equipped" && i.Slot == "armor");
                 var doll = new PaperDoll { ItemsSource = vm.EquipmentSlots };
                 BindingOperations.SetBinding(doll, PaperDoll.SelectedItemProperty, new Binding(nameof(MainViewModel.SelectedItem)) { Source = vm, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
@@ -184,6 +202,17 @@ public static class NativeSmoke
     static long Experience(JsonObject snapshot) => snapshot["character"]!["experience"]!.GetValue<long>();
     static int SkillPoints(JsonObject snapshot, int id) => snapshot["skills"]!.AsArray().OfType<JsonObject>().Single(skill => skill["id"]!.GetValue<int>() == id)["points"]!.GetValue<int>();
     static bool HasRunningWarning(JsonObject preview) => preview["validation"]!["warnings"]!.AsArray().Any(w => w?.GetValue<string>().Contains("Diablo II está abierto", StringComparison.Ordinal) == true);
+    static IEnumerable<JsonObject> CatalogRows(EditorService core, string sessionId, string type, string query) => NativeEditorBridge.Object(core.Catalog(sessionId, type, query, 0, 250))["entries"]!.AsArray().OfType<JsonObject>();
+    static bool HasSameArtInStorage(ItemViewModel source, string slot, string expected)
+    {
+        ItemViewModel At(string page, string occupiedSlot)
+        {
+            var data = (JsonObject)source.Data.DeepClone(); data["page"] = page; data["slot"] = occupiedSlot;
+            return new ItemViewModel(data);
+        }
+        var equipped = At("equipped", slot); var stored = At("stash", "");
+        return ItemArt.Category(equipped) == expected && ItemArt.Category(stored) == expected && ReferenceEquals(ItemArt.Get(equipped), ItemArt.Get(stored));
+    }
     sealed class NoDialogs : IFileDialogs
     {
         public string? OpenFile(string title, string filter) => throw new InvalidOperationException("Unexpected OS file dialog in a native test.");

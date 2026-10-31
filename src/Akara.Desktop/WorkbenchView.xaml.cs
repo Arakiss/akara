@@ -122,6 +122,20 @@ public partial class WorkbenchView : UserControl
     async void DesignCatalog(CatalogEntry entry){if(attached is not null)await NativeDialogs.DesignAsync(Window.GetWindow(this),attached,null,new ItemDesignRequest{BaseCode="",Quality="normal",RunewordName=entry.Name,Level=85});}
     void OnItemInvoked(object? sender,EventArgs e){if(attached?.SelectedItem is { } item)Design(item);}
     void OnItemTableInvoked(object sender,MouseButtonEventArgs e){if(sender is ItemsControl table&&e.OriginalSource is DependencyObject source&&ItemsControl.ContainerFromElement(table,source) is DataGridRow&&attached?.SelectedItem is { } item)Design(item);}
+    static void SizeItemTable(DataGrid table)
+    {
+        if(table.ActualWidth<=0||table.Columns.Count!=3)return;
+        double nameWidth=Math.Max(160,table.ActualWidth-table.BorderThickness.Left-table.BorderThickness.Right-220-SystemParameters.VerticalScrollBarWidth);
+        table.Columns[0].Width=new DataGridLength(nameWidth,DataGridLengthUnitType.Pixel);
+        table.Columns[1].Width=new DataGridLength(130,DataGridLengthUnitType.Pixel);
+        table.Columns[2].Width=new DataGridLength(90,DataGridLengthUnitType.Pixel);
+    }
+    void OnItemTableLoaded(object sender,RoutedEventArgs e)=>SizeItemTable((DataGrid)sender);
+    void OnItemTableSizeChanged(object sender,SizeChangedEventArgs e)=>SizeItemTable((DataGrid)sender);
+    void OnItemTableVisibleChanged(object sender,DependencyPropertyChangedEventArgs e)
+    {
+        if(e.NewValue is true)Dispatcher.BeginInvoke(DispatcherPriority.Loaded,new Action(()=>SizeItemTable((DataGrid)sender)));
+    }
     async void OnMercenary(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.MercenaryAsync(Window.GetWindow(this),attached);}
     async void OnAddProfile(object sender,RoutedEventArgs e){if(attached is null)return;var dialog=new Microsoft.Win32.OpenFolderDialog{Title="Carpeta de tablas del juego o del mod"};if(dialog.ShowDialog()==true)await attached.RegisterProfileAsync(dialog.FolderName);}
     void OnTitleDrag(object sender,MouseButtonEventArgs e){if(Window.GetWindow(this) is not { } window)return;if(e.ClickCount==2){window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;return;}try{window.DragMove();}catch(InvalidOperationException){}}

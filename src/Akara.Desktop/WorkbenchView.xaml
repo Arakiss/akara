@@ -342,11 +342,11 @@
                 <RowDefinition Height="*" />
               </Grid.RowDefinitions>
               <TextBlock Text="Objetos del personaje" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,6" />
-              <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="25" AlternationCount="0">
+              <DataGrid x:Name="CharacterItemTable" Loaded="OnItemTableLoaded" SizeChanged="OnItemTableSizeChanged" IsVisibleChanged="OnItemTableVisibleChanged" Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="25" AlternationCount="0">
                 <DataGrid.Columns>
-                  <DataGridTextColumn Header="Objeto" Binding="{Binding Name}" Width="*" MaxWidth="520" MinWidth="200" />
-                  <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="180" />
-                  <DataGridTextColumn Header="Calidad" Binding="{Binding QualityLabel}" Width="120" />
+                  <DataGridTextColumn Header="Objeto" Binding="{Binding Name}" Width="300" MinWidth="160"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="ToolTip" Value="{Binding Name}"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                  <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />
+                  <DataGridTextColumn Header="Calidad" Binding="{Binding QualityLabel}" Width="90" MinWidth="90" MaxWidth="90" />
                 </DataGrid.Columns>
               </DataGrid>
             </Grid>
@@ -566,7 +566,7 @@
             <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28">
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Objetos actuales" Binding="{Binding Name}" Width="2*" />
-                <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="180" />
+                <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />
                 <DataGridTextColumn Header="Base" Binding="{Binding BaseName}" Width="*" />
               </DataGrid.Columns>
             </DataGrid>

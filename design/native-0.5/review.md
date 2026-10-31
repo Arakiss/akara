@@ -40,6 +40,7 @@ La evidencia de paquete sobre fixtures privadas, manifiestos y hashes correspond
 | Riesgo de desbordamiento con nombres largos. | **Cerrado.** La muestra real de talismán a 1280 conserva el nombre completo en dos líneas y mantiene las acciones accesibles. |
 | Escala manual 150% con inspector recortado en una ventana insuficiente. | **Cerrado por prueba GUI reportada por root sobre el paquete final.** La ventana crece a 1740 × 1200, todos los botones permanecen visibles y se puede volver a Auto. Las capturas fuera de pantalla no se usan como prueba de esta corrección interactiva. |
 | Barra de estado oculta por la barra de tareas al maximizar. | **Cerrado por prueba GUI reportada por root tras el ajuste a WorkArea.** La barra de estado completa queda visible sobre la barra de tareas. El tamaño exterior de WindowGraphicsCapture no se interpreta como una medida del área útil de contenido. |
+| Columnas auxiliares comprimidas tras maximizar, cambiar de vista y restaurar. | **Cerrado por prueba GUI reportada por root sobre el paquete final.** Tras maximizar → Habilidades → Objetos → restaurar a 1600, el nombre ocupa el ancho restante y Ubicación/Calidad se mantienen completas y legibles. Este cierre corresponde a la prueba interactiva de root, sin una nueva revisión visual completa por este agente. |
 
 No quedan cambios visuales requeridos por esta revisión. El resultado presenta una jerarquía de armería y ficha de objeto que supera el cambio de paleta: cambian la escala de las piezas, la prioridad del listado, la estructura del inspector y la lectura de los controles.
 
@@ -55,4 +56,4 @@ Se inspeccionaron el [informe externo del paquete](../../../../outputs/AKARA-0.5
 
 Entre los checks leídos figuran la exclusión de retratos rechazados, la ausencia del atlas generado, la ausencia de fuentes y sprites locales del juego embebidos y el rechazo de sprites truncados. Estos resultados se atribuyen al paquete probado; no se deducen de su apariencia.
 
-SHA256 del ejecutable final verificado: `E51E4A5D74B2DE236C5409AB3E2A6B1913BC7C6DED3733E030CDDEFF74C73C01`.
+SHA256 del ejecutable final verificado: `2F5AB922899E01E7FD15BE05B4D0E07B43EEAD863562C671477BB43ADFA9216C`.

@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "name": "AKARA native identity and inventory art",
+  "root": "../..",
+  "output": "audit",
+  "minimumStatus": "approved",
+  "assets": [
+    {
+      "status": "approved",
+      "review": "design/native-0.3/review.md",
+      "requiredChecks": [
+        "read",
+        "semantics",
+        "craft",
+        "identity",
+        "runtime"
+      ],
+      "source": "imagegen",
+      "path": "src/Akara.Desktop/Assets/Art/akara-mark.png",
+      "openFindings": [],
+      "id": "akara-native-mark",
+      "prompt": "design/native-0.3/logo-refinement-prompt.txt",
+      "role": "logo",
+      "inspectionRegions": [
+        {
+          "name": "mark",
+          "y": 0.05412156536219817,
+          "x": 0.19083969465648856,
+          "height": 0.8492922564529559,
+          "width": 0.6183206106870229
+        }
+      ],
+      "expected": {}
+    },
+    {
+      "status": "approved",
+      "review": "design/native-0.3/review.md",
+      "requiredChecks": [
+        "read",
+        "semantics",
+        "craft",
+        "identity",
+        "runtime"
+      ],
+      "source": "imagegen",
+      "path": "src/Akara.Desktop/Assets/Art/items-atlas.png",
+      "openFindings": [],
+      "id": "inventory-objects",
+      "prompt": "design/native-0.3/item-atlas-prompt.txt",
+      "role": "sprite-atlas",
+      "inspectionRegions": [
+        {
+          "name": "orbStaff",
+          "y": 0.009765625,
+          "x": 0.033203125,
+          "height": 0.267578125,
+          "width": 0.107421875
+        },
+        {
+          "name": "sword",
+          "y": 0.00390625,
+          "x": 0.21484375,
+          "height": 0.2744140625,
+          "width": 0.072265625
+        },
+        {
+          "name": "axe",
+          "y": 0.0048828125,
+          "x": 0.3580729166666667,
+          "height": 0.27734375,
+          "width": 0.11979166666666667
+        },
+        {
+          "name": "scythe",
+          "y": 0.00390625,
+          "x": 0.53515625,
+          "height": 0.2763671875,
+          "width": 0.11197916666666667
+        },
+        {
+          "name": "javelin",
+          "y": 0.00390625,
+          "x": 0.677734375,
+          "height": 0.2802734375,
+          "width": 0.1171875
+        },
+        {
+          "name": "bow",
+          "y": 0.009765625,
+          "x": 0.828125,
+          "height": 0.248046875,
+          "width": 0.16341145833333334
+        },
+        {
+          "name": "hood",
+          "y": 0.2783203125,
+          "x": 0.021484375,
+          "height": 0.2265625,
+          "width": 0.14388020833333334
+        },
+        {
+          "name": "helm",
+          "y": 0.279296875,
+          "x": 0.19986979166666666,
+          "height": 0.228515625,
+          "width": 0.11197916666666667
+        },
+        {
+          "name": "mask",
+          "y": 0.2841796875,
+          "x": 0.365234375,
+          "height": 0.22265625,
+          "width": 0.11263020833333333
+        },
+        {
+          "name": "mageArmor",
+          "y": 0.2783203125,
+          "x": 0.509765625,
+          "height": 0.23828125,
+          "width": 0.12955729166666666
+        },
+        {
+          "name": "plateArmor",
+          "y": 0.287109375,
+          "x": 0.6653645833333334,
+          "height": 0.23046875,
+          "width": 0.14778645833333334
+        },
+        {
+          "name": "cube",
+          "y": 0.28515625,
+          "x": 0.837890625,
+          "height": 0.2197265625,
+          "width": 0.13216145833333334
+        },
+        {
+          "name": "kiteShield",
+          "y": 0.5029296875,
+          "x": 0.035807291666666664,
+          "height": 0.23828125,
+          "width": 0.10807291666666667
+        },
+        {
+          "name": "roundShield",
+          "y": 0.517578125,
+          "x": 0.18033854166666666,
+          "height": 0.2158203125,
+          "width": 0.13932291666666666
+        },
+        {
+          "name": "gloves",
+          "y": 0.525390625,
+          "x": 0.3515625,
+          "height": 0.1953125,
+          "width": 0.13671875
+        },
+        {
+          "name": "boots",
+          "y": 0.5205078125,
+          "x": 0.5026041666666666,
+          "height": 0.2138671875,
+          "width": 0.13802083333333334
+        },
+        {
+          "name": "belt",
+          "y": 0.5380859375,
+          "x": 0.6634114583333334,
+          "height": 0.1982421875,
+          "width": 0.158203125
+        },
+        {
+          "name": "ring",
+          "y": 0.53125,
+          "x": 0.8483072916666666,
+          "height": 0.171875,
+          "width": 0.12109375
+        },
+        {
+          "name": "amulet",
+          "y": 0.7421875,
+          "x": 0.052734375,
+          "height": 0.2421875,
+          "width": 0.07291666666666667
+        },
+        {
+          "name": "blueBook",
+          "y": 0.740234375,
+          "x": 0.17578125,
+          "height": 0.2451171875,
+          "width": 0.150390625
+        },
+        {
+          "name": "brownBook",
+          "y": 0.734375,
+          "x": 0.3404947916666667,
+          "height": 0.248046875,
+          "width": 0.154296875
+        },
+        {
+          "name": "grandCharm",
+          "y": 0.740234375,
+          "x": 0.548828125,
+          "height": 0.248046875,
+          "width": 0.0625
+        },
+        {
+          "name": "smallCharm",
+          "y": 0.7734375,
+          "x": 0.703125,
+          "height": 0.162109375,
+          "width": 0.0859375
+        },
+        {
+          "name": "potion",
+          "y": 0.7421875,
+          "x": 0.8580729166666666,
+          "height": 0.2353515625,
+          "width": 0.09440104166666667
+        }
+      ],
+      "expected": {}
+    }
+  ],
+  "languageSurfaces": []
+}

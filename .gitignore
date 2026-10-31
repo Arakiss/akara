@@ -43,6 +43,19 @@
 # Local evidence and session-specific audit helpers
 /evidence/
 /test-results/
+/design/**/audit/
+/design/**/design/
+/design/**/rejected/
+/design/**/actual-*.png
+/design/**/actual-*.json
+/design/**/review-*.png
+/design/**/review-*.json
+/design/**/final-*.png
+/design/**/final-*.json
+/design/**/logo-reviewed.png
+/design/**/portraits-reviewed.png
+/design/**/logo-candidate.png
+/design/**/items-atlas-candidate.png
 /playwright-report/
 /src/ForjaHoradrica.Web/qa-ui.cjs
 /src/ForjaHoradrica.Web/qa-shutdown.cjs

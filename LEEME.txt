@@ -1,8 +1,9 @@
-AKARA 0.2.0
-Editor local de personajes de Diablo II: Resurrected para Windows
+AKARA 0.3.0
+Editor nativo de personajes de Diablo II: Resurrected para Windows
 
-Abre Akara.exe. La aplicación se mostrará en tu navegador.
+Abre Akara.exe. Se abre la aplicación de escritorio en su propia ventana.
 El paquete portátil no necesita Node.js, PowerShell ni .NET instalados.
+No utiliza navegador, WebView ni servidor local.
 
 PARA EMPEZAR
 
@@ -23,8 +24,7 @@ PARA EMPEZAR
 6. Cierra Diablo II y pulsa Guardar con copia. Para un personaje nuevo,
    elige un archivo cuyo nombre coincida con el del personaje.
    La creación nunca sobrescribe un personaje existente.
-7. Al terminar, pulsa Salir de AKARA y cierra la pestaña. Cerrar sólo
-   la pestaña no detiene la aplicación local.
+7. Cierra la ventana al terminar.
 
 PLANTILLAS Y BIBLIOTECA
 
@@ -82,9 +82,9 @@ Se aceptan partidas de formato 97 a 105 sólo si superan las comprobaciones
 binarias de lectura y escritura idénticas. No se convierten formatos.
 La creación utiliza el formato 105 y las ocho clases. Las pruebas de
 Core, CLI y codificación no equivalen a una prueba de las ocho clases
-dentro del juego. La prueba de navegador recorre creación, inventario,
-mercenario, mundo, taller, planos, biblioteca y guardado/restauración
-usando archivos desechables y datos locales aislados.
+dentro del juego. Las pruebas nativas renderizan los controles WPF fuera
+de pantalla y comprueban el comportamiento de la aplicación. Los flujos
+de archivos usan copias desechables y datos locales aislados.
 
 No modifica personajes online ni el baúl compartido. AKARA funciona
 en tu propio PC, sin cuenta ni envío de partidas a un servicio externo.

@@ -134,7 +134,7 @@ public sealed partial class EditorService
         string name = ItemName(item, p), baseName = p.Bases.TryGetValue(item.ItemCodeString, out var br) ? V(br, "name") : item.ItemCodeString;
         return new { id, owner, code = item.ItemCodeString, name, baseName, runewordName = item.Flags.HasFlag(ItemFlags.Runeword) ? name.Split(" · ")[0] : null, quality = QualityName(item.Quality), type = QualityName(item.Quality), level = item.ItemLevel, identified = item.Flags.HasFlag(ItemFlags.Identified), ethereal = item.Flags.HasFlag(ItemFlags.Ethereal), personalizedName = item.PersonalizedName, defense = item.Defense, prefixIds = item.QualityData is MagicQualityData mq ? new[]{(int)mq.PrefixId}.Where(n=>n>0) : item.QualityData is RareCraftQualityData rq ? rq.Prefixes.Select(n=>(int)n).Where(n=>n>0) : [], suffixIds = item.QualityData is MagicQualityData ms ? new[]{(int)ms.SuffixId}.Where(n=>n>0) : item.QualityData is RareCraftQualityData rs ? rs.Suffixes.Select(n=>(int)n).Where(n=>n>0) : [], rarePrefixId = item.QualityData is RareCraftQualityData rn ? rn.RarePrefixId : 0, rareSuffixId = item.QualityData is RareCraftQualityData rf ? rf.RareSuffixId : 0, itemType = GameData.V(p.Bases[item.ItemCodeString], "type"), requirements = Requirements(item,p), slot = Slot(item), weaponSet = save is null ? null : ItemWeaponSet(item, save, owner), twoHanded = TwoHanded(item, p, owner == "character" && save?.Character.Class.ToString() == "Barbarian"), equipSlots = save is null ? [] : EquipSlots(item, p, owner, save), page = item.Position.Mode == ItemMode.Equipped ? "equipped" : item.Position.Mode == ItemMode.InBelt ? "belt" : item.Position.Mode == ItemMode.Socketed ? "socket" : item.Position.StorePage.ToString().ToLowerInvariant(), x = item.Position.InvX, y = item.Position.InvY, width = size.Width, height = size.Height, quantity = item.Quantity, durability = item.Durability, maxDurability = item.MaxDurability, stats = StatDtos(item.Stats, p), setBonusMask = item.SetItemMask, setBonusLists = item.SetBonusStats.Select(s => StatDtos(s, p)), runewordId = item.RunewordId, runewordStats = item.RunewordStats is null ? [] : StatDtos(item.RunewordStats, p), sockets = item.Sockets.Select((s, n) => s is null ? null : ItemDto(s, p, id + "/s" + n, owner, save)) };
     }
-    private static object Inspect(SaveSession s, D2Save save, ItemIdentities? identities = null)
+    private object Inspect(SaveSession s, D2Save save, ItemIdentities? identities = null)
     {
         long Stat(int id) => save.Stats.GetStat((StatId)id);
         var grid = s.Profile.Grid(save, "inventory"); var stash = s.Profile.Grid(save, "stash"); var cube = s.Profile.Grid(save,"cube");
@@ -164,7 +164,7 @@ public sealed partial class EditorService
             questRewards = new { skillPoints = CountSkillRewards(save), statPoints = CountStatRewards(save), anyaScrollsConsumed = Difficulties(save).Count(q => (q.ActV.PrisonOfIce & QuestFlags.Custom3) != 0) },
             hotkeys = save.Character.SkillHotkeys.Select((key, index) => new { index, skillId = key.SkillId, side=key.Side.ToString().ToLowerInvariant() }), leftSkill = save.Character.LeftSkill.SkillId, rightSkill = save.Character.RightSkill.SkillId,
             mercenary = MercenaryDto(save, s.Profile, identities),
-            gameRunning = GameRunning(), validation = new { canEdit = s.Roundtrip, checksum = true, roundtrip = s.Roundtrip },
+            gameRunning = gameState(), validation = new { canEdit = s.Roundtrip, checksum = true, roundtrip = s.Roundtrip },
             warnings = s.Roundtrip ? Array.Empty<string>() : new[] { "La partida se puede inspeccionar, pero estas tablas no permiten conservarla exactamente. Elige el perfil correcto antes de editar." }
         };
     }
@@ -229,7 +229,7 @@ public sealed partial class EditorService
                 var characterIds = save.Items.Select(identities.Id).ToArray(); var mercIds = save.MercItems?.Items.Select(identities.Id).ToArray();
                 var plan = new EditPlan(Guid.NewGuid().ToString("N"), bytes, diff, characterIds, mercIds); s.Plan = plan;
                 warnings.Add("Los recursos mostrados son valores base; el juego calcula los bonus del equipo al cargar.");
-                if (GameRunning()) warnings.Add("Diablo II está abierto. Puedes exportar una copia; cierra el juego antes de reemplazar la partida.");
+                if (gameState()) warnings.Add("Diablo II está abierto. Puedes exportar una copia; cierra el juego antes de reemplazar la partida.");
                 return new { planId = plan.Id, canSave = true, validation = new { errors, warnings }, diff, summary = Inspect(s, readback, new(readback, characterIds, mercIds)) };
             }
             catch (Exception ex) when (ex is ApiProblem or ArgumentException or InvalidDataException or NotSupportedException or InvalidOperationException or OverflowException)

@@ -1,6 +1,6 @@
 # Work on AKARA
 
-AKARA is an offline Diablo II: Resurrected character editor. The GUI and CLI must use the same `Akara.Core` validation and persistence code. Keep game data local: this repository must not contain Blizzard/mod TXT tables, saves, item binary fixtures, screenshots from private sessions, tokens, or machine-specific paths.
+AKARA is a native WPF offline Diablo II: Resurrected character editor. The desktop GUI and CLI call the same `Akara.Core` validation and persistence code directly. Do not introduce a browser, WebView or local HTTP host into the desktop client. Keep game data local: this repository must not contain Blizzard/mod TXT tables, saves, item binary fixtures, screenshots from private sessions, tokens, or machine-specific paths.
 
 ## Use the installed CLI
 
@@ -12,19 +12,17 @@ Treat generated plans and blueprints as private save data. Do not commit them. D
 
 ## Build and verify
 
-Prerequisites for development: .NET10 SDK, Node24, npm, PowerShell7 on Windows. Portable releases include the runtime and need none of these.
+Prerequisites for native development: .NET 10 SDK and PowerShell 7 on Windows. Portable releases include the runtime and need neither. Node/npm are needed only for the retained legacy browser client.
 
 ```powershell
 dotnet build src/Akara.Cli/Akara.Cli.csproj
+dotnet build src/Akara.Desktop/Akara.Desktop.csproj
 dotnet build tests/ForjaHoradrica.Tests.csproj
-cd src/ForjaHoradrica.Web
-npm ci
-npm run build
 ```
 
 The integration runner needs your own local game tables and copied saves. `AKARA_TEST_EXCEL` selects the TXT directory; `AKARA_TEST_FIXTURES` selects a private directory containing `sorceress.d2s` and `warlock.d2s`. Missing fixtures must be reported explicitly, never counted as a passing integration test. The runner works on temporary copies.
 
-`scripts/Publish.ps1` builds the interface and both standalone executables, then checks the packaged server's actual embedded JS/CSS/SVG resources, API authorization and shutdown. Development through Vite alone does not verify portable packaging.
+`scripts/Publish.ps1` builds both native desktop and CLI standalone executables. `Test-Native.ps1` runs the actual WPF tree offscreen at multiple dimensions, verifies native framework metadata, and exercises the ViewModels. Do not substitute HTML, design mockups or screenshots of a different implementation for native application evidence. Captures/self-tests must not show a window, inject desktop input or write live characters. Private-file checks copy fixtures into an isolated save root and data directory first.
 
 ## Invariants
 

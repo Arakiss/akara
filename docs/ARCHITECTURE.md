@@ -1,23 +1,24 @@
 # Architecture
 
-AKARA 0.2 has two clients over one character-editing core. The React/TypeScript interface calls a local ASP.NET Core API; `akara-cli` calls the same Core directly. Both target Windows and .NET 10. The self-contained GUI executable embeds the compiled interface and opens the default browser.
+AKARA 0.3 has a native WPF desktop client and a JSON CLI over one character-editing Core. Both call Core in-process on Windows/.NET 10. The self-contained desktop executable opens its own window; it does not start a browser, WebView or HTTP server.
 
 | Component | Responsibility |
 | --- | --- |
 | `Akara.Core` | Profiles, creation, transformations, validation, item encoding, plans, loadouts, and guarded persistence. |
+| `Akara.Desktop` | WPF views/styles, native file dialogs, asynchronous ViewModels and offscreen test/capture modes. |
 | `Akara.Cli` | JSON commands, persistent plans, batches, and automation over Core. |
-| `ForjaHoradrica.Server` | Loopback API, authorization, embedded resources, and host lifecycle. |
-| `ForjaHoradrica.Web` | Spanish editor, draft history, inventory, workshop, world editor, and build library. |
+| `ForjaHoradrica.Server` | Retained legacy 0.2 loopback API; excluded from native distribution. |
+| `ForjaHoradrica.Web` | Retained legacy 0.2 React client; excluded from native distribution. |
 
 The `ForjaHoradrica` technical namespace remains for compatibility; product names are AKARA and `akara-cli`.
 
 ## Runtime and local storage
 
-The server binds to `127.0.0.1`, selects a free port unless supplied, and generates an access token per run. API requests require that token. Host and origin checks restrict access; response policy prevents remote resource loading. `POST /api/shutdown` responds before stopping the host.
+The desktop's `NativeEditorBridge` calls `EditorService` on background tasks. ViewModels apply the results to observable native models on the UI dispatcher and gate save commands behind a valid reviewed plan. Windows file dialogs are abstracted for tests. No transport or API token sits between the native client and Core.
 
-The package needs no separately installed Node.js or .NET runtime. There is no remote service or account. NuGet and npm are build dependencies.
+The package needs no separately installed Node.js or .NET runtime. There is no remote service or account. NuGet is a native build dependency; npm belongs only to the archived web client.
 
-Core normally stores settings, backups, exports, and loadouts under `%LOCALAPPDATA%\AKARA`. Host and CLI accept `--data-dir DIRECTORY` for isolated instances. Generated plans and JSON documents can contain local paths and character data; they are private artifacts, not source fixtures.
+Core normally stores settings, backups, exports, and loadouts under `%LOCALAPPDATA%\AKARA`. Desktop and CLI accept `--data-dir DIRECTORY` for isolated instances. Core's optional save-root injection permits private behavior tests to discover and write only their temporary fixture copies. Generated plans and JSON documents can contain local paths and character data; they are private artifacts, not source fixtures.
 
 ## Native data profiles
 
@@ -72,4 +73,6 @@ D2SSharp 0.0.22 parses and serializes saves. Existing versions 97–105 require 
 
 Core and CLI checks use private tables and copied version 105 saves. Creation and presets have binary/roundtrip checks; these do not establish an in-game pass for every class. Versions 97–104 have not each been exercised with fixtures. The public browser smoke exercises the main 0.2 workflows against a real local API, including invalid native encodings, reversible inventory/socket changes, blueprint/loadout exchange, and private-file commit/backup/restore.
 
-Public CI builds data-dependent runners without distributing their inputs. Portable checks must exercise embedded resources and authorization, not only Vite. See [integration tests](../tests/README.md), [browser checks](../tests/browser/README.md), [API](api-v0.2.md), and [CLI](cli.md).
+Public CI builds WPF, CLI and data-dependent runners without distributing their inputs. Native capture mode arranges and renders the same `WorkbenchView` used by the window through `RenderTargetBitmap`; no window is shown and no desktop input is injected. Captures include actual `PresentationFramework` and layout metadata. Native behavior tests execute on the STA dispatcher, using dialog stubs and isolated Core state. Screenshots still require visual inspection at target dimensions; structural PNG checks are not a design-quality verdict.
+
+See [integration tests](../tests/README.md) and [CLI](cli.md). The retained [browser checks](../tests/browser/README.md) and [API](api-v0.2.md) document the historical 0.2 client and do not establish native UI coverage.

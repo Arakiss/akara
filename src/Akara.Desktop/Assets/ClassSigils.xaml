@@ -1,0 +1,56 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Original, authored vector emblems. The transparent64px bounds keep optical sizing consistent. -->
+  <SolidColorBrush x:Key="Class.Ink" Color="#CBB780" />
+  <SolidColorBrush x:Key="Class.Shade" Color="#27251D" />
+  <Pen x:Key="Class.Pen" Brush="{StaticResource Class.Ink}" Thickness="2.2" LineJoin="Round" StartLineCap="Round" EndLineCap="Round" />
+
+  <DrawingImage x:Key="Class.Amazon"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M17,53 L45,11 M34,13 L46,10 L46,23 M17,44 L23,48 L25,57 M10,48 L17,53 L21,61 M36,29 L29,30 L33,37 L25,39" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Sorceress"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M43,25 A11,11 0 1 1 21,25 A11,11 0 1 1 43,25" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M13,15 C7,27 11,40 23,45 M51,15 C57,27 53,40 41,45 M25,43 L32,54 L39,43 M32,5 L32,10 M8,30 L13,30 M51,30 L56,30" />
+    <GeometryDrawing Brush="{StaticResource Class.Ink}" Geometry="M32,18 L35,25 L32,32 L29,25 Z" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Necromancer"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M19,23 C19,7 45,7 45,23 C45,30 41,32 39,34 L39,40 H25 V34 C21,32 19,30 19,23 Z M32,40 V57 M23,45 L14,41 M23,50 L13,47 M41,45 L50,41 M41,50 L51,47" />
+    <GeometryDrawing Brush="{StaticResource Class.Ink}" Geometry="M25,24 L29,23 L28,28 L24,28 Z M35,23 L39,24 L40,28 L36,28 Z M32,29 L34,34 H30 Z" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Paladin"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M14,10 H50 V29 C50,42 42,50 32,56 C22,50 14,42 14,29 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M32,18 V23 M32,37 V43 M20,30 H25 M39,30 H44 M23,21 L27,25 M37,35 L41,39 M23,39 L27,35 M37,25 L41,21" />
+    <GeometryDrawing Brush="{StaticResource Class.Ink}" Geometry="M37,30 A5,5 0 1 1 27,30 A5,5 0 1 1 37,30" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Barbarian"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M15,54 L43,13 M49,54 L21,13" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M38,13 C42,17 47,20 54,19 C52,28 48,32 41,32 L35,24 Z M26,13 C22,17 17,20 10,19 C12,28 16,32 23,32 L29,24 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M11,51 L18,57 M46,57 L53,51" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Druid"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M32,57 V13 M32,36 L18,24 M32,43 L47,29 M32,23 L39,16 M26,57 L32,50 L38,57" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M18,26 C7,24 9,13 10,10 C18,11 23,17 18,26 Z M45,31 C43,20 49,15 56,14 C57,22 53,29 45,31 Z M32,17 C24,11 28,5 32,3 C37,6 40,12 32,17 Z" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Assassin"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Pen="{StaticResource Class.Pen}" Geometry="M11,47 C22,34 25,23 28,10 M23,53 C34,37 37,23 39,8 M35,56 C47,39 50,25 51,13 M10,18 C18,10 24,8 30,8 M12,56 C19,59 25,59 31,58" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+
+  <DrawingImage x:Key="Class.Warlock"><DrawingImage.Drawing><DrawingGroup>
+    <GeometryDrawing Brush="Transparent" Geometry="M0,0 H64 V64 H0 Z" />
+    <GeometryDrawing Brush="{StaticResource Class.Shade}" Pen="{StaticResource Class.Pen}" Geometry="M32,32 C23,27 16,27 9,29 V52 C18,49 25,50 32,55 C39,50 46,49 55,52 V29 C47,27 40,27 32,32 Z M32,33 V54 M15,36 L24,37 M15,42 L24,43 M40,37 L49,36 M40,43 L49,42" />
+    <GeometryDrawing Brush="{StaticResource Class.Ink}" Geometry="M32,5 C32,13 40,15 38,21 C37,29 25,29 25,21 C25,17 29,15 32,5 Z" />
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
+</ResourceDictionary>

@@ -20,8 +20,18 @@ public static class LocalGameArt
     public sealed record ImportResult(int ItemsLoaded, int SkillsLoaded, IReadOnlyList<string> Missing, string CacheDirectory);
     static readonly ConcurrentDictionary<string, ImageSource> Images = new(StringComparer.Ordinal);
     static readonly ConcurrentDictionary<string, ImageSource> Skills = new(StringComparer.OrdinalIgnoreCase);
+    static readonly ConcurrentDictionary<string, ImageSource> UiArt = new(StringComparer.Ordinal);
+    static readonly Dictionary<string, string> UiPaths = new(StringComparer.Ordinal)
+    {
+        ["DiabloDivider"] = "data/hd/global/ui/pausemenu/divider.sprite",
+        ["DiabloPortraitFrame"] = "data/hd/global/ui/panel/portraitframe.sprite"
+    };
     static readonly SemaphoreSlim Gate = new(1, 1);
     static string activeSource = "";
+    static FontFamily? displayFont;
+    const string DisplayFontPath = "data/hd/ui/fonts/exocetblizzardot-medium.otf";
+    public static FontFamily? TryGetDisplayFont() => displayFont;
+    public static ImageSource? TryGetUiArt(string key) => UiArt.GetValueOrDefault(key);
     static readonly Dictionary<string, string> ClassFiles = new(StringComparer.OrdinalIgnoreCase)
     { ["Amazon"]="amazon/amskillicon", ["Sorceress"]="sorceress/soskillicon", ["Necromancer"]="necromancer/neskillicon", ["Paladin"]="paladin/paskillicon", ["Barbarian"]="barbarian/baskillicon", ["Druid"]="druid/drskillicon", ["Assassin"]="assassin/asskillicon", ["Warlock"]="warlock/waskillicon" };
 
@@ -41,17 +51,19 @@ public static class LocalGameArt
     static ImportResult Import(string gameRoot, string excel, JsonObject[] items, string? dataRoot, CancellationToken ct)
     {
         var missing = new List<string>();
-        if (!Directory.Exists(gameRoot) || !Directory.Exists(excel)) return new(0, 0, ["No hay una instalación y perfil disponibles."], "");
+        if (!Directory.Exists(gameRoot) || !Directory.Exists(excel)) { displayFont = null; return new(0, 0, ["No hay una instalación y perfil disponibles."], ""); }
         string modData = Directory.GetParent(Directory.GetParent(Path.GetFullPath(excel))!.FullName)!.FullName;
         string[] dependencies = [Path.Combine(gameRoot, ".build.info"), Path.Combine(modData, "global/ui/layouts/globaldatahd.json"), ..new[]{"items","uniques","sets"}.Select(n=>Path.Combine(modData,"hd/items/"+n+".json")), ..new[]{"uniqueitems","setitems","magicprefix","magicsuffix","automagic","itemtypes"}.Select(n=>Path.Combine(excel,n+".txt"))];
         string stamp = RendererVersion + "|" + gameRoot + "|" + excel + "|" + string.Join("|", dependencies.Select(LastWrite));
         string source = Hash(Encoding.UTF8.GetBytes(stamp))[..24];
         string cache = Path.GetFullPath(Path.Combine(dataRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AKARA"), "game-art", source));
-        if (activeSource != cache) { Images.Clear(); Skills.Clear(); activeSource = cache; }
+        if (activeSource != cache) { Images.Clear(); Skills.Clear(); UiArt.Clear(); displayFont = null; activeSource = cache; }
         if (Inside(cache, gameRoot)) throw new IOException("La caché de imágenes debe estar fuera del juego.");
         Directory.CreateDirectory(cache);
-        if (Flatten(items).All(n => Images.ContainsKey(Key(n))) && Skills.Count > 0) return new(Images.Count, Skills.Count, missing, cache);
+        if (Flatten(items).All(n => Images.ContainsKey(Key(n))) && Skills.Count > 0 && displayFont is not null && UiArt.Count == UiPaths.Count) return new(Images.Count, Skills.Count, missing, cache);
         using var reader = new GameReader(gameRoot, modData);
+        ImportDisplayFont(reader, cache);
+        ImportUiArt(reader, cache);
         var bases = ReadMap(reader.TryRead("data/hd/items/items.json"), "asset");
         var uniques = ReadMap(reader.TryRead("data/hd/items/uniques.json"), "normal");
         var sets = ReadMap(reader.TryRead("data/hd/items/sets.json"), "normal");
@@ -135,6 +147,64 @@ public static class LocalGameArt
         manifest["missing"] = JsonSerializer.SerializeToNode(missing);
         WriteManifestAtomic(manifestPath, manifest.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         return new(Images.Count, Skills.Count, missing, cache);
+    }
+
+    static void ImportDisplayFont(GameReader reader, string cache)
+    {
+        if (displayFont is not null) return;
+        try
+        {
+            byte[]? bytes = reader.TryRead(DisplayFontPath);
+            if (bytes is null) return;
+            string hash = Hash(bytes), directory = Path.Combine(cache, "fonts", hash);
+            Directory.CreateDirectory(directory);
+            string path = Path.Combine(directory, "exocetblizzardot-medium.otf");
+            if (!File.Exists(path))
+            {
+                string temporary = path + "." + Environment.ProcessId + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    File.WriteAllBytes(temporary, bytes);
+                    try { File.Move(temporary, path, false); }
+                    catch (IOException) when (File.Exists(path)) { /* Another process published the same content-addressed font. */ }
+                }
+                finally { try { if (File.Exists(temporary)) File.Delete(temporary); } catch (IOException) { } }
+            }
+            if (!CryptographicOperations.FixedTimeEquals(SHA256.HashData(File.ReadAllBytes(path)), SHA256.HashData(bytes))) return;
+            // Use the preferred WPF family name from the installed font itself. No font is
+            // installed into Windows, embedded in the executable or copied into the repository.
+            var typeface = new GlyphTypeface(new Uri(path, UriKind.Absolute));
+            string family = typeface.FamilyNames.TryGetValue(System.Globalization.CultureInfo.GetCultureInfo("en-US"), out var english)
+                ? english : typeface.FamilyNames.Values.First();
+            displayFont = new FontFamily(new Uri(directory + Path.DirectorySeparatorChar, UriKind.Absolute), "./#" + family);
+            WriteManifestAtomic(Path.Combine(directory, "provenance.json"), new JsonObject
+            {
+                ["source"] = "local-game-install", ["path"] = DisplayFontPath,
+                ["sourceHash"] = hash, ["bytes"] = bytes.Length, ["family"] = family,
+                ["distribution"] = "local-cache-only"
+            }.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        { displayFont = null; /* Typography is optional; the native theme keeps its fallback. */ }
+    }
+
+    static void ImportUiArt(GameReader reader, string cache)
+    {
+        var provenance = new JsonArray();
+        foreach (var (key, path) in UiPaths)
+        {
+            try
+            {
+                byte[]? bytes = reader.TryRead(path); if (bytes is null) continue;
+                var frame = DecodeSprite(bytes, 0); var image = Bitmap(frame.Width, frame.Height, frame.Pixels);
+                Save(image, Path.Combine(cache, key + ".png")); UiArt[key] = image;
+                provenance.Add(new JsonObject { ["key"] = key, ["path"] = path, ["sourceHash"] = Hash(bytes), ["width"] = frame.Width, ["height"] = frame.Height });
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException or OverflowException)
+            { /* Optional decoration falls back to the native theme. */ }
+        }
+        try { WriteManifestAtomic(Path.Combine(cache, "ui-provenance.json"), new JsonObject { ["source"] = "local-game-install", ["images"] = provenance }.ToJsonString(new JsonSerializerOptions { WriteIndented = true })); }
+        catch (IOException) { /* A manifest must not prevent the original decoded image from being displayed. */ }
     }
 
     static IEnumerable<JsonObject> Flatten(IEnumerable<JsonObject> items)

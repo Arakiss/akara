@@ -32,15 +32,16 @@ public sealed class InventoryBoard : FrameworkElement
     protected override void OnRender(DrawingContext d)
     {
         base.OnRender(d);int columns=Math.Max(1,Columns),rows=Math.Max(1,Rows);double width=columns*CellSize,height=rows*CellSize;
-        d.DrawRectangle(new SolidColorBrush(Color.FromRgb(20,24,27)),null,new Rect(0,0,width,height));
-        var gridPen=new Pen(new SolidColorBrush(Color.FromRgb(60,70,77)),.7);
+        d.DrawRectangle(new LinearGradientBrush(Color.FromRgb(18,17,16),Color.FromRgb(8,9,11),90),null,new Rect(0,0,width,height));
+        d.DrawRectangle(MaterialBrushes.Grain,null,new Rect(0,0,width,height));
+        var gridPen=new Pen(new SolidColorBrush(Color.FromRgb(53,46,36)),.65);
         for(int x=0;x<=columns;x++)d.DrawLine(gridPen,new(x*CellSize,0),new(x*CellSize,height));
         for(int y=0;y<=rows;y++)d.DrawLine(gridPen,new(0,y*CellSize),new(width,y*CellSize));
         foreach(var item in ItemsSource??[])
         {
             var rect=Bounds(item);bool selected=SelectedItem?.Id==item.Id;
             var tone=(Color)ColorConverter.ConvertFromString(item.Accent);
-            d.DrawRectangle(new SolidColorBrush(Color.FromArgb(selected?(byte)30:(byte)9,tone.R,tone.G,tone.B)),new Pen(new SolidColorBrush(selected?Color.FromRgb(195,166,109):Color.FromArgb(90,tone.R,tone.G,tone.B)),selected?1.4:.7),rect);
+            d.DrawRectangle(new SolidColorBrush(Color.FromArgb(selected?(byte)30:(byte)7,tone.R,tone.G,tone.B)),new Pen(new SolidColorBrush(selected?tone:Color.FromArgb(68,tone.R,tone.G,tone.B)),selected?1.5:.65),rect);
             var image=ItemArt.Get(item);double ratio=image.Width/image.Height;double drawWidth=rect.Width-7,drawHeight=rect.Height-7;if(drawWidth/drawHeight>ratio)drawWidth=drawHeight*ratio;else drawHeight=drawWidth/ratio;
             d.DrawImage(image,new Rect(rect.X+(rect.Width-drawWidth)/2,rect.Y+(rect.Height-drawHeight)/2,drawWidth,drawHeight));
         }

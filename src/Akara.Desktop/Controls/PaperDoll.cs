@@ -28,25 +28,32 @@ public sealed class PaperDoll : FrameworkElement
     {
         base.OnRender(d);double scale=Math.Min(ActualWidth/440,ActualHeight/500);if(scale<=0)return;
         d.PushTransform(new TranslateTransform((ActualWidth-440*scale)/2,0));d.PushTransform(new ScaleTransform(scale,scale));
-        d.DrawRectangle(new SolidColorBrush(Color.FromRgb(25,29,32)),null,new Rect(0,0,440,500));
-        var charcoal=new SolidColorBrush(Color.FromRgb(20,24,27));
+        var ambient=new RadialGradientBrush(Color.FromRgb(35,29,22),Color.FromRgb(11,12,14)){Center=new Point(.5,.22),GradientOrigin=new Point(.5,.22),RadiusX=.75,RadiusY=.85};
+        d.DrawRectangle(ambient,null,new Rect(0,0,440,500));
+        d.DrawRectangle(MaterialBrushes.Grain,null,new Rect(0,0,440,500));
+        var charcoal=new LinearGradientBrush(Color.FromRgb(23,22,20),Color.FromRgb(9,10,12),90);
+        var corner=new Pen(new SolidColorBrush(Color.FromRgb(90,71,48)),.9);
+        foreach(var origin in new[]{new Point(6,6),new Point(434,6),new Point(6,494),new Point(434,494)})
+        {double sx=origin.X<220?1:-1,sy=origin.Y<250?1:-1;d.DrawLine(corner,origin,new Point(origin.X+18*sx,origin.Y));d.DrawLine(corner,origin,new Point(origin.X,origin.Y+18*sy));}
 
         foreach(var pair in Layout)
         {
             var slot=ItemsSource?.FirstOrDefault(s=>s.Slot==pair.Key);var item=slot?.Item;var r=pair.Value;bool selected=item is not null&&SelectedItem?.Id==item.Id;
 
-            var stroke=new Pen(new SolidColorBrush(selected?Color.FromRgb(195,166,109):Color.FromRgb(68,78,85)),selected?1.7:.8);
-            d.DrawRectangle(charcoal,stroke,r);
+            var tone=item is null?Color.FromRgb(91,76,55):(Color)ColorConverter.ConvertFromString(item.Accent);
+            var stroke=new Pen(new SolidColorBrush(selected?tone:Color.FromRgb(70,59,45)),selected?1.7:.8);
+            d.DrawRoundedRectangle(charcoal,stroke,r,2,2);
+            d.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(45,182,151,108)),.65),new Point(r.X+3,r.Y+2),new Point(r.Right-3,r.Y+2));
 
             if(item is not null)
             {
-                if(selected)d.DrawRectangle(new SolidColorBrush(Color.FromArgb(26,195,166,109)),null,new Rect(r.X+1,r.Y+1,r.Width-2,r.Height-2));
-                var image=ItemArt.Get(item);var area=new Rect(r.X+7,r.Y+5,r.Width-14,r.Height-24/scale);DrawContained(d,image,area);
+                if(selected)d.DrawRectangle(new SolidColorBrush(Color.FromArgb(24,tone.R,tone.G,tone.B)),null,new Rect(r.X+1,r.Y+1,r.Width-2,r.Height-2));
+                var image=ItemArt.GetPresentation(item);var area=new Rect(r.X+8,r.Y+7,r.Width-16,r.Height-14);DrawContained(d,image,area);
             }
             else
             {
-                string glyph=pair.Key switch{"weapon"=>"╱","shield"=>"◇","armor"=>"♧","helm"=>"⌒","ring1" or "ring2"=>"○",_=>"·"};
-                var ghost=new FormattedText(glyph,CultureInfo.InvariantCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),22,new SolidColorBrush(Color.FromRgb(75,85,92)),1);
+                string glyph=pair.Key switch{"weapon"=>"╱","shield"=>"◇","helm"=>"⌒","ring1" or "ring2"=>"○",_=>"·"};
+                var ghost=new FormattedText(glyph,CultureInfo.InvariantCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),22,new SolidColorBrush(Color.FromRgb(68,61,51)),1);
                 d.DrawText(ghost,new(r.X+(r.Width-ghost.Width)/2,r.Y+(r.Height-ghost.Height)/2));
             }
             string labelText=pair.Key switch{"ring1" or "ring2"=>"Anillo","shield"=>"Secundaria",_=>slot?.Label??Names.Slot(pair.Key)};
@@ -56,7 +63,7 @@ public sealed class PaperDoll : FrameworkElement
         var twoHand=ItemsSource?.FirstOrDefault(s=>s.Slot=="weapon")?.Item;
         if(twoHand?.TwoHanded==true&&ItemsSource?.FirstOrDefault(s=>s.Slot=="shield")?.Item is null)
         {
-            var r=Layout["shield"];d.PushOpacity(.2);DrawContained(d,ItemArt.Get(twoHand),new Rect(r.X+11,r.Y+8,r.Width-22,r.Height-23));d.Pop();
+            var r=Layout["shield"];d.PushOpacity(.2);DrawContained(d,ItemArt.GetPresentation(twoHand),new Rect(r.X+11,r.Y+8,r.Width-22,r.Height-23));d.Pop();
         }
         d.Pop();d.Pop();
     }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -10,7 +11,29 @@ namespace Akara.Desktop.Controls;
 public static class ItemArt
 {
     static readonly ImageSource Neutral = CreateNeutral();
+    static readonly ConditionalWeakTable<BitmapSource, ImageSource> Presentation = new();
     public static ImageSource Get(ItemViewModel item) => Akara.Desktop.Services.LocalGameArt.TryGetItem(item) ?? Neutral;
+    // The paper doll and inspector fit the original opaque silhouette, while the
+    // inventory retains the native frame. No pixel, tint or item data is changed.
+    public static ImageSource GetPresentation(ItemViewModel item)
+    {
+        var original = Get(item);
+        if (original is not BitmapSource bitmap || bitmap.Format.BitsPerPixel != 32) return original;
+        if (Presentation.TryGetValue(bitmap, out var cached)) return cached;
+        int stride = checked(bitmap.PixelWidth * 4);
+        var pixels = new byte[checked(stride * bitmap.PixelHeight)];
+        bitmap.CopyPixels(pixels, stride, 0);
+        int left = bitmap.PixelWidth, top = bitmap.PixelHeight, right = -1, bottom = -1;
+        for (int y = 0; y < bitmap.PixelHeight; y++)
+            for (int x = 0; x < bitmap.PixelWidth; x++)
+                if (pixels[y * stride + x * 4 + 3] > 0)
+                { left = Math.Min(left, x); top = Math.Min(top, y); right = Math.Max(right, x); bottom = Math.Max(bottom, y); }
+        if (right < left || bottom < top) return original;
+        left = Math.Max(0, left - 1); top = Math.Max(0, top - 1);
+        right = Math.Min(bitmap.PixelWidth - 1, right + 1); bottom = Math.Min(bitmap.PixelHeight - 1, bottom + 1);
+        var crop = new CroppedBitmap(bitmap, new Int32Rect(left, top, right - left + 1, bottom - top + 1));
+        crop.Freeze(); Presentation.Add(bitmap, crop); return crop;
+    }
     public static ImageSource Get(string key) => Neutral;
     static ImageSource CreateNeutral()
     {

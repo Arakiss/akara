@@ -14,6 +14,9 @@ public partial class WorkbenchView : UserControl
     MainViewModel? attached;
     bool objectContext,catalogExpanded=true,skillsQueued,catalogInitialized,catalogQueued;
     double catalogWidth=235,inspectorWidth=300;
+    double presentationScale=1;
+    double? requestedScale;
+    public double AppearanceScale=>presentationScale;
     public WorkbenchView()=>InitializeComponent();
     void OnDataContextChanged(object sender,DependencyPropertyChangedEventArgs e)
     {
@@ -91,18 +94,21 @@ public partial class WorkbenchView : UserControl
     void UpdateCanvasScale()
     {
         if(EquipmentDoll is null||InventoryCells is null)return;
-        double center=MainPane.ActualWidth>0?MainPane.ActualWidth:Math.Max(520,ActualWidth-(objectContext?(catalogExpanded?catalogWidth+5:0)+inspectorWidth+5:0));
+        double logicalHeight=ActualHeight/presentationScale;
+        double center=MainPane.ActualWidth>0?MainPane.ActualWidth:Math.Max(520,ActualWidth/presentationScale-(objectContext?(catalogExpanded?catalogWidth+5:0)+inspectorWidth+5:0));
         bool wide=center>=950,compact=center<700;
-        EquipmentDoll.Width=compact?240:wide?330:280;EquipmentDoll.Height=compact?290:wide?390:330;
-        InventoryCells.CellSize=compact?28:center>=1350?40:wide?36:32;
+        EquipmentDoll.Width=compact?240:wide?330:280;
+        EquipmentDoll.Height=Math.Min(compact?290:wide?420:330,Math.Max(240,logicalHeight-580));
+        double targetCell=center>=1350?48:wide?44:compact?28:32;
+        InventoryCells.CellSize=Math.Min(targetCell,Math.Max(28,Math.Floor((logicalHeight-520)/Math.Max(1,attached?.GridRows??8))));
         ContainerViewport.MaxWidth=Math.Max(280,center-EquipmentDoll.Width-48);
-        ContainerViewport.MaxHeight=Math.Max(280,Math.Min(410,ActualHeight-390));
+        ContainerViewport.MaxHeight=Math.Max(220,Math.Min(410,logicalHeight-520));
         bool showStash=center>=1450&&attached?.SelectedView=="equipment"&&attached.SelectedStorage!="stash";
         ExtraStashPane.Visibility=showStash?Visibility.Visible:Visibility.Collapsed;
         StashCanvasColumn.Width=showStash?new GridLength(1,GridUnitType.Star):new GridLength(0);
         var inventoryColumn=EquipmentCanvas.ColumnDefinitions[1];
-        inventoryColumn.Width=showStash?new GridLength(420):new GridLength(1,GridUnitType.Star);
-        ExtraStashScroll.MaxHeight=Math.Max(280,Math.Min(650,ActualHeight-430));
+        inventoryColumn.Width=showStash?new GridLength(Math.Max(360,(attached?.GridColumns??10)*InventoryCells.CellSize+12)):new GridLength(1,GridUnitType.Star);
+        ExtraStashScroll.MaxHeight=Math.Max(220,Math.Min(650,logicalHeight-520));
     }
     void OnToggleCatalog(object sender,RoutedEventArgs e)
     {
@@ -122,6 +128,38 @@ public partial class WorkbenchView : UserControl
     void OnMinimize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is { } window)SystemCommands.MinimizeWindow(window);}
     void OnMaximize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is not { } window)return;if(window.WindowState==WindowState.Maximized)SystemCommands.RestoreWindow(window);else SystemCommands.MaximizeWindow(window);}
     void OnClose(object sender,RoutedEventArgs e){Window.GetWindow(this)?.Close();}
-    void OnSizeChanged(object sender,SizeChangedEventArgs e)=>UpdateCanvasScale();
+    void ApplyAppearanceScale()
+    {
+        if(DesignSurface is null||AppearanceScaleTransform is null)return;
+        if(Window.GetWindow(this) is { } window)
+        {
+            var area=SystemParameters.WorkArea;
+            foreach(var choice in AppearanceScalePicker.Items.OfType<ComboBoxItem>())
+                if(double.TryParse(choice.Tag?.ToString(),System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double scale))
+                    choice.IsEnabled=1160*scale<=area.Width&&800*scale<=area.Height;
+            if(requestedScale is { } requested&&(1160*requested>area.Width||800*requested>area.Height))
+            { requestedScale=null;AppearanceScalePicker.SelectedIndex=0; }
+            double minimumScale=requestedScale??1;
+            window.MinWidth=1160*minimumScale;window.MinHeight=800*minimumScale;
+            if(requestedScale.HasValue&&window.WindowState==WindowState.Normal)
+            {
+                window.Width=Math.Min(area.Width,Math.Max(window.ActualWidth,window.MinWidth));
+                window.Height=Math.Min(area.Height,Math.Max(window.ActualHeight,window.MinHeight));
+                if(!double.IsNaN(window.Left))window.Left=Math.Clamp(window.Left,area.Left,area.Right-window.Width);
+                if(!double.IsNaN(window.Top))window.Top=Math.Clamp(window.Top,area.Top,area.Bottom-window.Height);
+            }
+        }
+        double next=requestedScale??(ActualWidth>=2600&&ActualHeight>=1200?1.5:ActualWidth>=2200&&ActualHeight>=1000?1.25:1);
+        if(Math.Abs(next-presentationScale)<.001)return;
+        presentationScale=next;AppearanceScaleTransform.ScaleX=AppearanceScaleTransform.ScaleY=next;
+        UpdateContext();
+    }
+    void OnAppearanceScaleChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if(sender is not ComboBox{SelectedItem:ComboBoxItem item})return;
+        requestedScale=double.TryParse(item.Tag?.ToString(),System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double value)?value:null;
+        ApplyAppearanceScale();
+    }
+    void OnSizeChanged(object sender,SizeChangedEventArgs e){ApplyAppearanceScale();UpdateCanvasScale();}
     void OnWorkspaceSizeChanged(object sender,SizeChangedEventArgs e)=>UpdateCanvasScale();
 }

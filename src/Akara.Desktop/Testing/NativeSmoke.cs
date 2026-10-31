@@ -37,6 +37,7 @@ public static class NativeSmoke
             }
             Check(resourceNames.All(n => !n.Contains("class-portraits", StringComparison.OrdinalIgnoreCase)), "rejected-portrait-candidate-not-embedded");
             Check(resourceNames.All(n => !n.Contains("items-atlas", StringComparison.OrdinalIgnoreCase)), "generated-item-atlas-not-embedded");
+            Check(resourceNames.All(n => !n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase) && !n.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) && !n.EndsWith(".sprite", StringComparison.OrdinalIgnoreCase)), "local-game-fonts-and-sprites-not-embedded");
             Check(RejectsTruncatedSprite(), "local-sprite-decoder-rejects-truncated-header-and-payload");
             Check(!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name is { } name && (name.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) || name.Contains("WebView2", StringComparison.Ordinal))), "no-web-host-or-webview-assembly");
             var demo = new MainViewModel(dataRoot: Path.Combine(root, "demo"), fileDialogs: new NoDialogs());

@@ -10,6 +10,13 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Closing+=OnClosing;
+        StateChanged+=OnWindowStateChanged;
+    }
+    void OnWindowStateChanged(object? sender,EventArgs e)
+    {
+        bool maximized=WindowState==WindowState.Maximized;
+        MaxHeight=maximized?SystemParameters.WorkArea.Height:double.PositiveInfinity;
+        MaxWidth=maximized?SystemParameters.WorkArea.Width:double.PositiveInfinity;
     }
     void OnClosing(object? sender,CancelEventArgs e)
     {

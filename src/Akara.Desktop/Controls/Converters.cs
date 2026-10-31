@@ -18,7 +18,7 @@ public sealed class InverseVisibilityConverter : IValueConverter
 }
 public sealed class ItemImageConverter : IValueConverter
 {
-    public object? Convert(object value,Type targetType,object parameter,CultureInfo culture)=>value is ItemViewModel item?ItemArt.Get(item):null;
+    public object? Convert(object value,Type targetType,object parameter,CultureInfo culture)=>value is ItemViewModel item?ItemArt.GetPresentation(item):null;
     public object ConvertBack(object value,Type targetType,object parameter,CultureInfo culture)=>Binding.DoNothing;
 }
 public sealed class BrushConverter : IValueConverter

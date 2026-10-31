@@ -34,6 +34,10 @@ public partial class App : Application
             if (Option("open") is { } path) await vm.OpenPathAsync(path);
             else if (Option("scenario") == "demo") await vm.CreateDemoAsync();
             if (Option("section") is { } section) vm.SelectedView = section;
+            if (Option("storage") is { } storage && vm.StorageOptions.Contains(storage)) vm.SelectedStorage = storage;
+            if (Option("select-item") is { } itemQuery)
+                vm.SelectedItem = vm.Items.Concat(vm.MercenaryItems).FirstOrDefault(item => item.Name.Contains(itemQuery, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new ArgumentException("No se encontró un objeto que coincida con «" + itemQuery + "».", "select-item");
             if (Option("capture") is { } capture)
             {
                 if (vm.HasCharacter && !vm.IsSyntheticDemo && vm.SelectedView is "equipment" or "mercenary" or "workshop")
@@ -82,6 +86,9 @@ public partial class App : Application
             width, height,
             actualWidth = root.ActualWidth,
             actualHeight = root.ActualHeight,
+            appearanceScale = root.AppearanceScale,
+            selectedItemName = vm.SelectedItem?.Name,
+            selectedStorage = vm.SelectedStorage,
             section = vm.SelectedView,
             artworkStatus = vm.ArtworkStatus,
             originalItemImages = vm.Items.Concat(vm.MercenaryItems).Count(item => item.HasGameArt),

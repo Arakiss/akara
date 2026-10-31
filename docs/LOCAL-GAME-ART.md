@@ -6,6 +6,17 @@ Documentation screenshots show the app with a fictional demonstration character;
 they are not an asset library. Game artwork remains the property of its owners.
 Only the decoder and the MIT-licensed CASC reader are distributed.
 
+The display font is read from `data/hd/ui/fonts/exocetblizzardot-medium.otf`.
+Its WPF family is `Exocet Blizzard Mixed Caps`; its local cache is addressed by
+SHA-256 and records provenance. No font is installed into Windows or bundled.
+A system serif is used when it is unavailable. The divider and optional frame
+are also read from the installed game and remain in the private cache. Text,
+statistics, layout and controls are native WPF; none is baked into artwork.
+
+The paper doll and item inspector may fit a transparent-margin crop of the
+original bitmap in memory. The inventory keeps its native frame. This changes
+presentation bounds only; the original pixels, colors and item footprint are retained.
+
 `LocalGameArt.WarmupAsync` runs outside the WPF dispatcher. It reads the selected
 mod's loose files first, then the local game's CASC archives. It writes derived
 PNG images and their provenance manifest to the selected AKARA data directory's

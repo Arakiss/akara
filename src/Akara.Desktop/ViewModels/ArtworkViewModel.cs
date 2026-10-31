@@ -1,6 +1,8 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Windows;
+using System.Windows.Media;
 using Akara.Desktop.Services;
 
 namespace Akara.Desktop.ViewModels;
@@ -28,6 +30,18 @@ public sealed partial class MainViewModel
         try
         {
             var result = await LocalGameArt.WarmupAsync(gameRoot, profile.ExcelPath, items, artworkDataRoot);
+            if (Application.Current is { } application)
+            {
+                void UpdateResources()
+                {
+                    application.Resources["DisplayFont"] = LocalGameArt.TryGetDisplayFont() ?? new FontFamily("Palatino Linotype");
+                    foreach (string key in new[] { "DiabloDivider", "DiabloPortraitFrame" })
+                        if (LocalGameArt.TryGetUiArt(key) is { } image) application.Resources[key] = image;
+                        else application.Resources.Remove(key);
+                }
+                if (application.Dispatcher.CheckAccess()) UpdateResources();
+                else await application.Dispatcher.InvokeAsync(UpdateResources);
+            }
             ArtworkStatus = result.Missing.Count == 0
                 ? "Gráficos originales de tu instalación · " + result.ItemsLoaded + " objetos"
                 : "Gráficos originales · " + result.ItemsLoaded + " objetos · " + result.Missing.Count + " imágenes no disponibles";

@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Windows build
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/ForjaHoradrica.Web/package-lock.json
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install frontend dependencies
+        working-directory: src/ForjaHoradrica.Web
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend
+        working-directory: src/ForjaHoradrica.Web
+        run: npm run build
+
+      - name: Stage embedded interface
+        shell: pwsh
+        run: |
+          $destination = Join-Path $PWD 'src/ForjaHoradrica.Server/wwwroot'
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          Copy-Item -Path 'src/ForjaHoradrica.Web/dist/*' -Destination $destination -Recurse
+
+      - name: Restore server
+        run: dotnet restore src/ForjaHoradrica.Server/ForjaHoradrica.Server.csproj
+
+      - name: Restore test runner
+        run: dotnet restore tests/ForjaHoradrica.Tests.csproj
+
+      - name: Restore CLI
+        run: dotnet restore src/Akara.Cli/Akara.Cli.csproj
+
+      - name: Build server
+        run: dotnet build src/ForjaHoradrica.Server/ForjaHoradrica.Server.csproj --configuration Release --no-restore
+
+      - name: Compile integration test runner
+        run: dotnet build tests/ForjaHoradrica.Tests.csproj --configuration Release --no-restore
+
+      - name: Build CLI
+        run: dotnet build src/Akara.Cli/Akara.Cli.csproj --configuration Release --no-restore
+
+      - name: Verify standalone CLI contracts
+        shell: pwsh
+        run: |
+          dotnet src/Akara.Cli/bin/Release/net10.0/akara-cli.dll version
+          if ($LASTEXITCODE -ne 0) { throw 'CLI version failed' }
+          dotnet src/Akara.Cli/bin/Release/net10.0/akara-cli.dll schema preview
+          if ($LASTEXITCODE -ne 0) { throw 'CLI schema failed' }
+
+      - name: Verify embedded interface and local API boundaries
+        shell: pwsh
+        run: ./scripts/Test-Portable.ps1 -Executable ./src/ForjaHoradrica.Server/bin/Release/net10.0/Akara.exe
+
+      - name: Check browser test syntax
+        run: node --check tests/browser/smoke.mjs
+
+      # Running the integration runner requires private local game tables and
+      # character copies. Neither is bundled or uploaded by this workflow.

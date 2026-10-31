@@ -1,0 +1,110 @@
+AKARA 0.2.0
+Editor local de personajes de Diablo II: Resurrected para Windows
+
+Abre Akara.exe. La aplicación se mostrará en tu navegador.
+El paquete portátil no necesita Node.js, PowerShell ni .NET instalados.
+
+PARA EMPEZAR
+
+1. Elige una partida o pulsa Abrir otra partida e indica su archivo .d2s.
+   Selecciona el perfil de datos que corresponde al personaje.
+2. Puedes crear un Nuevo personaje de cualquiera de las ocho clases o
+   Clonar personaje con otro nombre. Se prepara un borrador; aún no se
+   crea ningún archivo.
+3. Ajusta Personaje y Habilidades. En Equipo puedes organizar el
+   inventario, el baúl personal, el cubo, el cinturón y los conjuntos I y II.
+   Mercenario muestra sus piezas según el perfil. Reimagined admite
+   nueve piezas equipadas: un arma a dos manos también reserva la otra
+   mano y no necesita una segunda arma.
+4. Mundo permite ajustar misiones, recompensas, transportadores y
+   progreso por dificultad. Taller permite diseñar o editar objetos.
+5. Pulsa Revisar cambios. Lee las diferencias y corrige los errores.
+   Deshacer y Rehacer modifican el borrador, no la partida guardada.
+6. Cierra Diablo II y pulsa Guardar con copia. Para un personaje nuevo,
+   elige un archivo cuyo nombre coincida con el del personaje.
+   La creación nunca sobrescribe un personaje existente.
+7. Al terminar, pulsa Salir de AKARA y cierra la pestaña. Cerrar sólo
+   la pestaña no detiene la aplicación local.
+
+PLANTILLAS Y BIBLIOTECA
+
+Hay nueve plantillas para Reimagined 3.1: una por clase, incluida la
+Hechicera híbrida de Orbe y rayos, y la plantilla original de Orbe con
+Tal Rasha y Oculus. Consulta su guía antes de entrar en la partida:
+explica ataques, buffs, cambio de armas y cómo afrontar inmunidades.
+
+La biblioteca guarda configuraciones propias en este equipo. Puedes
+exportarlas o importarlas como JSON e incluir sólo equipo o también
+personaje y progreso. Al prepararlas, el equipo anterior pasa al baúl
+por defecto. Comprueba las diferencias antes de guardar la partida.
+Si el nivel no cambia, se conserva la experiencia del personaje de
+destino. Si cambia, se usa la experiencia inicial de ese nivel. Para
+copiar también la experiencia exacta del original, usa Clonar personaje.
+
+TALLER Y PLANOS DE OBJETOS
+
+El Taller usa bases y propiedades existentes en las tablas del perfil.
+Permite elegir calidad, afijos, propiedades y parámetros, engarces,
+estado etéreo y firma del artesano. Los planos JSON permiten guardar
+e importar un objeto con su codificación nativa. Se comprueban el
+formato de partida y el perfil al importarlos.
+
+Crear un objeto personalizado aquí no añade nuevas bases, gráficos
+ni definiciones al mod. Las propiedades que no se pueden interpretar
+se rechazan; no se omiten para fabricar una pieza incompleta.
+
+GUARDADO Y RECUPERACIÓN
+
+Guardar con copia comprueba que el juego esté cerrado y que el archivo
+no haya cambiado desde su apertura. Después verifica un respaldo y
+reemplaza la partida de forma atómica. Puedes consultar y restaurar
+versiones anteriores en Copias de seguridad. Restaurar también exige
+cerrar Diablo II y conserva la versión desplazada en otro respaldo.
+
+Exportar copia crea otro archivo sin sobrescribir el destino. Puedes
+exportar fuera de Saved Games con el juego abierto. Crear o exportar
+dentro de Saved Games exige cerrar Diablo II. Si cambias el nombre,
+exporta la copia con ese nombre; el guardado directo conserva el
+nombre del archivo original.
+
+Si la partida cambia mientras editas, vuelve a abrirla y prepara de
+nuevo los cambios. La interfaz muestra atributos y recursos base;
+el juego añade las bonificaciones del equipo al cargar el personaje.
+
+DATOS Y COMPATIBILIDAD
+
+AKARA detecta una instalación habitual de Reimagined. Si no encuentra
+el mod, indica su carpeta de tablas al abrir el personaje. Las tablas
+del juego y del mod deben estar en tu instalación; no se incluyen.
+Usa siempre el perfil que corresponde a esa partida.
+
+Se aceptan partidas de formato 97 a 105 sólo si superan las comprobaciones
+binarias de lectura y escritura idénticas. No se convierten formatos.
+La creación utiliza el formato 105 y las ocho clases. Las pruebas de
+Core, CLI y codificación no equivalen a una prueba de las ocho clases
+dentro del juego. La prueba de navegador recorre creación, inventario,
+mercenario, mundo, taller, planos, biblioteca y guardado/restauración
+usando archivos desechables y datos locales aislados.
+
+No modifica personajes online ni el baúl compartido. AKARA funciona
+en tu propio PC, sin cuenta ni envío de partidas a un servicio externo.
+Los datos locales se guardan normalmente en %LOCALAPPDATA%\AKARA.
+La opción --data-dir permite usar otra carpeta para pruebas aisladas.
+No publiques partidas, planos, configuraciones, tokens, rutas personales
+ni capturas de sesiones privadas.
+
+CLI
+
+El paquete incluye akara-cli para automatizar las mismas operaciones
+del núcleo. Empieza por akara-cli help, doctor y schema commands.
+Los comandos devuelven JSON y no piden confirmaciones interactivas.
+Usa plan, revisa las diferencias, valida y aplica. Consulta docs/cli.md
+para los comandos de creación, lotes, taller, biblioteca y recuperación.
+
+LICENCIA
+
+AKARA: licencia MIT, copyright 2026 Arakiss. Consulta LICENSE.
+Incluye D2SSharp de ResurrectedTrader y otros componentes bajo sus
+respectivas licencias. Consulta la carpeta licenses para los avisos.
+Diablo II y sus recursos pertenecen a sus respectivos titulares.
+AKARA es una herramienta independiente de la comunidad.

@@ -1,0 +1,15 @@
+{
+  "baseCode": "amu",
+  "quality": "crafted",
+  "level": 85,
+  "rarePrefixId": 1,
+  "rareSuffixId": 1,
+  "stats": [
+    { "id": 127, "value": 2 },
+    { "id": 105, "value": 20 },
+    { "id": 39, "value": 30 },
+    { "id": 41, "value": 30 },
+    { "id": 43, "value": 30 },
+    { "id": 45, "value": 30 }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "level": 85,
+  "stats": {
+    "strength": 124,
+    "dexterity": 25,
+    "vitality": 331,
+    "energy": 35
+  },
+  "skills": {
+    "Frozen Orb": 25,
+    "Cold Mastery": 25,
+    "Ice Bolt": 25,
+    "Frost Nova": 16,
+    "Warmth": 1,
+    "Frozen Armor": 1,
+    "Static Field": 1,
+    "Telekinesis": 1,
+    "Teleport": 1
+  },
+  "gear": [
+    {
+      "kind": "unique",
+      "name": "The Oculus",
+      "slot": "weapon"
+    },
+    {
+      "kind": "unique",
+      "name": "Harlequin Crest",
+      "slot": "helm",
+      "sockets": [
+        "r22"
+      ]
+    },
+    {
+      "kind": "set",
+      "name": "Tal Rasha's Guardianship",
+      "slot": "armor",
+      "sockets": [
+        "r22"
+      ]
+    },
+    {
+      "kind": "set",
+      "name": "Tal Rasha's Adjudication",
+      "slot": "amulet"
+    },
+    {
+      "kind": "set",
+      "name": "Tal Rasha's Fine-Spun Cloth",
+      "slot": "belt"
+    },
+    {
+      "kind": "unique",
+      "name": "Magefist",
+      "slot": "gloves"
+    },
+    {
+      "kind": "unique",
+      "name": "War Traveler",
+      "slot": "boots"
+    },
+    {
+      "kind": "unique",
+      "name": "The Stone of Jordan",
+      "slot": "ring1"
+    },
+    {
+      "kind": "unique",
+      "name": "The Stone of Jordan",
+      "slot": "ring2"
+    },
+    {
+      "kind": "runeword",
+      "name": "Spirit",
+      "baseCode": "uit",
+      "slot": "shield",
+      "page": "inventory"
+    },
+    {
+      "kind": "unique",
+      "name": "Annihilus",
+      "page": "inventory"
+    },
+    {
+      "kind": "unique",
+      "name": "Hellfire Torch",
+      "page": "inventory"
+    },
+    {
+      "kind": "unique",
+      "name": "Gheed's Fortune",
+      "page": "inventory"
+    },
+    {
+      "kind": "magic",
+      "name": "Chilling Grand Charm of Substinence",
+      "baseCode": "cm3",
+      "page": "inventory",
+      "prefix": "Chilling",
+      "suffix": "of Substinence"
+    },
+    {
+      "kind": "magic",
+      "name": "Chilling Grand Charm of Substinence",
+      "baseCode": "cm3",
+      "page": "inventory",
+      "prefix": "Chilling",
+      "suffix": "of Substinence"
+    },
+    {
+      "kind": "magic",
+      "name": "Chilling Grand Charm of Substinence",
+      "baseCode": "cm3",
+      "page": "inventory",
+      "prefix": "Chilling",
+      "suffix": "of Substinence"
+    },
+    {
+      "kind": "magic",
+      "name": "Chilling Grand Charm of Substinence",
+      "baseCode": "cm3",
+      "page": "inventory",
+      "prefix": "Chilling",
+      "suffix": "of Substinence"
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    },
+    {
+      "kind": "magic",
+      "name": "Ancient Small Charm",
+      "baseCode": "cm1",
+      "page": "inventory",
+      "prefix": "Ancient",
+      "suffix": null
+    }
+  ],
+  "hotkeys": {
+    "0": 64,
+    "1": 54,
+    "2": 42,
+    "3": 40,
+    "4": 220
+  },
+  "leftSkill": 0,
+  "rightSkill": 64
+}

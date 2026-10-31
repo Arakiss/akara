@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Akara</AssemblyName>
+    <Product>AKARA</Product>
+    <Title>AKARA</Title>
+    <ApplicationIcon>../../assets/akara.ico</ApplicationIcon>
+    <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
+    <Version>0.2.0</Version>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Akara.Core/Akara.Core.csproj" />
+    <EmbeddedResource Include="wwwroot/**/*" />
+    <Content Update="wwwroot/**/*" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+</Project>

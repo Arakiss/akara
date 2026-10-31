@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "characters": [
+    { "name": "Akara-Amazona", "classId": 0, "preset": "squad-amazon" },
+    { "name": "Akara-Hechicera", "classId": 1, "preset": "squad-sorceress" },
+    { "name": "Akara-Paladin", "classId": 3, "preset": "squad-paladin" },
+    { "name": "Akara-Barbaro", "classId": 4, "preset": "squad-barbarian" },
+    { "name": "Akara-Necro", "classId": 2, "preset": "squad-necromancer" },
+    { "name": "Akara-Druida", "classId": 5, "preset": "squad-druid" },
+    { "name": "Akara-Asesina", "classId": 6, "preset": "squad-assassin" },
+    { "name": "Akara-Brujo", "classId": 7, "preset": "squad-warlock" }
+  ]
+}

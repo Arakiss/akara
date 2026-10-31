@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>akara-cli</AssemblyName>
     <Product>AKARA CLI</Product>
-    <Version>0.3.1</Version>
+    <Version>0.4.0</Version>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>

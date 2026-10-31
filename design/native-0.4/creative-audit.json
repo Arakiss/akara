@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "name": "AKARA Jamella layout study - not a runtime asset",
+  "root": "../..",
+  "output": "audit",
+  "minimumStatus": "reviewed",
+  "assets": [
+    {
+      "id": "jamella-modern-layout-study",
+      "path": "design/native-0.4/concept-candidate.png",
+      "role": "ui-concept",
+      "source": "imagegen",
+      "status": "reviewed",
+      "prompt": "design/native-0.4/prompt-concept.txt",
+      "review": "design/native-0.4/concept-review.md",
+      "requiredChecks": [
+        "read",
+        "semantics",
+        "craft",
+        "identity",
+        "runtime"
+      ],
+      "openFindings": [
+        "Illustrative generated items and incorrect data are forbidden in the app; the concept is layout reference only."
+      ],
+      "inspectionRegions": [
+        {
+          "name": "commands-and-tabs",
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 0.15
+        },
+        {
+          "name": "paperdoll-and-inventory",
+          "x": 0.28,
+          "y": 0.15,
+          "width": 0.47,
+          "height": 0.58
+        },
+        {
+          "name": "properties",
+          "x": 0.75,
+          "y": 0.15,
+          "width": 0.25,
+          "height": 0.81
+        }
+      ],
+      "expected": {}
+    }
+  ],
+  "languageSurfaces": []
+}

@@ -1,27 +1,32 @@
-AKARA 0.3.1
+AKARA 0.4.0
 Editor nativo de personajes de Diablo II: Resurrected para Windows
 
 Abre Akara.exe. Se abre la aplicación de escritorio en su propia ventana.
 El paquete portátil no necesita Node.js, PowerShell ni .NET instalados.
 No utiliza navegador, WebView ni servidor local.
 
+Los objetos y habilidades usan imágenes originales de tu instalación.
+AKARA lee los archivos del juego y del mod sin modificarlos. Las imágenes
+descodificadas se guardan en su caché local; no se distribuyen con la app.
+Una imagen que no se pueda resolver muestra un marcador neutro y su nombre.
+
 PARA EMPEZAR
 
-1. Elige una partida o pulsa Abrir otra partida e indica su archivo .d2s.
+1. Elige una partida o pulsa Abrir e indica su archivo .d2s.
    Selecciona el perfil de datos que corresponde al personaje.
-2. Puedes crear un Nuevo personaje de cualquiera de las ocho clases o
-   Clonar personaje con otro nombre. Se prepara un borrador; aún no se
+2. Puedes crear un Nuevo de cualquiera de las ocho clases o
+   Clonar con otro nombre. Se prepara un borrador; aún no se
    crea ningún archivo.
-3. Ajusta Personaje y Habilidades. En Equipo puedes organizar el
+3. Ajusta Personaje y Habilidades. En Objetos puedes organizar el
    inventario, el baúl personal, el cubo, el cinturón y los conjuntos I y II.
    Mercenario muestra sus piezas según el perfil. Reimagined admite
    nueve piezas equipadas: un arma a dos manos también reserva la otra
    mano y no necesita una segunda arma.
 4. Mundo permite ajustar misiones, recompensas, transportadores y
-   progreso por dificultad. Taller permite diseñar o editar objetos.
-5. Pulsa Revisar cambios. Lee las diferencias y corrige los errores.
+   progreso por dificultad. Constructor permite diseñar o editar objetos.
+5. Pulsa Revisar. Lee las diferencias y corrige los errores.
    Deshacer y Rehacer modifican el borrador, no la partida guardada.
-6. Cierra Diablo II y pulsa Guardar con copia. Para un personaje nuevo,
+6. Cierra Diablo II y pulsa Guardar. Para un personaje nuevo,
    elige un archivo cuyo nombre coincida con el del personaje.
    La creación nunca sobrescribe un personaje existente.
 7. Cierra la ventana al terminar.
@@ -39,7 +44,7 @@ personaje y progreso. Al prepararlas, el equipo anterior pasa al baúl
 por defecto. Comprueba las diferencias antes de guardar la partida.
 Si el nivel no cambia, se conserva la experiencia del personaje de
 destino. Si cambia, se usa la experiencia inicial de ese nivel. Para
-copiar también la experiencia exacta del original, usa Clonar personaje.
+copiar también la experiencia exacta del original, usa Clonar.
 
 TALLER Y PLANOS DE OBJETOS
 
@@ -55,7 +60,7 @@ se rechazan; no se omiten para fabricar una pieza incompleta.
 
 GUARDADO Y RECUPERACIÓN
 
-Guardar con copia comprueba que el juego esté cerrado y que el archivo
+Guardar comprueba que el juego esté cerrado y que el archivo
 no haya cambiado desde su apertura. Después verifica un respaldo y
 reemplaza la partida de forma atómica. Puedes consultar y restaurar
 versiones anteriores en Copias de seguridad. Restaurar también exige

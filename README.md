@@ -4,7 +4,7 @@
 
 A native Windows character editor for Diablo II: Resurrected. AKARA uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly.
 
-Version **0.3.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.4.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
@@ -15,9 +15,10 @@ Version **0.3.1**. Developed against **D2R Reimagined 3.1**, using data from you
 - Opens offline `.d2s` characters. Creates version 105 characters for all eight classes, or clones an existing character into a new draft.
 - Edits level, experience, base attributes, gold, and skills, with native budgets, requirements, prerequisites, and encoding checks. Base resources update from native progression and attribute scaling.
 - Offers nine Reimagined presets: one per class, including a Frozen Orb/lightning Sorceress, plus the original Frozen Orb/Tal Rasha preset. Guides explain attacks, buffs, weapon switching, and immunities.
+- Uses a compact Jamella-inspired workbench: horizontal tabs, resizable catalog and property panes, equipment and containers together. Item and skill images are read from your installed game and mod; no generated item artwork is shipped. Unresolved graphics use an explicit neutral marker.
 - Arranges inventory, personal stash, cube, belt, both weapon sets, and mercenary equipment. Reimagined supports nine equipped mercenary pieces; a two-handed weapon reserves the off hand without adding a duplicate item. Inventory actions have controls that do not require dragging.
 - Edits quests and waypoints by difficulty, progression, and rewards through **Mundo**.
-- Builds items in **Taller** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.
+- Builds items in **Constructor** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.
 - Saves reusable loadouts in a local library, with JSON import/export and optional character progression. Applying a loadout keeps previous equipment in the personal stash by default. At the same level, it preserves the destination character's experience; changing level uses that level's native starting XP. Clone a character to retain its exact XP.
 - Prepares a validated preview and readable diff before writing. Undo/redo changes the draft; backup restoration recovers an earlier saved file.
 - Exports a new copy without overwriting a destination. Replacement and restoration require Diablo II to be closed and use verified backups, source-hash checks, and atomic replacement.
@@ -28,11 +29,11 @@ Custom items use existing native bases and properties. Adding new game definitio
 ## Inicio rápido en español
 
 1. Extrae el paquete para Windows y abre **Akara.exe**. Se abre la ventana nativa de escritorio; el paquete portátil no necesita Node.js, PowerShell ni .NET instalados.
-2. Elige una partida o pulsa **Abrir otra partida**. Selecciona el perfil que corresponde al personaje. Si AKARA no detecta el mod, indica su carpeta de tablas.
-3. Para empezar desde cero, pulsa **Nuevo personaje** y elige clase, nombre y, si quieres, una plantilla. **Clonar personaje** prepara una copia con otro nombre. Todavía no se escribe ningún archivo.
-4. Ajusta **Personaje**, **Habilidades**, **Equipo**, **Mercenario**, **Mundo** o **Taller**. En el equipo puedes cambiar entre los conjuntos I y II. La biblioteca permite preparar una plantilla o recuperar una configuración propia.
-5. Pulsa **Revisar cambios**. Lee las diferencias y resuelve los errores. **Deshacer** y **Rehacer** actúan sobre el borrador.
-6. Cierra Diablo II y pulsa **Guardar con copia**. Para un personaje nuevo, elige un archivo cuyo nombre coincida con el personaje; la creación nunca sobrescribe otro existente.
+2. Elige una partida o pulsa **Abrir**. Selecciona el perfil que corresponde al personaje. Si AKARA no detecta el mod, indica su carpeta de tablas.
+3. Para empezar desde cero, pulsa **Nuevo** y elige clase, nombre y, si quieres, una plantilla. **Clonar** prepara una copia con otro nombre. Todavía no se escribe ningún archivo.
+4. Ajusta **Personaje**, **Habilidades**, **Objetos**, **Mercenario**, **Mundo** o **Constructor**. En el equipo puedes cambiar entre los conjuntos I y II. La biblioteca permite preparar una plantilla o recuperar una configuración propia.
+5. Pulsa **Revisar**. Lee las diferencias y resuelve los errores. **Deshacer** y **Rehacer** actúan sobre el borrador.
+6. Cierra Diablo II y pulsa **Guardar**. Para un personaje nuevo, elige un archivo cuyo nombre coincida con el personaje; la creación nunca sobrescribe otro existente.
 7. **Exportar copia** guarda otro archivo sin sobrescribir el destino. Puedes exportar fuera de **Saved Games** con el juego abierto. Crear o exportar dentro de **Saved Games** exige cerrar Diablo II. Si cambias el nombre, exporta con el nuevo nombre.
 8. Consulta **Copias de seguridad** para restaurar una versión anterior. Cierra la ventana al terminar.
 
@@ -62,7 +63,7 @@ Opening reads a character without writing it. Previews replay the draft from the
 
 Local settings, backups, exports, and loadouts normally live under `%LOCALAPPDATA%\AKARA`. Use `--data-dir DIRECTORY` to isolate another instance or a test run. Plans, blueprints, loadouts, logs, and screenshots may contain private character data or paths; keep them outside public commits.
 
-AKARA does not include or download game binaries, installed tables, mod packages, or character saves.
+AKARA does not include or download game binaries, installed tables, mod packages, game artwork, or character saves. The native image reader uses the installed CASC files and loose mod overrides read-only and caches decoded images locally. See [local game artwork](docs/LOCAL-GAME-ART.md). The bundled CascLib reader is MIT-licensed.
 
 ## Build from source
 
@@ -75,7 +76,7 @@ $dotnetPath = (Get-Command dotnet).Source
 ./scripts/Publish.ps1 -DotnetPath $dotnetPath -OutputDirectory (Join-Path $PWD 'artifacts/AKARA-Desktop')
 ```
 
-The script publishes the self-contained WPF GUI and CLI with documentation and dependency notices, then checks actual native rendering and behavior. Generated binaries and local game data do not belong in the source repository.
+The script publishes the self-contained WPF GUI and CLI with documentation and dependency notices, then checks actual native rendering and behavior. Application build output and local game data do not belong in the source repository. The checked-in CascLib.dll is the MIT-licensed native reader; its source commit, license, hash and optional C++ rebuild workflow are documented in docs/LOCAL-GAME-ART.md.
 
 ### Development
 

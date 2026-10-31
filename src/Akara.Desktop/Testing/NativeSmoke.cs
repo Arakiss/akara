@@ -36,6 +36,8 @@ public static class NativeSmoke
                 foreach (System.Collections.DictionaryEntry entry in reader) resourceNames.Add(entry.Key.ToString() ?? "");
             }
             Check(resourceNames.All(n => !n.Contains("class-portraits", StringComparison.OrdinalIgnoreCase)), "rejected-portrait-candidate-not-embedded");
+            Check(resourceNames.All(n => !n.Contains("items-atlas", StringComparison.OrdinalIgnoreCase)), "generated-item-atlas-not-embedded");
+            Check(RejectsTruncatedSprite(), "local-sprite-decoder-rejects-truncated-header-and-payload");
             Check(!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name is { } name && (name.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) || name.Contains("WebView2", StringComparison.Ordinal))), "no-web-host-or-webview-assembly");
             var demo = new MainViewModel(dataRoot: Path.Combine(root, "demo"), fileDialogs: new NoDialogs());
             await demo.InitializeAsync(); Healthy(demo, "initialize");
@@ -68,18 +70,19 @@ public static class NativeSmoke
                 string name = inspected["character"]!["name"]!.GetValue<string>();
                 if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || name is "." or "..") throw new InvalidDataException("Invalid fixture character name.");
                 string copy = Path.Combine(saves, name + ".d2s"); await File.WriteAllBytesAsync(copy, fixtureBytes);
-                var runningVm = new MainViewModel(core: runningCore, fileDialogs: new NoDialogs());
+                var runningVm = new MainViewModel(dataRoot: Path.Combine(root, "fixture-ui"), core: runningCore, fileDialogs: new NoDialogs());
                 await runningVm.InitializeAsync(); Healthy(runningVm, "running-state initialize");
                 await runningVm.OpenPathAsync(copy); Healthy(runningVm, "running-state open");
                 await runningVm.ApplyDraftAsync(new PreviewRequest { Attributes = new() { ["gold"] = Gold(runningVm.Snapshot) + 1 } }); Healthy(runningVm, "running-state edit");
                 await runningVm.PreviewAsync(true); Healthy(runningVm, "running-state review");
                 Check(runningVm.GameRunning && !runningVm.CanCommit && !runningVm.SaveCommand.CanExecute(null) && runningVm.ValidationMessage.Contains("Cierra Diablo II", StringComparison.Ordinal), "native-review-explains-open-game-save-guard");
-                var vm = new MainViewModel(core: core, fileDialogs: new NoDialogs());
+                var vm = new MainViewModel(dataRoot: Path.Combine(root, "fixture-ui"), core: core, fileDialogs: new NoDialogs());
                 await vm.InitializeAsync(); Healthy(vm, "fixture initialize");
                 vm.SelectedProfile = vm.Profiles.First(p => p.Id == profileId);
                 await vm.OpenPathAsync(copy); Healthy(vm, "fixture open");
                 Check(vm.HasCharacter && !vm.CanCommit, "private-fixture-open-is-read-only");
                 Check(Hash(await File.ReadAllBytesAsync(copy)) == fixtureHash, "opening-keeps-source-bytes");
+                await CheckOriginalGameArtAsync(vm, excelPath, root, checks, omissions);
                 long gold = Gold(vm.Snapshot), xp = Experience(vm.Snapshot);
                 await vm.ApplyDraftAsync(new PreviewRequest { Attributes = new() { ["gold"] = gold + 1 } }); Healthy(vm, "edit gold");
                 Check(vm.IsDirty && !vm.CanCommit && Gold(vm.Snapshot) == gold + 1, "draft-is-valid-but-unreviewed");
@@ -202,6 +205,65 @@ public static class NativeSmoke
     static long Experience(JsonObject snapshot) => snapshot["character"]!["experience"]!.GetValue<long>();
     static int SkillPoints(JsonObject snapshot, int id) => snapshot["skills"]!.AsArray().OfType<JsonObject>().Single(skill => skill["id"]!.GetValue<int>() == id)["points"]!.GetValue<int>();
     static bool HasRunningWarning(JsonObject preview) => preview["validation"]!["warnings"]!.AsArray().Any(w => w?.GetValue<string>().Contains("Diablo II está abierto", StringComparison.Ordinal) == true);
+    static bool RejectsTruncatedSprite()
+    {
+        var header = new byte[40];
+        System.Text.Encoding.ASCII.GetBytes("SpA1").CopyTo(header, 0);
+        BitConverter.GetBytes((ushort)31).CopyTo(header, 4);
+        BitConverter.GetBytes((ushort)1).CopyTo(header, 6);
+        BitConverter.GetBytes(1u).CopyTo(header, 8);
+        BitConverter.GetBytes(1u).CopyTo(header, 12);
+        BitConverter.GetBytes(1u).CopyTo(header, 20);
+        foreach (var bytes in new[] { Array.Empty<byte>(), header[..39], header })
+        {
+            try { LocalGameArt.DecodeSprite(bytes, 0); return false; }
+            catch (InvalidDataException) { }
+        }
+        return true;
+    }
+    static async Task CheckOriginalGameArtAsync(MainViewModel vm, string excelPath, string evidenceRoot, List<string> checks, List<string> omissions)
+    {
+        static bool HasCasc(string directory) => File.Exists(Path.Combine(directory, ".build.info")) && Directory.Exists(Path.Combine(directory, "Data", "data"));
+        string? gameRoot = null;
+        for (var directory = new DirectoryInfo(excelPath); directory is not null; directory = directory.Parent)
+            if (HasCasc(directory.FullName)) { gameRoot = directory.FullName; break; }
+        string defaultRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Diablo II Resurrected");
+        if (gameRoot is null && HasCasc(defaultRoot)) gameRoot = defaultRoot;
+        if (gameRoot is null) { omissions.Add("original-game-art-local-casc-not-available"); return; }
+        var items = vm.Items.Concat(vm.MercenaryItems).ToArray();
+        var imported = await LocalGameArt.WarmupAsync(gameRoot, excelPath, items.Select(item => item.Data), Path.Combine(evidenceRoot, "fixture-ui"));
+        var groups = new[]
+        {
+            (Key: "oculus", Needle: "Oculus"), (Key: "eschuta", Needle: "Eschuta"),
+            (Key: "harlequin-crest", Needle: "Harlequin Crest"), (Key: "tal-rasha", Needle: "Tal Rasha")
+        };
+        var results = new List<object>();
+        foreach (var group in groups)
+        {
+            var present = items.Where(item => item.Name.Contains(group.Needle, StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (present.Length == 0) { omissions.Add("original-game-art-" + group.Key + "-not-present-in-private-fixture"); continue; }
+            var missing = new List<string>();
+            foreach (var item in present)
+            {
+                var image = LocalGameArt.TryGetItem(item) as System.Windows.Media.Imaging.BitmapSource;
+                bool visible = image is not null && HasVisiblePixels(image);
+                results.Add(new { group = group.Key, item.Name, item.Code, item.Quality, loaded = visible, width = image?.PixelWidth, height = image?.PixelHeight });
+                if (!visible) missing.Add(item.Name + " [" + item.Code + "]");
+            }
+            if (missing.Count > 0)
+                throw new InvalidOperationException("Local CASC is installed but critical original art is missing: " + string.Join(", ", missing) + ". Import diagnostics: " + string.Join("; ", imported.Missing));
+            checks.Add("original-local-casc-art-loaded-" + group.Key);
+        }
+        await File.WriteAllTextAsync(Path.Combine(evidenceRoot, "original-art.json"), JsonSerializer.Serialize(new { gameRoot, excelPath, imported.ItemsLoaded, imported.SkillsLoaded, imported.CacheDirectory, imported.Missing, criticalItems = results }, new JsonSerializerOptions { WriteIndented = true }));
+    }
+    static bool HasVisiblePixels(System.Windows.Media.Imaging.BitmapSource image)
+    {
+        if (image.PixelWidth <= 0 || image.PixelHeight <= 0 || image.Format.BitsPerPixel != 32) return false;
+        int stride = checked(image.PixelWidth * 4); var pixels = new byte[checked(stride * image.PixelHeight)];
+        image.CopyPixels(pixels, stride, 0);
+        for (int index = 3; index < pixels.Length; index += 4) if (pixels[index] > 0) return true;
+        return false;
+    }
     static IEnumerable<JsonObject> CatalogRows(EditorService core, string sessionId, string type, string query) => NativeEditorBridge.Object(core.Catalog(sessionId, type, query, 0, 250))["entries"]!.AsArray().OfType<JsonObject>();
     static bool HasSameArtInStorage(ItemViewModel source, string slot, string expected)
     {

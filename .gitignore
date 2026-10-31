@@ -6,6 +6,7 @@
 **/wwwroot/
 *.tsbuildinfo
 *.dll
+!/src/Akara.Desktop/Native/CascLib.dll
 *.exe
 *.pdb
 *.msi
@@ -56,6 +57,7 @@
 /design/**/portraits-reviewed.png
 /design/**/logo-candidate.png
 /design/**/items-atlas-candidate.png
+/design/native-0.4/concept-candidate.png
 /playwright-report/
 /src/ForjaHoradrica.Web/qa-ui.cjs
 /src/ForjaHoradrica.Web/qa-shutdown.cjs

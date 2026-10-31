@@ -32,19 +32,19 @@ public sealed class InventoryBoard : FrameworkElement
     protected override void OnRender(DrawingContext d)
     {
         base.OnRender(d);int columns=Math.Max(1,Columns),rows=Math.Max(1,Rows);double width=columns*CellSize,height=rows*CellSize;
-        d.DrawRectangle(new SolidColorBrush(Color.FromRgb(10,12,12)),null,new Rect(0,0,width,height));
-        var gridPen=new Pen(new SolidColorBrush(Color.FromRgb(61,59,50)),.7);
+        d.DrawRectangle(new SolidColorBrush(Color.FromRgb(20,24,27)),null,new Rect(0,0,width,height));
+        var gridPen=new Pen(new SolidColorBrush(Color.FromRgb(60,70,77)),.7);
         for(int x=0;x<=columns;x++)d.DrawLine(gridPen,new(x*CellSize,0),new(x*CellSize,height));
         for(int y=0;y<=rows;y++)d.DrawLine(gridPen,new(0,y*CellSize),new(width,y*CellSize));
         foreach(var item in ItemsSource??[])
         {
             var rect=Bounds(item);bool selected=SelectedItem?.Id==item.Id;
             var tone=(Color)ColorConverter.ConvertFromString(item.Accent);
-            d.DrawRectangle(new SolidColorBrush(Color.FromArgb(selected?(byte)30:(byte)9,tone.R,tone.G,tone.B)),new Pen(new SolidColorBrush(selected?Color.FromRgb(210,174,103):Color.FromArgb(90,tone.R,tone.G,tone.B)),selected?1.4:.7),rect);
+            d.DrawRectangle(new SolidColorBrush(Color.FromArgb(selected?(byte)30:(byte)9,tone.R,tone.G,tone.B)),new Pen(new SolidColorBrush(selected?Color.FromRgb(195,166,109):Color.FromArgb(90,tone.R,tone.G,tone.B)),selected?1.4:.7),rect);
             var image=ItemArt.Get(item);double ratio=image.Width/image.Height;double drawWidth=rect.Width-7,drawHeight=rect.Height-7;if(drawWidth/drawHeight>ratio)drawWidth=drawHeight*ratio;else drawHeight=drawWidth/ratio;
             d.DrawImage(image,new Rect(rect.X+(rect.Width-drawWidth)/2,rect.Y+(rect.Height-drawHeight)/2,drawWidth,drawHeight));
         }
-        if(IsKeyboardFocusWithin)d.DrawRectangle(null,new Pen(new SolidColorBrush(Color.FromRgb(195,161,100)),1),new Rect(.5,.5,width-1,height-1));
+        if(IsKeyboardFocusWithin)d.DrawRectangle(null,new Pen(new SolidColorBrush(Color.FromRgb(195,166,109)),1),new Rect(.5,.5,width-1,height-1));
     }
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e){base.OnMouseLeftButtonDown(e);Focus();var point=e.GetPosition(this);SelectItem((ItemsSource??[]).LastOrDefault(i=>Bounds(i).Contains(point)));if(e.ClickCount==2&&SelectedItem is not null)ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}
     protected override void OnKeyDown(KeyEventArgs e){base.OnKeyDown(e);if(e.Key is Key.Left or Key.Right or Key.Up or Key.Down){var items=(ItemsSource??[]).OrderBy(i=>i.Y).ThenBy(i=>i.X).ToList();if(items.Count==0)return;int index=items.FindIndex(i=>i.Id==SelectedItem?.Id);index=e.Key is Key.Left or Key.Up?Math.Max(0,index-1):Math.Min(items.Count-1,index+1);SelectItem(items[index]);e.Handled=true;}else if(e.Key==Key.Enter&&SelectedItem is not null){ItemInvoked?.Invoke(this,EventArgs.Empty);e.Handled=true;}}

@@ -38,7 +38,7 @@ public sealed partial class MainViewModel : ObservableModel
 
     public MainViewModel(string? dataRoot = null, EditorService? core = null, IFileDialogs? fileDialogs = null)
     {
-        bridge = new(dataRoot, core); dialogs = fileDialogs ?? new WindowsFileDialogs();
+        bridge = new(dataRoot, core); dialogs = fileDialogs ?? new WindowsFileDialogs(); artworkDataRoot = dataRoot;
         OpenCommand = Command(async parameter => { var path = parameter as string ?? dialogs.OpenFile("Abrir personaje", SaveFilter); if (path is not null) await OpenPathAsync(path); });
         RefreshCommand = Command(_ => InitializeAsync());
         CreateCommand = Command(async parameter => { if (parameter is CreateRequest request) await CreateCharacterAsync(request); else RequestCreate?.Invoke(); });
@@ -95,6 +95,7 @@ public sealed partial class MainViewModel : ObservableModel
     public ObservableCollection<ItemViewModel> Equipped { get; } = [];
     public ObservableCollection<EquipmentSlotViewModel> EquipmentSlots { get; } = [];
     public ObservableCollection<ItemViewModel> VisibleInventory { get; } = [];
+    public ObservableCollection<ItemViewModel> StashItems { get; } = [];
     public ObservableCollection<ItemViewModel> MercenaryItems { get; } = [];
     public ObservableCollection<EquipmentSlotViewModel> MercenarySlots { get; } = [];
     public ObservableCollection<QuestViewModel> WorldQuests { get; } = [];
@@ -154,6 +155,8 @@ public sealed partial class MainViewModel : ObservableModel
     public JsonObject WorldSnapshot { get; private set; } = new();
     public int GridColumns => SelectedStorage switch { "stash" => Snapshot.Obj("stashGrid").Int("width", 10), "cube" => Snapshot.Obj("cubeGrid").Int("width", 3), "belt" => Snapshot.Obj("beltGrid").Int("width", 4), _ => Snapshot.Obj("inventoryGrid").Int("width", 10) };
     public int GridRows => SelectedStorage switch { "stash" => Snapshot.Obj("stashGrid").Int("height", 10), "cube" => Snapshot.Obj("cubeGrid").Int("height", 4), "belt" => Snapshot.Obj("beltGrid").Int("height", 4), _ => Snapshot.Obj("inventoryGrid").Int("height", 8) };
+    public int StashGridColumns => Snapshot.Obj("stashGrid").Int("width", 10);
+    public int StashGridRows => Snapshot.Obj("stashGrid").Int("height", 10);
     public int StorageColumns => GridColumns;
     public int StorageRows => GridRows;
     public double GridWidth => GridColumns * 52;
@@ -232,7 +235,7 @@ public sealed partial class MainViewModel : ObservableModel
         IsSyntheticDemo = false; Raise(nameof(IsSyntheticDemo)); Raise(nameof(DemoLabel)); Raise(nameof(CanEdit));
         sessionId = opened.Text("sessionId"); SourceSnapshot = (JsonObject)opened.DeepClone(); draft = new() { SessionId = sessionId };
         undo.Clear(); redo.Clear(); basicTouched = skillsTouched = reviewed = validPlan = false; planId = ""; ErrorText = ""; IsDirty = opened.Bool("isNew");
-        ApplySnapshot(opened, true); await RefreshPresetsCoreAsync(); await RefreshWorldCoreAsync(); await RefreshBackupsCoreAsync();
+        await PrepareArtworkAsync(opened); ApplySnapshot(opened, true); Changes.Clear(); await RefreshPresetsCoreAsync(); await RefreshWorldCoreAsync(); await RefreshBackupsCoreAsync();
         ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage));
         Raise(nameof(HasCharacter)); Raise(nameof(IsCharacterSelected)); Raise(nameof(SourcePath)); Raise(nameof(SourceHash)); Requery();
     }
@@ -251,7 +254,7 @@ public sealed partial class MainViewModel : ObservableModel
             ValidationMessage = "Revisa los valores del borrador."; Raise(nameof(ValidationMessage)); Raise(nameof(CanCommit)); return;
         }
         validPlan = true; reviewed = review; planId = preview.Text("planId");
-        ApplySnapshot(preview.Obj("summary"), true);
+        await PrepareArtworkAsync(preview.Obj("summary")); ApplySnapshot(preview.Obj("summary"), true);
         Replace(Changes, preview.Array("diff").OfType<JsonObject>().Select(d => new DiffViewModel(d.Text("section"), d.Text("label"), Describe(d["before"]), Describe(d["after"]))));
         ValidationMessage = review && GameRunning
             ? "Validación correcta. Cierra Diablo II para usar «Guardar con copia». Puedes exportar una copia fuera de Saved Games."
@@ -398,15 +401,16 @@ public sealed partial class MainViewModel : ObservableModel
             UpdateRowLocks();
             Replace(Items, snapshot.Array("items").OfType<JsonObject>().Select(n => new ItemViewModel(n)));
             Replace(MercenaryItems, snapshot.Obj("mercenary").Array("items").OfType<JsonObject>().Select(n => new ItemViewModel(n)));
-            SelectedItem = Items.Concat(MercenaryItems).FirstOrDefault(i => i.Id == selectedId) ?? Items.FirstOrDefault(i => i.Page == "equipped" && i.Slot == "weapon");
+            SelectedItem = Items.Concat(MercenaryItems).FirstOrDefault(i => i.Id == selectedId) ?? Items.FirstOrDefault(i => i.Page == "equipped" && i.Slot == "weapon" && i.WeaponSet == SelectedWeaponSet);
             RefreshInventory();
-            foreach (var property in new[] { nameof(Snapshot), nameof(ClassName), nameof(ClassLabel), nameof(BaseLifeText), nameof(BaseManaText), nameof(SkillPointsText), nameof(AttributePointsText), nameof(IsNew), nameof(MercenaryName), nameof(MercenaryLevelText), nameof(MercenaryAura), nameof(HasMercenary), nameof(ActiveWeaponSet), nameof(GridColumns), nameof(GridRows), nameof(GridWidth), nameof(GridHeight) }) Raise(property);
+            foreach (var property in new[] { nameof(Snapshot), nameof(ClassName), nameof(ClassLabel), nameof(BaseLifeText), nameof(BaseManaText), nameof(SkillPointsText), nameof(AttributePointsText), nameof(IsNew), nameof(MercenaryName), nameof(MercenaryLevelText), nameof(MercenaryAura), nameof(HasMercenary), nameof(ActiveWeaponSet), nameof(GridColumns), nameof(GridRows), nameof(GridWidth), nameof(GridHeight), nameof(StashGridColumns), nameof(StashGridRows) }) Raise(property);
         }
         finally { loading = false; }
     }
     void RefreshInventory()
     {
         Replace(VisibleInventory, Items.Where(i => i.Page == SelectedStorage));
+        Replace(StashItems, Items.Where(i => i.Page == "stash"));
         Replace(Equipped, Items.Where(i => i.Page == "equipped" && (!i.WeaponSet.HasValue || i.WeaponSet == SelectedWeaponSet)));
         string[] slots = ["helm", "amulet", "weapon", "shield", "armor", "gloves", "belt", "boots", "ring1", "ring2"];
         Replace(EquipmentSlots, slots.Select(s => new EquipmentSlotViewModel(s, Names.Slot(s), Equipped.FirstOrDefault(i => i.Slot == s))));

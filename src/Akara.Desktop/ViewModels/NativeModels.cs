@@ -75,6 +75,8 @@ public sealed class SkillViewModel : ObservableModel
     public int MaxPoints { get; }
     public int RequiredLevel { get; }
     public int TabId { get; }
+    public int IconCell { get; }
+    public string IconClass { get; }
     public int Row { get; }
     public int Column { get; }
     public string Requirement => "Nivel " + RequiredLevel + " · máximo " + MaxPoints;
@@ -86,6 +88,7 @@ public sealed class SkillViewModel : ObservableModel
     {
         Id = node.Int("id"); NativeName = node.Text("name"); Name = Names.Skill(NativeName);
         points = node.Int("points"); MaxPoints = node.Int("maxPoints", 25); RequiredLevel = node.Int("requiredLevel");
+        IconCell = node.Int("iconCell", -1); IconClass = node.Text("iconClass");
         TabId = node.Int("tabId"); Row = node.Int("row"); Column = node.Int("column"); change = changed;
     }
 }
@@ -99,6 +102,8 @@ public sealed class ItemViewModel
     public string Code => Data.Text("code");
     public string Quality => Data.Text("quality");
     public string QualityLabel => Names.Quality(Quality);
+    public bool HasGameArt => Akara.Desktop.Services.LocalGameArt.TryGetItem(this) is not null;
+    public string ArtSourceLabel => HasGameArt ? "Gráfico original del juego" : "Imagen del juego no disponible";
     public string Owner => Data.Text("owner", "character");
     public string Page => Data.Text("page");
     public string Slot => Data.Text("slot");
@@ -122,7 +127,7 @@ public sealed class ItemViewModel
     public double PixelY => Y * 52d;
     public double PixelWidth => Width * 52d - 4;
     public double PixelHeight => Height * 52d - 4;
-    public string DetailLine => QualityLabel + " · nivel " + Level + (Ethereal ? " · etéreo" : "");
+    public string DetailLine => QualityLabel + " · nivel de objeto " + Level + (Ethereal ? " · etéreo" : "");
     public string LocationLabel => Owner == "mercenary" ? "Mercenario · " + SlotLabel : Page == "equipped" ? SlotLabel + (WeaponSet.HasValue ? " · " + (WeaponSet == 1 ? "I" : "II") : "") : Names.Storage(Page);
     public IReadOnlyList<StatViewModel> Stats { get; }
     public IReadOnlyList<StatViewModel> VisibleStats => Stats.Where(stat => !stat.Hidden).ToList();
@@ -191,6 +196,8 @@ public static class Names
 {
     static readonly Dictionary<string, string> StatLabels = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["passive_fire_mastery"]="Daño de habilidades de fuego", ["passive_ltng_mastery"]="Daño de habilidades de rayos", ["passive_cold_mastery"]="Daño de habilidades de frío", ["passive_pois_mastery"]="Daño de habilidades de veneno",
+        ["passive_fire_pierce"]="Penetración de resistencia al fuego", ["passive_ltng_pierce"]="Penetración de resistencia a los rayos", ["passive_cold_pierce"]="Penetración de resistencia al frío", ["passive_pois_pierce"]="Penetración de resistencia al veneno",
         ["item_manaafterkill"]="Maná tras cada muerte", ["item_healafterkill"]="Vida tras cada muerte", ["item_replenish_durability"]="Reparación de durabilidad", ["item_replenish_quantity"]="Reponer cantidad",
         ["item_hp_perlevel"]="Vida por nivel", ["item_mana_perlevel"]="Maná por nivel", ["item_hpregen"]="Regeneración de vida", ["hpregen"]="Regeneración de vida", ["manarecovery"]="Regeneración de maná",
         ["item_maxhp_percent"]="Vida máxima", ["item_maxmana_percent"]="Maná máximo", ["item_fastercastrate"]="Velocidad de lanzamiento", ["item_fastergethitrate"]="Recuperación de impacto", ["item_fastermovevelocity"]="Velocidad de carrera", ["item_fasterattackrate"]="Velocidad de ataque", ["item_fasterblockrate"]="Velocidad de bloqueo",
@@ -209,7 +216,7 @@ public static class Names
         if (nativeName is "item_addskill_tab" or "item_skilltab") return "Árbol de habilidades";
         return StatLabels.GetValueOrDefault(nativeName, fallback);
     }
-    public static bool PercentStat(string name) => name.Contains("resist", StringComparison.Ordinal) || name.EndsWith("_percent",StringComparison.Ordinal) || name is "item_fastercastrate" or "item_fastergethitrate" or "item_fastermovevelocity" or "item_fasterattackrate" or "item_fasterblockrate" or "item_magicbonus" or "item_goldbonus" or "item_crushingblow" or "item_deadlystrike" or "item_openwounds" or "item_pierce" or "item_damagetomana" or "lifedrainmindam" or "manadrainmindam" or "manarecovery" or "item_req_percent";
+    public static bool PercentStat(string name) => (name.StartsWith("passive_",StringComparison.Ordinal) && (name.EndsWith("_mastery",StringComparison.Ordinal) || name.EndsWith("_pierce",StringComparison.Ordinal))) || name.Contains("resist", StringComparison.Ordinal) || name.EndsWith("_percent",StringComparison.Ordinal) || name is "item_fastercastrate" or "item_fastergethitrate" or "item_fastermovevelocity" or "item_fasterattackrate" or "item_fasterblockrate" or "item_magicbonus" or "item_goldbonus" or "item_crushingblow" or "item_deadlystrike" or "item_openwounds" or "item_pierce" or "item_damagetomana" or "lifedrainmindam" or "manadrainmindam" or "manarecovery" or "item_req_percent";
     public static string Class(string name) => name switch { "Amazon" => "Amazona", "Sorceress" => "Hechicera", "Necromancer" => "Nigromante", "Paladin" => "Paladín", "Barbarian" => "Bárbaro", "Druid" => "Druida", "Assassin" => "Asesina", "Warlock" => "Brujo", _ => name };
     public static string Slot(string name) => name switch { "weapon" => "Arma", "shield" => "Mano secundaria", "helm" => "Yelmo", "armor" => "Armadura", "amulet" => "Amuleto", "ring1" => "Anillo derecho", "ring2" => "Anillo izquierdo", "boots" => "Botas", "gloves" => "Guantes", "belt" => "Cinturón", _ => name };
     public static string Storage(string name) => name switch { "inventory" => "Inventario", "stash" => "Alijo", "cube" => "Cubo horádrico", "belt" => "Cinturón", "equipped" => "Equipado", _ => name };

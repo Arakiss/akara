@@ -36,6 +36,8 @@ public partial class App : Application
             if (Option("section") is { } section) vm.SelectedView = section;
             if (Option("capture") is { } capture)
             {
+                if (vm.HasCharacter && !vm.IsSyntheticDemo && vm.SelectedView is "equipment" or "mercenary" or "workshop")
+                    await vm.SearchCatalogAsync();
                 int width = int.TryParse(Option("width"), out int w) ? Math.Clamp(w, 960, 3840) : 1600;
                 int height = int.TryParse(Option("height"), out int h) ? Math.Clamp(h, 700, 2160) : 1000;
                 await CaptureAsync(vm, capture, width, height);
@@ -81,6 +83,9 @@ public partial class App : Application
             actualWidth = root.ActualWidth,
             actualHeight = root.ActualHeight,
             section = vm.SelectedView,
+            artworkStatus = vm.ArtworkStatus,
+            originalItemImages = vm.Items.Concat(vm.MercenaryItems).Count(item => item.HasGameArt),
+            totalItemImages = vm.Items.Count + vm.MercenaryItems.Count,
             visibleWindowCreated = false,
             native = true,
             browser = false

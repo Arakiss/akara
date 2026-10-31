@@ -34,3 +34,7 @@ Status: findings closed after rectangle correction and a second inspection of al
 Semantic checks passed independently: 24 item categories, two gloves, two boots, a visibly open transparent ring hole, continuous bow string and axe/scythe handles, separate blue/brown books, one amber drop inside the logo arch, and no baked text or mutable values. The embedded 32 px and 64 px ICO frames retain the arch/drop silhouette at native size.
 
 The corrected 24 rectangles contain all 25 connected visible components with no clipping and zero intersections with any foreign component bounding box. Alpha above 16/255 defines the visible silhouette for this measurement; faint alpha below that threshold links some source shadows between rows and is not used to assign an object. Every refreshed crop was also inspected on the native dark background. The shield apex and book corners are intact, the glove and hood neighbors are gone, and the ring hole remains transparent. This review covers these assets only; application layout and interaction approval are separate.
+
+## Estado posterior: atlas de objetos retirado en 0.4
+
+El 31-10-2026 el usuario exigió gráficos de objetos auténticos de su instalación. El atlas generado fue retirado de Assets y del manifiesto de producción. La revisión anterior es evidencia histórica del intento anterior, no aprobación vigente para usar esas ilustraciones en AKARA. La marca conserva su revisión independiente.

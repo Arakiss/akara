@@ -9,57 +9,21 @@ namespace Akara.Desktop.Controls;
 
 public static class ItemArt
 {
-    static readonly Dictionary<string, ImageSource> Cache = new(StringComparer.Ordinal);
-    static BitmapSource? atlas;
-    static Dictionary<string, Int32Rect>? crops;
-    public static ImageSource Get(ItemViewModel item) => Get(Category(item));
-    public static ImageSource Get(string key)
+    static readonly ImageSource Neutral = CreateNeutral();
+    public static ImageSource Get(ItemViewModel item) => Akara.Desktop.Services.LocalGameArt.TryGetItem(item) ?? Neutral;
+    public static ImageSource Get(string key) => Neutral;
+    static ImageSource CreateNeutral()
     {
-        key=key switch{"purpleArmor"=>"mageArmor","steelArmor"=>"plateArmor","demonMask"=>"mask","shield"=>"kiteShield","bookBlue"=>"blueBook","bookGold"=>"brownBook",_=>key};
-        if (Cache.TryGetValue(key, out var image)) return image;
-        if(key=="unknown")
+        var drawing = new DrawingGroup();
+        using (var context = drawing.Open())
         {
-            // An unrecognised base gets an explicit neutral marker, never a
-            // fabricated charm based only on its inventory dimensions.
-            var drawing=new DrawingGroup();
-            using(var context=drawing.Open())
-            {
-                context.DrawRectangle(Brushes.Transparent,null,new Rect(0,0,120,160));
-                var line=new Pen(new SolidColorBrush(Color.FromRgb(128,123,103)),1.5);
-                context.DrawGeometry(new SolidColorBrush(Color.FromRgb(26,31,30)),line,Geometry.Parse("M60,27 L98,51 98,107 60,132 22,107 22,51 Z"));
-                context.DrawGeometry(null,line,Geometry.Parse("M49,60 C48,45 76,45 75,62 C75,72 60,72 60,85"));
-                context.DrawEllipse(line.Brush,null,new Point(60,97),1.8,1.8);
-            }
-            drawing.Freeze();var marker=new DrawingImage(drawing);marker.Freeze();Cache[key]=marker;return marker;
+            context.DrawRectangle(Brushes.Transparent, null, new Rect(0,0,64,64));
+            var line = new Pen(new SolidColorBrush(Color.FromRgb(109,116,121)),1);
+            context.DrawRectangle(null,line,new Rect(13,9,38,46));
+            context.DrawLine(line,new Point(22,25),new Point(42,25));
+            context.DrawLine(line,new Point(22,33),new Point(42,33));
         }
-        LoadAtlas();
-        if (atlas is not null && crops?.TryGetValue(key, out var rectangle) == true)
-        {
-            var crop = new CroppedBitmap(atlas, rectangle); crop.Freeze(); Cache[key] = crop; return crop;
-        }
-        var illustration = new ItemIllustration { Kind = Fallback(key), Width = 120, Height = 160 };
-        illustration.Measure(new Size(120,160)); illustration.Arrange(new Rect(0,0,120,160)); illustration.UpdateLayout();
-        var bitmap = new RenderTargetBitmap(120,160,96,96,PixelFormats.Pbgra32); bitmap.Render(illustration); bitmap.Freeze(); Cache[key]=bitmap; return bitmap;
-    }
-    static void LoadAtlas()
-    {
-        if (crops is not null) return;
-        crops = new(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            var manifest = Application.GetResourceStream(new Uri("Assets/Art/items-atlas.json",UriKind.Relative));
-            if (manifest is null) return;
-            using var document = JsonDocument.Parse(manifest.Stream);
-            string file = document.RootElement.GetProperty("atlas").GetString()!;
-            var bitmap = new BitmapImage(); bitmap.BeginInit(); bitmap.UriSource = new Uri("pack://application:,,,/Akara;component/Assets/Art/"+file); bitmap.CacheOption=BitmapCacheOption.OnLoad; bitmap.EndInit(); bitmap.Freeze(); atlas=bitmap;
-            foreach (var entry in document.RootElement.GetProperty("items").EnumerateObject())
-            {
-                var r=entry.Value;
-                var rectangle=new Int32Rect(r.GetProperty("x").GetInt32(),r.GetProperty("y").GetInt32(),r.GetProperty("width").GetInt32(),r.GetProperty("height").GetInt32());
-                if(rectangle.Width>0&&rectangle.Height>0&&rectangle.X>=0&&rectangle.Y>=0&&rectangle.X+rectangle.Width<=bitmap.PixelWidth&&rectangle.Y+rectangle.Height<=bitmap.PixelHeight)crops[entry.Name]=rectangle;
-            }
-        }
-        catch (Exception exception) when(exception is IOException or JsonException or ArgumentException or InvalidOperationException) { atlas=null; }
+        drawing.Freeze();var image = new DrawingImage(drawing);image.Freeze();return image;
     }
     public static string Category(ItemViewModel item)
     {

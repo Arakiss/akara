@@ -71,6 +71,7 @@ public sealed record StatViewModel(int Id, string Label, int Layer, long RawValu
 public sealed class SkillViewModel : ObservableModel
 {
     int points;
+    bool readOnly;
     readonly Action<SkillViewModel, int>? change;
     public int Id { get; }
     public string Name { get; }
@@ -83,7 +84,7 @@ public sealed class SkillViewModel : ObservableModel
     public int Row { get; }
     public int Column { get; }
     public string Requirement => "Nivel " + RequiredLevel + " · máximo " + MaxPoints;
-    public bool IsReadOnly { get; set; }
+    public bool IsReadOnly { get => readOnly; set => Set(ref readOnly,value); }
     public int Points { get => points; set { if (IsReadOnly || points == value) return; change?.Invoke(this, value); points = value; Raise(); Raise(nameof(Progress)); } }
     internal void RestorePoints(int value) { points = value; Raise(nameof(Points)); Raise(nameof(Progress)); }
     public double Progress => MaxPoints == 0 ? 0 : 100d * Points / MaxPoints;

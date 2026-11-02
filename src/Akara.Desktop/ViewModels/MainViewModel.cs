@@ -51,7 +51,7 @@ public sealed partial class MainViewModel : ObservableModel
         SelectWeaponSetCommand = Command(parameter => { SelectedWeaponSet = int.TryParse(parameter?.ToString(), out int set) && set == 2 ? 2 : 1; return Task.CompletedTask; });
         ActivateWeaponSetCommand = Command(parameter => MutateAndPreviewAsync(r => r.ActiveWeaponSet = int.TryParse(parameter?.ToString(), out int n) ? n : SelectedWeaponSet), _ => HasCharacter);
         PreviewCommand = Command(_ => PreviewAsync(true), _ => HasCharacter);
-        SaveCommand = Command(parameter => SaveAsync(parameter as string), _ => CanCommit);
+        SaveCommand = Command(parameter => SaveAsync(parameter as string), _ => CanSave);
         ExportCommand = Command(parameter => ExportAsync(parameter as string), _ => HasCharacter && (IsDirty || IsNew));
         UndoCommand = Command(_ => UndoAsync(), _ => undo.Count > 0);
         RedoCommand = Command(_ => RedoAsync(), _ => redo.Count > 0);
@@ -138,9 +138,9 @@ public sealed partial class MainViewModel : ObservableModel
     public string SelectedStorage { get => selectedStorage; set { if (Set(ref selectedStorage, value)) RefreshInventory(); foreach (var name in new[] { nameof(StorageLabel), nameof(GridColumns), nameof(GridRows), nameof(StorageColumns), nameof(StorageRows), nameof(GridWidth), nameof(GridHeight) }) Raise(name); } }
     public string StorageLabel => Names.Storage(SelectedStorage);
     public int SelectedWeaponSet { get => selectedWeaponSet; set { if (Set(ref selectedWeaponSet, value is 2 ? 2 : 1)) RefreshInventory(); } }
-    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); Raise(nameof(CanCommit)); Raise(nameof(CanEdit)); Raise(nameof(CanChooseSave)); Raise(nameof(SaveSelectionText)); Requery(); } }
+    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); RaiseSaveState(); Raise(nameof(CanEdit)); Raise(nameof(CanChooseSave)); Raise(nameof(SaveSelectionText)); Requery(); } }
     public bool CanChooseSave => !IsBusy;
-    public bool IsDirty { get => dirty; private set { Set(ref dirty, value); Raise(nameof(CanCommit)); Raise(nameof(DraftLabel)); Requery(); } }
+    public bool IsDirty { get => dirty; private set { Set(ref dirty, value); RaiseSaveState(); Raise(nameof(DraftLabel)); Requery(); } }
     public bool IsSyntheticDemo { get; private set; }
     public string DemoLabel => IsSyntheticDemo ? "Vista de diseño · sin partida abierta" : "";
     public bool HasCharacter => IsSyntheticDemo || sessionId.Length > 0;
@@ -149,9 +149,9 @@ public sealed partial class MainViewModel : ObservableModel
     public bool HasSelectedItem => SelectedItem is not null;
     public bool GameRunning => Snapshot.Bool("gameRunning");
     public bool IsNew => Snapshot.Bool("isNew");
-    public bool CanCommit => CanEdit && !GameRunning && reviewed && validPlan && (IsDirty || IsNew);
-    public bool HasErrors => ErrorText.Length > 0;
-    public string ErrorText { get => error; private set { Set(ref error, value); Raise(nameof(HasErrors)); } }
+    public bool CanCommit => CanSave && reviewed && validPlan;
+    public bool HasErrors => ErrorText.Length > 0 || HasInputErrors;
+    public string ErrorText { get => error; private set { Set(ref error, value); Raise(nameof(HasErrors)); Raise(nameof(DisplayErrorText)); } }
     public string ValidationMessage { get; private set; } = "Sin cambios pendientes.";
     public string StatusText { get => status; private set { Set(ref status, value); Raise(nameof(Status)); } }
     public string Status => StatusText;
@@ -164,7 +164,7 @@ public sealed partial class MainViewModel : ObservableModel
     public int ActiveWeaponSet => Snapshot.Int("activeWeaponSet", 1);
     public string BaseLifeText => Number(Snapshot.Obj("character").Obj("vitals").Double("maxLife"));
     public string BaseManaText => Number(Snapshot.Obj("character").Obj("vitals").Double("maxMana"));
-    public string SkillPointsText => Snapshot.Obj("character").Obj("attributes").Long("unspentSkills") + " disponibles";
+    public string SkillPointsText => (Snapshot.Obj("character").Obj("attributes").Long("unspentSkills") + Snapshot.Array("skills").OfType<JsonObject>().Sum(skill => (long)skill.Int("points")) - Skills.Sum(skill => (long)skill.Points)) + " disponibles";
     public string AttributePointsText => Snapshot.Obj("character").Obj("attributes").Long("unspentStats") + " disponibles";
     public string MercenaryName => Names.MercenaryType(Snapshot.Obj("mercenary").Text("typeName", "Mercenario"));
     public string MercenaryLevelText => "Nivel " + Snapshot.Obj("mercenary").Int("level");
@@ -231,7 +231,7 @@ public sealed partial class MainViewModel : ObservableModel
     public Task OpenPathAsync(string path) => OpenPathAsync(path, null);
     Task OpenPathAsync(string path, string? profileId) => RunAsync(async () =>
     {
-        if (IsDirty && !dialogs.Confirm("Cambiar de personaje", "Hay un borrador sin guardar. ¿Quieres abrir otra partida y descartarlo?")) return;
+        if ((IsDirty || HasInputErrors) && !dialogs.Confirm("Cambiar de personaje", "Hay un borrador sin guardar. ¿Quieres abrir otra partida y descartarlo?")) return;
         string fullPath = Path.GetFullPath(path);
         var knownSave = Saves.FirstOrDefault(s => string.Equals(Path.GetFullPath(s.Path), fullPath, StringComparison.OrdinalIgnoreCase));
         string? selectedProfileId = profileId ?? knownSave?.ProfileId ?? SelectedProfile?.Id;
@@ -248,7 +248,7 @@ public sealed partial class MainViewModel : ObservableModel
     { await bridge.CallAsync(c => c.AddProfile(new(excelPath, null, name))); await RefreshBootstrapCoreAsync(); StatusText = "Perfil de datos añadido."; });
     public Task CreateCharacterAsync(CreateRequest request) => RunAsync(async () =>
     {
-        if (IsDirty && !IsSyntheticDemo && !dialogs.Confirm("Crear otro personaje", "Hay un borrador sin guardar. ¿Quieres descartarlo para crear otro personaje?")) return;
+        if ((IsDirty || HasInputErrors) && !IsSyntheticDemo && !dialogs.Confirm("Crear otro personaje", "Hay un borrador sin guardar. ¿Quieres descartarlo para crear otro personaje?")) return;
         request.ProfileId ??= SelectedProfile?.Id;
         var opened = await bridge.CallAsync(c => c.Create(request)); await AcceptOpenedAsync(opened); IsDirty = true;
         StatusText = "Personaje creado en memoria. Revisa los cambios para guardarlo.";
@@ -293,13 +293,14 @@ public sealed partial class MainViewModel : ObservableModel
     async Task PreviewCoreAsync(bool review)
     {
         if (!HasCharacter) return;
+        if (HasInputErrors) { StatusText = "Corrige los campos señalados antes de revisar o guardar."; return; }
         var request = BuildRequest();
         var preview = await bridge.CallAsync(c => c.Preview(request));
         if (!preview.Bool("canSave"))
         {
             validPlan = reviewed = false; planId = "";
             ErrorText = string.Join(Environment.NewLine, preview.Obj("validation").Array("errors").Select(n => n?.GetValue<string>()));
-            ValidationMessage = "Revisa los valores del borrador."; Raise(nameof(ValidationMessage)); Raise(nameof(CanCommit)); return;
+            ValidationMessage = "Revisa los valores del borrador."; Raise(nameof(ValidationMessage)); RaiseSaveState(); return;
         }
         validPlan = true; reviewed = review; planId = preview.Text("planId");
         await PrepareArtworkAsync(preview.Obj("summary")); ApplySnapshot(preview.Obj("summary"), true);
@@ -313,13 +314,16 @@ public sealed partial class MainViewModel : ObservableModel
                     : IsNew
                         ? "Personaje nuevo válido. Revisa los cambios antes de guardarlo."
                         : "Borrador válido. Revisa los cambios antes de guardar.";
-        Raise(nameof(ValidationMessage)); Raise(nameof(CanCommit)); ErrorText = "";
+        Raise(nameof(ValidationMessage)); RaiseSaveState(); ErrorText = "";
         await RefreshWorldCoreAsync();
         if (review) { SelectedView = "changes"; StatusText = "Cambios revisados · " + Changes.Count + " entradas."; }
     }
     public Task SaveAsync(string? destination = null) => RunAsync(async () =>
     {
-        if (!reviewed || !validPlan) { ErrorText = "Revisa los cambios antes de guardar."; return; }
+        if (HasInputErrors) { StatusText = "Corrige los campos señalados antes de guardar."; return; }
+        if (!HasCharacter || IsSyntheticDemo || (!IsDirty && !IsNew)) return;
+        if (!reviewed || !validPlan) { await PreviewCoreAsync(true); return; }
+        if (GameRunning) { ErrorText = "Cierra Diablo II y revisa los cambios antes de guardar."; return; }
         if (IsNew) { destination ??= dialogs.SaveFile("Guardar personaje nuevo", CharacterName + ".d2s", SaveFilter); if (destination is null) return; }
         var result = await bridge.CallAsync(c => c.Commit(new(sessionId, planId, SourceHash, destination)));
         LastOutputPath = result.Text("outputPath"); Raise(nameof(LastOutputPath)); OutputCreated?.Invoke(LastOutputPath);
@@ -409,9 +413,10 @@ public sealed partial class MainViewModel : ObservableModel
         catch (Exception exception) { ShowError(exception); }
         finally { IsBusy = false; Requery(); }
     }
-    void ShowError(Exception exception) { ErrorText = exception is ApiProblem problem ? problem.Message : "No se pudo completar la operación: " + exception.Message; StatusText = "La operación no se ha completado."; reviewed = false; Raise(nameof(CanCommit)); }
+    void ShowError(Exception exception) { ErrorText = exception is ApiProblem problem ? problem.Message : "No se pudo completar la operación: " + exception.Message; StatusText = "La operación no se ha completado."; reviewed = false; RaiseSaveState(); }
     PreviewRequest BuildRequest()
     {
+        if (HasInputErrors) throw new ApiProblem("input_invalid", DisplayErrorText);
         var request = NativeEditorBridge.Clone(draft); request.SessionId = sessionId;
         if (basicTouched)
         {
@@ -432,7 +437,7 @@ public sealed partial class MainViewModel : ObservableModel
         if (!loading && HasCharacter) { basicTouched = true; MarkDirty(); }
     }
     string PendingValidationText => IsNew ? "Personaje nuevo pendiente de revisión y guardado." : IsDirty ? "Cambios pendientes de revisar." : "Sin cambios pendientes.";
-    void MarkDirty() { IsDirty = true; reviewed = validPlan = false; planId = ""; ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage)); Raise(nameof(CanCommit)); }
+    void MarkDirty() { IsDirty = true; reviewed = validPlan = false; planId = ""; ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage)); RaiseSaveState(); }
     void ApplySnapshot(JsonObject snapshot, bool fields)
     {
         loading = true;
@@ -445,7 +450,9 @@ public sealed partial class MainViewModel : ObservableModel
                 CharacterName = character.Text("name"); LevelText = character.Int("level", 1).ToString(); ExperienceText = character.Long("experience").ToString();
                 StrengthText = attributes.Long("strength").ToString(); DexterityText = attributes.Long("dexterity").ToString(); VitalityText = attributes.Long("vitality").ToString(); EnergyText = attributes.Long("energy").ToString(); GoldText = attributes.Long("gold").ToString(); StashGoldText = attributes.Long("stashGold").ToString();
             }
+            foreach (var skill in Skills) skill.PropertyChanged -= OnSkillRowChanged;
             Replace(Skills, snapshot.Array("skills").OfType<JsonObject>().Select(n => new SkillViewModel(n, ChangeSkill)));
+            foreach (var skill in Skills) skill.PropertyChanged += OnSkillRowChanged;
             UpdateRowLocks();
             Replace(Items, snapshot.Array("items").OfType<JsonObject>().Select(n => new ItemViewModel(n)));
             Replace(MercenaryItems, snapshot.Obj("mercenary").Array("items").OfType<JsonObject>().Select(n => new ItemViewModel(n)));
@@ -467,6 +474,10 @@ public sealed partial class MainViewModel : ObservableModel
     void ChangeSkill(SkillViewModel skill, int value)
     {
         if (loading) return; Remember(); skillsTouched = true; draft.Skills = Skills.Select(s => new SkillChange(s.Id, s.Id == skill.Id ? value : s.Points)).ToList(); MarkDirty();
+    }
+    void OnSkillRowChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SkillViewModel.Points)) Raise(nameof(SkillPointsText));
     }
     async Task RefreshWorldCoreAsync()
     {

@@ -1,4 +1,4 @@
-Jamella · Tributo 0.6.0 (proyecto AKARA)
+Jamella · Tributo 0.6.1 (proyecto AKARA)
 Editor nativo de personajes de Diablo II: Resurrected para Windows
 
 Abre Akara.exe. Se abre la aplicación de escritorio en su propia ventana.
@@ -24,7 +24,10 @@ PARA EMPEZAR
    mano y no necesita una segunda arma.
 4. Mundo permite ajustar misiones, recompensas, transportadores y
    progreso por dificultad. Constructor permite diseñar o editar objetos.
-5. Pulsa Revisar. Lee las diferencias y corrige los errores.
+5. Las habilidades detectan cambios al escribir y actualizan los puntos.
+   Revisar y guardar… (Ctrl+S) muestra las diferencias. Después,
+   Guardar confirma la escritura. También puedes pulsar Revisar.
+   Corrige los campos inválidos antes de continuar.
    Deshacer y Rehacer modifican el borrador, no la partida guardada.
 6. Cierra Diablo II y pulsa Guardar. Para un personaje nuevo,
    elige un archivo cuyo nombre coincida con el del personaje.

@@ -48,7 +48,7 @@ public static class NativeSmoke
             Check(demo.NavItems.Select(n => n.Key).Distinct().Count() == demo.NavItems.Count && demo.NavItems.Count >= 7, "native-navigation-model");
             await demo.CreateDemoAsync(); Healthy(demo, "demo");
             Check(demo.Snapshot["character"] is JsonObject character && character["name"]?.GetValue<string>() is { Length: > 0 }, "native-demo-populates-viewmodel");
-            Check(!demo.CanCommit && !demo.SaveCommand.CanExecute(null), "demo-never-auto-saves");
+            Check(!demo.CanCommit && (!demo.IsSyntheticDemo || !demo.SaveCommand.CanExecute(null)), "demo-never-commits-before-review");
 
             if (savePath is null && excelPath is null) omissions.Add("private-fixture-flows-not-requested");
             else
@@ -83,6 +83,7 @@ public static class NativeSmoke
                 await vm.OpenPathAsync(copy); Healthy(vm, "fixture open");
                 Check(vm.HasCharacter && !vm.CanCommit, "private-fixture-open-is-read-only");
                 await WorkbenchChecks.EquipmentAsync(vm,checks); Healthy(vm,"production workbench");
+                await SkillEditingChecks.RunAsync(vm,root,checks); Healthy(vm,"skill input");
                 Check(Hash(await File.ReadAllBytesAsync(copy)) == fixtureHash, "opening-keeps-source-bytes");
                 await CheckOriginalGameArtAsync(vm, excelPath, root, checks, omissions);
                 await CheckItemHoverAsync(vm, copy, fixtureHash, root, checks);

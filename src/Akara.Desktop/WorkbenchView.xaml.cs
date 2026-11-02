@@ -16,6 +16,7 @@ namespace Akara.Desktop;
 public partial class WorkbenchView : UserControl
 {
     MainViewModel? attached;
+    readonly HashSet<ValidationError> inputErrors=[];
     bool objectContext,catalogExpanded=true,skillsQueued,catalogInitialized,catalogQueued;
     double catalogWidth=240,inspectorWidth=370;
     readonly CatalogBranch[] catalogBranches=[new("unique","Únicos"),new("set","Conjuntos"),new("runeword","Palabras rúnicas"),new("base","Bases")];
@@ -34,10 +35,12 @@ public partial class WorkbenchView : UserControl
     {
         if(attached is not null)
         {
+            attached.SetInputErrorCount(0);
             attached.RequestCreate-=Create;attached.RequestClone-=Clone;attached.RequestMove-=Move;attached.RequestDesign-=Design;attached.RequestCatalogDesign-=DesignCatalog;
             attached.PropertyChanged-=OnViewModelChanged;attached.Skills.CollectionChanged-=OnSkillsChanged;
         }
         attached=e.NewValue as MainViewModel;
+        inputErrors.Clear();
         catalogInitialized=false;
         if(welcomeView is not null)welcomeView.Filter=null;
         welcomeView=null;
@@ -52,6 +55,11 @@ public partial class WorkbenchView : UserControl
             WelcomeSavesList.SelectedItem=attached.Saves.FirstOrDefault(save=>save.ProfileId is not null)??attached.Saves.FirstOrDefault();
         }
         UpdateContext();RefreshSkillColumns();RefreshInspector();
+    }
+    void OnInputValidationError(object sender,ValidationErrorEventArgs e)
+    {
+        if(e.Action==ValidationErrorEventAction.Added)inputErrors.Add(e.Error);else inputErrors.Remove(e.Error);
+        attached?.SetInputErrorCount(inputErrors.Count);
     }
     void OnViewModelChanged(object? sender,PropertyChangedEventArgs e)
     {
@@ -103,6 +111,7 @@ public partial class WorkbenchView : UserControl
     }
     void OnSkillsChanged(object? sender,NotifyCollectionChangedEventArgs e)
     {
+        if(e.Action==NotifyCollectionChangedAction.Reset){inputErrors.Clear();attached?.SetInputErrorCount(0);}
         if(skillsQueued)return;skillsQueued=true;
         Dispatcher.BeginInvoke(DispatcherPriority.DataBind,new Action(()=>{skillsQueued=false;RefreshSkillColumns();}));
     }

@@ -2,7 +2,7 @@
 
 A native Windows character editor for Diablo II: Resurrected, inspired by Jamella's 2001 editor. This independent tribute uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly. The repository, executable and CLI keep their AKARA identifiers for compatibility. See the [tribute and attribution](docs/JAMELLA-TRIBUTE.md).
 
-Version **0.6.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.6.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
@@ -32,7 +32,7 @@ Custom items use existing native bases and properties. Adding new game definitio
 2. Elige una partida o pulsa **Abrir**. Selecciona el perfil que corresponde al personaje. Si AKARA no detecta el mod, indica su carpeta de tablas.
 3. Para empezar desde cero, pulsa **Nuevo** y elige clase, nombre y, si quieres, una plantilla. **Clonar** prepara una copia con otro nombre. Todavía no se escribe ningún archivo.
 4. Ajusta **Personaje**, **Habilidades**, **Objetos**, **Mercenario**, **Mundo** o **Constructor**. En el equipo puedes cambiar entre los conjuntos I y II. La biblioteca permite preparar una plantilla o recuperar una configuración propia.
-5. Pulsa **Revisar**. Lee las diferencias y resuelve los errores. **Deshacer** y **Rehacer** actúan sobre el borrador.
+5. Los cambios de habilidades se detectan al escribir y actualizan los puntos disponibles. Pulsa **Revisar y guardar…** o **Ctrl+S** para ver las diferencias; resuelve los errores y pulsa **Guardar** para confirmar. También puedes usar **Revisar** directamente. **Deshacer** y **Rehacer** actúan sobre el borrador.
 6. Cierra Diablo II y pulsa **Guardar**. Para un personaje nuevo, elige un archivo cuyo nombre coincida con el personaje; la creación nunca sobrescribe otro existente.
 7. **Exportar copia** guarda otro archivo sin sobrescribir el destino. Puedes exportar fuera de **Saved Games** con el juego abierto. Crear o exportar dentro de **Saved Games** exige cerrar Diablo II. Si cambias el nombre, exporta con el nuevo nombre.
 8. Consulta **Copias de seguridad** para restaurar una versión anterior. Cierra la ventana al terminar.

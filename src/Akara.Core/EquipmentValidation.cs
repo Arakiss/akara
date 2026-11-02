@@ -40,14 +40,14 @@ public sealed partial class EditorService
         foreach (var item in save.Items.Where(i => i.Position.Mode == ItemMode.Equipped))
         {
             ValidateClass(item, p, save, "character");
-            if (!EquipSlots(item, p, "character", save).Contains(Slot(item))) throw new ApiProblem("equipment_slot", "Hay un objeto incompatible con su ranura de equipo.");
+            if (!EquipSlots(item, p, "character", save).Contains(Slot(item))) throw new ApiProblem("equipment_slot", L.T("Hay un objeto incompatible con su ranura de equipo."));
         }
         if (save.MercItems is not null)
         {
-            if (!save.Character.MercData.HasMerc && save.MercItems.Items.Count > 0) throw new ApiProblem("mercenary_missing", "Hay equipo de mercenario sin un mercenario contratado.");
-            if (save.MercItems.Items.GroupBy(i => i.Position.BodyLocation).Any(g => g.Count() > 1)) throw new ApiProblem("mercenary_collision", "Hay dos objetos en la misma ranura del mercenario.");
+            if (!save.Character.MercData.HasMerc && save.MercItems.Items.Count > 0) throw new ApiProblem("mercenary_missing", L.T("Hay equipo de mercenario sin un mercenario contratado."));
+            if (save.MercItems.Items.GroupBy(i => i.Position.BodyLocation).Any(g => g.Count() > 1)) throw new ApiProblem("mercenary_collision", L.T("Hay dos objetos en la misma ranura del mercenario."));
             foreach (var item in save.MercItems.Items)
-                if (item.Position.Mode != ItemMode.Equipped || (int)item.Position.BodyLocation is < 1 or > 10 || !EquipSlots(item, p, "mercenary", save).Contains(Slot(item))) throw new ApiProblem("mercenary_slot", "El equipo del mercenario contiene una ubicación incompatible.");
+                if (item.Position.Mode != ItemMode.Equipped || (int)item.Position.BodyLocation is < 1 or > 10 || !EquipSlots(item, p, "mercenary", save).Contains(Slot(item))) throw new ApiProblem("mercenary_slot", L.T("El equipo del mercenario contiene una ubicación incompatible."));
         }
         foreach (string owner in new[] { "character", "mercenary" })
         {
@@ -56,14 +56,14 @@ public sealed partial class EditorService
             {
                 var weapon = items.FirstOrDefault(i => i.Position.Mode == ItemMode.Equipped && (int)i.Position.BodyLocation == main);
                 var offhand = items.FirstOrDefault(i => i.Position.Mode == ItemMode.Equipped && (int)i.Position.BodyLocation == main + 1);
-                if (weapon is not null && offhand is not null && TwoHanded(weapon, p, owner == "character" && save.Character.Class.ToString() == "Barbarian") && !AllowedTwoHandOffhand(weapon, offhand, p, save, owner)) throw new ApiProblem("two_handed_conflict", "Un arma de dos manos ocupa una mano secundaria incompatible.");
+                if (weapon is not null && offhand is not null && TwoHanded(weapon, p, owner == "character" && save.Character.Class.ToString() == "Barbarian") && !AllowedTwoHandOffhand(weapon, offhand, p, save, owner)) throw new ApiProblem("two_handed_conflict", L.T("Un arma de dos manos ocupa una mano secundaria incompatible."));
             }
         }
         var belt = save.Items.Where(i => i.Position.Mode == ItemMode.InBelt).ToArray();
-        if (belt.Any(i => i.Position.InvX >= BeltSlots(save, p)) || belt.GroupBy(i => i.Position.InvX).Any(g => g.Count() > 1)) throw new ApiProblem("belt_position", "El cinturón contiene posiciones duplicadas o fuera de sus límites.");
+        if (belt.Any(i => i.Position.InvX >= BeltSlots(save, p)) || belt.GroupBy(i => i.Position.InvX).Any(g => g.Count() > 1)) throw new ApiProblem("belt_position", L.T("El cinturón contiene posiciones duplicadas o fuera de sus límites."));
         int active = Array.FindIndex(save.Character.TownDifficulty, b => (b & 0x80) != 0);
         int acts = save.Character.Preview.GameVersion == GameVersion.Classic ? 4 : 5;
         int max = Math.Min(2, (int)(((uint)save.Character.Flags >> 8) & 31) / acts);
-        if (active > max) throw new ApiProblem("difficulty_locked", "La dificultad de inicio todavía no está desbloqueada.");
+        if (active > max) throw new ApiProblem("difficulty_locked", L.T("La dificultad de inicio todavía no está desbloqueada."));
     }
 }

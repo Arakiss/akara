@@ -35,7 +35,7 @@ internal static class WorkbenchChecks
             Require(list.Items.Count==0&&vm.Saves.Count>0,"Welcome filtering mutated discovery or failed to filter.");
             search.Text="";await Dispatcher.Yield(DispatcherPriority.DataBind);
             var save=vm.Saves[0];list.SelectedItem=save;
-            var open=Descendants<Button>(view).Single(button=>button.Content?.ToString()=="Abrir personaje");
+            var open=Descendants<Button>(view).Single(button=>button.Content?.ToString()==L.T("Abrir personaje"));
             Require(ReferenceEquals(open.Command,vm.OpenSaveCommand)&&ReferenceEquals(open.CommandParameter,save)&&open.Command.CanExecute(save),"The welcome action was not bound to its selected character.");
             await ((NativeCommand)open.Command).ExecuteAsync(open.CommandParameter);await Idle(vm);
             Require(vm.HasCharacter&&vm.SelectedSave?.Path==save.Path&&vm.ErrorText.Length==0,"Opening a welcome row did not synchronize the accepted character.");

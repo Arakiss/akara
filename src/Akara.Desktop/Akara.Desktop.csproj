@@ -9,8 +9,8 @@
     <RootNamespace>Akara.Desktop</RootNamespace>
     <Product>Jamella · Tributo</Product>
     <Title>Jamella · Tributo</Title>
-    <Description>Editor nativo de personajes de Diablo II: Resurrected</Description>
-    <Version>0.6.2</Version>
+    <Description>Native offline Diablo II: Resurrected character editor</Description>
+    <Version>0.7.0</Version>
     <ApplicationIcon>../../assets/akara-native.ico</ApplicationIcon>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

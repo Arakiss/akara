@@ -15,7 +15,7 @@ public sealed partial class EditorService
     private static int LevelForExperience(GameData p, string className, long experience)
     {
         int maximumLevel=I(p.Read("experience.txt").First(r=>V(r,"Level")=="MaxLvl"),className,99),level=1;
-        if(experience<0||experience>ExperienceBounds(p,className,maximumLevel).Maximum) throw new ApiProblem("experience_range","La experiencia supera el límite nativo de esta clase.");
+        if(experience<0||experience>ExperienceBounds(p,className,maximumLevel).Maximum) throw new ApiProblem("experience_range",L.T("La experiencia supera el límite nativo de esta clase."));
         for(int n=2;n<=maximumLevel;n++){if(experience<ExperienceBounds(p,className,n).Minimum) break;level=n;}
         return level;
     }
@@ -29,7 +29,7 @@ public sealed partial class EditorService
             if(before!=value.Value)diff.Add(new("character",label,before,value.Value));
         }
         bool wasDead=save.Character.Flags.HasFlag(CharacterFlags.Dead);
-        Set(CharacterFlags.Hardcore,change.Hardcore,"Hardcore");Set(CharacterFlags.Dead,change.Dead,"Marca de muerte");Set(CharacterFlags.Ladder,change.Ladder,"Escalera");
+        Set(CharacterFlags.Hardcore,change.Hardcore,"Hardcore");Set(CharacterFlags.Dead,change.Dead,L.T("Marca de muerte"));Set(CharacterFlags.Ladder,change.Ladder,"Escalera");
         if(change.Dead==false&&wasDead)save.Stats.SetStat((StatId)6,save.Stats.GetStat((StatId)7));
         if(change.Dead==true)save.Stats.SetStat((StatId)6,0);
     }

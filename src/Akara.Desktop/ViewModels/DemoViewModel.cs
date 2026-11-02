@@ -12,7 +12,7 @@ public sealed partial class MainViewModel
         {
             ["id"] = id, ["name"] = name, ["baseName"] = name, ["code"] = code, ["quality"] = quality,
             ["level"] = 85, ["slot"] = slot, ["page"] = page, ["owner"] = owner, ["width"] = width, ["height"] = height, ["x"] = x, ["y"] = y, ["weaponSet"] = weaponSet,
-            ["stats"] = new JsonArray(new JsonObject { ["id"] = 127, ["label"] = "Todas las habilidades", ["layer"] = 0, ["value"] = 2, ["displayValue"] = 2 }), ["sockets"] = new JsonArray()
+            ["stats"] = new JsonArray(new JsonObject { ["id"] = 127, ["label"] = L.T("Todas las habilidades"), ["layer"] = 0, ["value"] = 2, ["displayValue"] = 2 }), ["sockets"] = new JsonArray()
         };
         var items = new JsonArray
         {
@@ -23,7 +23,7 @@ public sealed partial class MainViewModel
             Item("i8","Piedra de Jordán","rin","ring1","unique",1,1), Item("i9","Piedra de Jordán","rin","ring2","unique",1,1),
             Item("i10","Llamada a las armas","crs","weapon","normal",2,3,weaponSet:2), Item("i11","Espíritu","uit","shield","normal",2,4,weaponSet:2),
             Item("i12","Tomo del portal","tbk","","normal",1,2,"inventory",0,0), Item("i13","Tomo de identificación","ibk","","normal",1,2,"inventory",1,0),
-            Item("i14","Cubo horádrico","box","","normal",2,2,"inventory",2,0), Item("i15","Antorcha del Infierno","cm2","","unique",1,3,"inventory",4,0),
+            Item("i14",L.T("Cubo horádrico"),"box","","normal",2,2,"inventory",2,0), Item("i15","Antorcha del Infierno","cm2","","unique",1,3,"inventory",4,0),
             Item("i16","Talismán de escarcha","cm3","","magic",1,3,"inventory",5,0), Item("i17","Talismán de rayos","cm3","","magic",1,3,"inventory",6,0),
             Item("i18","Talismán de rayos","cm3","","magic",1,3,"inventory",7,0), Item("i19","Annihilus","cm1","","unique",1,1,"inventory",8,0),
             Item("i20","Talismán antiguo","cm1","","magic",1,1,"inventory",8,1), Item("i21","Talismán antiguo","cm1","","magic",1,1,"inventory",9,1),
@@ -48,13 +48,13 @@ public sealed partial class MainViewModel
                 ["attributes"] = new JsonObject { ["strength"] = 124, ["dexterity"] = 25, ["vitality"] = 331, ["energy"] = 35, ["gold"] = 200000, ["stashGold"] = 2000000, ["unspentStats"] = 0, ["unspentSkills"] = 0 },
                 ["vitals"] = new JsonObject { ["maxLife"] = 986.5, ["maxMana"] = 325 } },
             ["inventoryGrid"] = new JsonObject { ["width"] = 10, ["height"] = 8 }, ["stashGrid"] = new JsonObject { ["width"] = 10, ["height"] = 10 }, ["cubeGrid"] = new JsonObject { ["width"] = 3, ["height"] = 4 },
-            ["items"] = items, ["skills"] = skills, ["mercenary"] = new JsonObject { ["exists"] = true, ["typeName"] = "Guardián del desierto", ["level"] = 85, ["aura"] = "Fuerza", ["items"] = merc },
+            ["items"] = items, ["skills"] = skills, ["mercenary"] = new JsonObject { ["exists"] = true, ["typeName"] = "Guardián del desierto", ["level"] = 85, ["aura"] = L.T("Fuerza"), ["items"] = merc },
             ["validation"] = new JsonObject { ["canEdit"] = false, ["checksum"] = false, ["roundtrip"] = false }
         };
         SourceSnapshot = (JsonObject)snapshot.DeepClone(); ApplySnapshot(snapshot, true);
         foreach (var skill in Skills) skill.IsReadOnly = true;
-        IsDirty = false; reviewed = validPlan = false; StatusText = "Vista de diseño · datos de muestra, sin partida abierta.";
-        ValidationMessage = "Abre una partida local para editar y guardar.";
+        IsDirty = false; reviewed = validPlan = false; StatusText = L.T("Vista de diseño · datos de muestra, sin partida abierta.");
+        ValidationMessage = L.T("Abre una partida local para editar y guardar.");
         foreach (var name in new[] { nameof(IsSyntheticDemo), nameof(DemoLabel), nameof(HasCharacter), nameof(IsCharacterSelected), nameof(CanEdit), nameof(CanCommit), nameof(ValidationMessage) }) Raise(name);
     }
 }

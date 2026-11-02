@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Akara.Desktop.ViewModels;
+using Akara.Desktop.Localization;
 
 namespace Akara.Desktop;
 
@@ -14,8 +15,6 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("es-ES");
-        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("es-ES");
         string? Option(string key)
         {
             int index = Array.IndexOf(e.Args, "--" + key);
@@ -23,6 +22,7 @@ public partial class App : Application
         }
         try
         {
+            LanguagePreferences.Apply(Option("language") ?? LanguagePreferences.Load(Option("data-dir")));
             if (Option("capture") is not null || Option("self-test") is not null) RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             if (Option("self-test") is { } report)
             {
@@ -37,7 +37,7 @@ public partial class App : Application
             if (Option("storage") is { } storage && vm.StorageOptions.Contains(storage)) vm.SelectedStorage = storage;
             if (Option("select-item") is { } itemQuery)
                 vm.SelectedItem = vm.Items.Concat(vm.MercenaryItems).FirstOrDefault(item => item.Name.Contains(itemQuery, StringComparison.OrdinalIgnoreCase))
-                    ?? throw new ArgumentException("No se encontró un objeto que coincida con «" + itemQuery + "».", "select-item");
+                    ?? throw new ArgumentException(L.T("No se encontró un objeto que coincida con «") + itemQuery + "».", "select-item");
             if (Option("capture") is { } capture)
             {
                 if (vm.HasCharacter && !vm.IsSyntheticDemo && vm.SelectedView is "equipment" or "mercenary" or "workshop")

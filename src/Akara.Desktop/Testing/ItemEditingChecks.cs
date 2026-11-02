@@ -25,7 +25,7 @@ internal static class ItemEditingChecks
         double value=item.Stats.Single(stat=>stat.NativeName==rate.NativeName).DisplayValue+10;
         editor.Table.SelectedItem=rate;Layout(editor);await Dispatcher.Yield(DispatcherPriority.ContextIdle);
         editor.ValueEditor.SetCurrentValue(TextBox.TextProperty,value.ToString(CultureInfo.InvariantCulture));await Dispatcher.Yield(DispatcherPriority.DataBind);
-        Require(rate.Label.Contains("Velocidad de lanzamiento",StringComparison.Ordinal)&&rate.Value==value.ToString(CultureInfo.InvariantCulture),"The visible property editor did not update the selected readable row immediately.");
+        Require(rate.Label.Contains(L.T("Velocidad de lanzamiento"),StringComparison.Ordinal)&&rate.Value==value.ToString(CultureInfo.InvariantCulture),"The visible property editor did not update the selected readable row immediately.");
         Require(editor.TryGetProperties(out var properties,out _)&&properties!.Single(stat=>stat.Id==rate.Id).Value==value,"The edited value was not collected before focus loss.");
         foreach(var original in design.Stats!.Where(stat=>stat.Id!=rate.Id))Require(properties!.Contains(original),"Editing one property changed an unrelated raw stat.");
         checks.Add("native-item-property-value-editor-updates-immediately-and-preserves-other-raw-stats");

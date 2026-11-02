@@ -10,7 +10,7 @@ namespace Akara.Desktop.ViewModels;
 public sealed partial class MainViewModel
 {
     readonly string? artworkDataRoot;
-    string artworkStatus = "Los gráficos se leen de tu instalación del juego.";
+    string artworkStatus = L.T("Los gráficos se leen de tu instalación del juego.");
     public string ArtworkStatus { get => artworkStatus; private set => Set(ref artworkStatus, value); }
 
     async Task PrepareArtworkAsync(JsonObject snapshot)
@@ -43,12 +43,12 @@ public sealed partial class MainViewModel
                 else await application.Dispatcher.InvokeAsync(UpdateResources);
             }
             ArtworkStatus = result.Missing.Count == 0
-                ? "Gráficos originales de tu instalación · " + result.ItemsLoaded + " objetos"
-                : "Gráficos originales · " + result.ItemsLoaded + " objetos · " + result.Missing.Count + " imágenes no disponibles";
+                ? L.T("Gráficos originales de tu instalación · ") + result.ItemsLoaded + L.T(" objetos")
+                : L.T("Gráficos originales · ") + result.ItemsLoaded + L.T(" objetos · ") + result.Missing.Count + L.T(" imágenes no disponibles");
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or ArgumentException or InvalidOperationException or KeyNotFoundException or OverflowException or DllNotFoundException or BadImageFormatException or EntryPointNotFoundException)
         {
-            ArtworkStatus = "No se pudieron leer los gráficos del juego. Las imágenes ausentes usan un marcador neutro.";
+            ArtworkStatus = L.T("No se pudieron leer los gráficos del juego. Las imágenes ausentes usan un marcador neutro.");
         }
     }
 }

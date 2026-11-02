@@ -1,12 +1,12 @@
 # Jamella · Tributo
 
-A native Windows character editor for Diablo II: Resurrected, inspired by Jamella's 2001 editor. This independent tribute uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly. The repository, executable and CLI keep their AKARA identifiers for compatibility. See the [tribute and attribution](docs/JAMELLA-TRIBUTE.md).
+A native Windows character editor for Diablo II: Resurrected, inspired by Jamella's 2001 editor. This independent tribute uses WPF and .NET 10: its interface opens as a desktop window and calls the character-editing Core directly. **English is the default language. Spanish is available under Language → Español**, and the choice is remembered. The repository, executable and CLI keep their AKARA identifiers for compatibility. See the [tribute and attribution](docs/JAMELLA-TRIBUTE.md).
 
-Version **0.6.2**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.7.0**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
-[Inicio rápido en español](#inicio-rápido-en-español) · [Build from source](#build-from-source) · [CLI](docs/cli.md) · [Verification](#verification) · [License](LICENSE)
+[Quickstart](#quickstart) · [Inicio rápido en español](#inicio-rápido-en-español) · [Build from source](#build-from-source) · [CLI](docs/cli.md) · [Verification](#verification) · [License](LICENSE)
 
 ## What it does
 
@@ -17,9 +17,9 @@ Version **0.6.2**. Developed against **D2R Reimagined 3.1**, using data from you
 - Opens with a searchable list of discovered local characters. Uses a compact Jamella-inspired workbench: desktop menus, a categorized item tree, horizontal tabs, resizable panes, equipment and containers together, a personal-stash gallery, and a full property inspector. Item and skill images are read from your installed game and mod; no generated item artwork is shipped. Unresolved graphics use an explicit neutral marker.
 - Shows item cards on hover across equipment, containers, item tables and mercenary pieces, without changing the selection. Cards retain full properties and socket contents, with scrolling for long descriptions.
 - Arranges inventory, personal stash, cube, belt, both weapon sets, and mercenary equipment. Reimagined supports nine equipped mercenary pieces; a two-handed weapon reserves the off hand without adding a duplicate item. Inventory actions have controls that do not require dragging.
-- Edits quests and waypoints by difficulty, progression, and rewards through **Mundo**.
-- Builds items in **Constructor** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.
-- Opens existing items directly on **Propiedades**, with readable property names and an explicit **Valor** field. Add or remove native properties from the installed profile; invalid designs stay open for correction before entering the draft.
+- Edits quests and waypoints by difficulty, progression, and rewards through **World**.
+- Builds items in **Item designer** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.
+- Opens existing items directly on **Properties**, with readable property names and an explicit value field. Add or remove native properties from the installed profile; invalid designs stay open for correction before entering the draft.
 - Saves reusable loadouts in a local library, with JSON import/export and optional character progression. Applying a loadout keeps previous equipment in the personal stash by default. At the same level, it preserves the destination character's experience; changing level uses that level's native starting XP. Clone a character to retain its exact XP.
 - Prepares a validated preview and readable diff before writing. Undo/redo changes the draft; backup restoration recovers an earlier saved file.
 - Exports a new copy without overwriting a destination. Replacement and restoration require Diablo II to be closed and use verified backups, source-hash checks, and atomic replacement.
@@ -27,7 +27,19 @@ Version **0.6.2**. Developed against **D2R Reimagined 3.1**, using data from you
 
 Custom items use existing native bases and properties. Adding new game definitions or artwork requires a separate mod-data workflow. Online characters and shared-stash files are outside the editor's scope.
 
+## Quickstart
+
+1. Extract the Windows package and open **Akara.exe**. No separate runtime is required.
+2. Double-click a discovered local character or select **Open…**. Choose the matching data profile if prompted.
+3. Edit **Character**, **Skills**, **Equipment**, **Mercenary** or **World**. To change an item's modifiers, select it, click **Edit item…**, select a property and edit its value. **Add a property** adds another native modifier; **Stage changes** validates the design and returns it to the draft.
+4. Select **Review and save…** (Ctrl+S), read the changes, then select **Save**. Close Diablo II before replacing a save. A verified backup is created automatically.
+5. Use **Language → Español** for Spanish or **Language → English** to return to English. The preference is saved locally. Switching languages preserves valid pending edits and their review state; correct invalid input before switching.
+
+The library stores reusable builds and supports JSON import/export. Custom items use existing game bases and encodable properties. Native item and skill names, artwork, user names and CLI identifiers are preserved. [Localization details](docs/LOCALIZATION.md).
+
 ## Inicio rápido en español
+
+Para seguir los nombres de estos controles en español, selecciona **Language → Español**. El idioma inicial es inglés, incluso en Windows en español. Puedes volver a inglés desde **Idioma → English**. El cambio conserva el borrador y se recuerda al abrir la aplicación de nuevo.
 
 1. Extrae el paquete para Windows y abre **Akara.exe**. Se abre la ventana nativa de escritorio; el paquete portátil no necesita Node.js, PowerShell ni .NET instalados.
 2. Elige una partida o pulsa **Abrir**. Selecciona el perfil que corresponde al personaje. Si AKARA no detecta el mod, indica su carpeta de tablas.

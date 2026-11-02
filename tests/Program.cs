@@ -99,7 +99,7 @@ var mercSummary = mercenary.GetProperty("summary").GetProperty("mercenary");
 Check(mercSummary.GetProperty("exists").GetBoolean() && mercSummary.GetProperty("experience").GetInt64()==74562000 && mercSummary.GetProperty("items").GetArrayLength()==3, "Mercenary XP, existence and equipment survive binary roundtrip");
 foreach (var item in mercSummary.GetProperty("items").EnumerateArray()) foreach (var listName in new[]{"stats","runewordStats"}) Check(item.GetProperty(listName).EnumerateArray().GroupBy(x => (x.GetProperty("id").GetInt32(),x.GetProperty("layer").GetInt32())).All(g=>g.Count()==1), "Mercenary "+item.GetProperty("name").GetString()+" "+listName+" has no duplicated paired ED");
 var lowered = J(service.Preview(new(){SessionId=reopen.GetProperty("sessionId").GetString()!,Level=30,Attributes=new(){["strength"]=10,["dexterity"]=25,["vitality"]=10,["energy"]=35}}));
-Check(!lowered.GetProperty("canSave").GetBoolean() && lowered.GetProperty("validation").GetProperty("errors").ToString().Contains("nivel del personaje"), "Lowering level validates existing hard skills even when skills are omitted");
+Check(!lowered.GetProperty("canSave").GetBoolean() && lowered.GetProperty("validation").GetProperty("errors").ToString().Contains("Character level", StringComparison.Ordinal), "Lowering level validates existing hard skills even when skills are omitted");
 var backups = J(service.GetBackups(session)).GetProperty("entries");
 var restored = J(service.Restore(new(session, backups[0].GetProperty("id").GetString()!, commit.GetProperty("hash").GetString()!)));
 Check(File.ReadAllBytes(source).AsSpan().SequenceEqual(original), "Restore returns original bytes and preserves displaced version");

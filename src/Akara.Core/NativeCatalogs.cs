@@ -10,7 +10,7 @@ public sealed partial class EditorService
     {
         var p = session.Profile; var save = Read(session.Original, p, session.Version);
         IEnumerable<Dictionary<string, string>> rows;
-        string file = type switch { "stat" => "itemstatcost.txt", "prefix" => "magicprefix.txt", "suffix" => "magicsuffix.txt", "rareprefix" => "rareprefix.txt", "raresuffix" => "raresuffix.txt", "hireling" => "hireling.txt", "all-skills" => "skills.txt", _ => throw new ApiProblem("catalog_type", "Tipo de catálogo desconocido.") };
+        string file = type switch { "stat" => "itemstatcost.txt", "prefix" => "magicprefix.txt", "suffix" => "magicsuffix.txt", "rareprefix" => "rareprefix.txt", "raresuffix" => "raresuffix.txt", "hireling" => "hireling.txt", "all-skills" => "skills.txt", _ => throw new ApiProblem("catalog_type", L.T("Tipo de catálogo desconocido.")) };
         var all = p.Read(file); rows = all;
         string Name(Dictionary<string, string> row) => type switch { "stat" => V(row, "Stat"), "hireling" => V(row, "Hireling") + " · " + string.Join(" / ", Enumerable.Range(1, 6).Select(n => V(row, "Skill" + n)).Where(n => n.Length > 0)), "all-skills" => V(row, "skill"), _ => V(row, "name") };
         if (type == "stat") rows = rows.Where(r => I(r, "Save Bits") > 0 && I(r, "*ID", -1) is >= 0 and < 511);

@@ -175,7 +175,7 @@ namespace D2RBuilder
         }
         public Item CreateMagicFromIds(string baseCode, int prefixId, int suffixId, int level = 99)
         {
-            if (prefixId == 0 && suffixId == 0) throw new ArgumentException("Selecciona al menos un afijo.");
+            if (prefixId == 0 && suffixId == 0) throw new ArgumentException(L.T("Selecciona al menos un afijo."));
             var item = CreateBase(baseCode, level, ItemQuality.Magic);
             item.QualityData = new MagicQualityData { PrefixId = checked((ushort)prefixId), SuffixId = checked((ushort)suffixId) };
             if (prefixId > 0) ApplyNativeAffix(item, prefixId, true);
@@ -254,7 +254,7 @@ namespace D2RBuilder
         public void ApplyNativeAffix(Item item, int id, bool prefix)
         {
             var rows = prefix ? prefixes : suffixes;
-            if (id < 1 || id > rows.Count || !IsAffixAllowed(rows[id - 1], item.ItemCodeString, item.ItemLevel)) throw new ArgumentException("El afijo no corresponde a esta base o nivel.");
+            if (id < 1 || id > rows.Count || !IsAffixAllowed(rows[id - 1], item.ItemCodeString, item.ItemLevel)) throw new ArgumentException(L.T("El afijo no corresponde a esta base o nivel."));
             ApplyAffix(item, rows[id - 1]); Finish(item);
         }
 
@@ -283,13 +283,13 @@ namespace D2RBuilder
             {
                 int index = item.AutoAffixId.Value - 1;
                 if (index >= automagic.Count || I(automagic[index], "group") != group || !IsAffixAllowed(automagic[index], item.ItemCodeString, item.ItemLevel))
-                    throw new InvalidDataException("El automodificador no corresponde a la base y nivel del objeto.");
+                    throw new InvalidDataException(L.T("El automodificador no corresponde a la base y nivel del objeto."));
                 row = automagic[index];
             }
             else
             {
                 var eligible = automagic.Where(r => I(r, "group") == group && IsAffixAllowed(r, item.ItemCodeString, item.ItemLevel)).ToList();
-                if (eligible.Count != 1) throw new NotSupportedException("El grupo de automodificadores necesita una selección nativa explícita: " + group);
+                if (eligible.Count != 1) throw new NotSupportedException(L.T("El grupo de automodificadores necesita una selección nativa explícita: ") + group);
                 row = eligible[0]; item.AutoAffixId = checked((ushort)(automagic.IndexOf(row) + 1));
             }
             var native = new List<Stat>();
@@ -304,7 +304,7 @@ namespace D2RBuilder
         public void MakeEthereal(Item item)
         {
             if (item.Flags.HasFlag(ItemFlags.Ethereal)) return;
-            if (item.Quality is ItemQuality.Set or ItemQuality.Inferior || !item.MaxDurability.HasValue || item.MaxDurability <= 0) throw new ArgumentException("Esta base o calidad no admite etéreo.");
+            if (item.Quality is ItemQuality.Set or ItemQuality.Inferior || !item.MaxDurability.HasValue || item.MaxDurability <= 0) throw new ArgumentException(L.T("Esta base o calidad no admite etéreo."));
             item.Flags |= ItemFlags.Ethereal;
             if (item.Defense.HasValue) item.Defense = item.Defense.Value * 3 / 2;
             item.MaxDurability = item.MaxDurability.Value / 2 + 1;
@@ -415,7 +415,7 @@ namespace D2RBuilder
                         Notes.Add(code + " resolved to skill " + layer + " at +" + value);
                         break;
                     case 19:
-                        if (lo < 1 || lo > 255 || hi < 1 || hi > 63) throw new NotSupportedException("Las cargas requieren cantidad y nivel explícitos dentro del rango nativo.");
+                        if (lo < 1 || lo > 255 || hi < 1 || hi > 63) throw new NotSupportedException(L.T("Las cargas requieren cantidad y nivel explícitos dentro del rango nativo."));
                         layer = (ResolveSkill(parameter) << 6) | hi;
                         value = (lo << 8) | lo;
                         break;
@@ -527,7 +527,7 @@ namespace D2RBuilder
                     if (limited != encoded)
                     {
                         s.Value = (limited - I(row, "Save Add")) << shift;
-                        Notes.Add("Valor nativo ajustado al campo guardable: " + V(row, "Stat"));
+                        Notes.Add(L.T("Valor nativo ajustado al campo guardable: ") + V(row, "Stat"));
                         encoded = limited;
                     }
                 }

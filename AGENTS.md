@@ -33,4 +33,4 @@ The integration runner needs your own local game tables and copied saves. `AKARA
 - Back up, verify, recheck the source and closed-game state, then replace atomically. Never bypass a stale-source conflict.
 - Custom save items use existing native bases and encodable properties. Adding a new base, asset, or unique definition to the game requires a separate mod-data workflow.
 
-Keep machine-oriented identifiers stable and user-facing Spanish clear. Include accessible non-drag controls for inventory operations. Avoid placeholder actions and do not claim engine testing when only serialization tests ran.
+Keep machine-oriented identifiers stable. English is the default desktop language; Spanish is optional and persisted. Route presentation text through the embedded language catalog and preserve user-authored and native identifiers. Include accessible non-drag controls for inventory operations. Avoid placeholder actions and do not claim engine testing when only serialization tests ran.

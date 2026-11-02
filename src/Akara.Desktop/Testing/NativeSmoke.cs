@@ -28,6 +28,7 @@ public static class NativeSmoke
         {
             Check(typeof(Application).Assembly.GetName().Name == "PresentationFramework", "actual-wpf-framework");
             Check(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA, "sta-ui-thread");
+            await LanguageChecks.RunAsync(root,checks);
             var resourceNames = new List<string>();
             foreach (string resourceName in typeof(App).Assembly.GetManifestResourceNames().Where(n => n.EndsWith(".g.resources", StringComparison.Ordinal)))
             {
@@ -76,12 +77,13 @@ public static class NativeSmoke
                 await runningVm.OpenPathAsync(copy); Healthy(runningVm, "running-state open");
                 await runningVm.ApplyDraftAsync(new PreviewRequest { Attributes = new() { ["gold"] = Gold(runningVm.Snapshot) + 1 } }); Healthy(runningVm, "running-state edit");
                 await runningVm.PreviewAsync(true); Healthy(runningVm, "running-state review");
-                Check(runningVm.GameRunning && !runningVm.CanCommit && !runningVm.SaveCommand.CanExecute(null) && runningVm.ValidationMessage.Contains("Cierra Diablo II", StringComparison.Ordinal), "native-review-explains-open-game-save-guard");
+                Check(runningVm.GameRunning && !runningVm.CanCommit && !runningVm.SaveCommand.CanExecute(null) && runningVm.ValidationMessage.Contains(L.IsSpanish?"Cierra Diablo II":"Close Diablo II", StringComparison.Ordinal), "native-review-explains-open-game-save-guard");
                 var vm = new MainViewModel(dataRoot: Path.Combine(root, "fixture-ui"), core: core, fileDialogs: new NoDialogs());
                 await vm.InitializeAsync(); Healthy(vm, "fixture initialize");
                 vm.SelectedProfile = vm.Profiles.First(p => p.Id == profileId);
                 await vm.OpenPathAsync(copy); Healthy(vm, "fixture open");
                 Check(vm.HasCharacter && !vm.CanCommit, "private-fixture-open-is-read-only");
+                await LanguageChecks.DraftAsync(vm,checks); Healthy(vm,"language switching");
                 await WorkbenchChecks.EquipmentAsync(vm,checks); Healthy(vm,"production workbench");
                 await SkillEditingChecks.RunAsync(vm,root,checks); Healthy(vm,"skill input");
                 await ItemEditingChecks.RunAsync(vm,root,checks); Healthy(vm,"item input");
@@ -116,7 +118,7 @@ public static class NativeSmoke
                 Check(vm.IsNew && vm.CharacterName == "NativeClone" && !vm.CanCommit, "native-clone-is-independent-unreviewed-draft");
                 Check(Gold(vm.Snapshot) == gold + 2 && Hash(await File.ReadAllBytesAsync(copy)) == fixtureHash, "native-clone-includes-raw-unreviewed-edits-without-source-write");
                 await vm.CreateCharacterAsync(new CreateRequest { Name = "NativeBuild", ClassName = "Sorceress", ProfileId = profileId, Preset = "squad-sorceress" }); Healthy(vm, "new preset");
-                Check(vm.IsNew && vm.IsDirty && vm.ValidationMessage.Contains("nuevo", StringComparison.Ordinal) && vm.ValidationMessage.Contains("revisión", StringComparison.Ordinal), "native-new-character-message-requires-review-and-save");
+                Check(vm.IsNew && vm.IsDirty && vm.ValidationMessage==L.T("Personaje nuevo pendiente de revisión y guardado."), "native-new-character-message-requires-review-and-save");
                 Check(vm.Snapshot["character"]!["level"]!.GetValue<int>() == 85 && vm.Skills.Sum(s => s.Points) == 96, "native-create-applies-class-build");
                 Check(vm.Items.Count(i => i.Page == "equipped") == 12 && vm.MercenaryItems.Count == 9, "native-both-sets-and-full-mercenary");
                 var oculus = vm.Items.Single(i => i.Name.Contains("Oculus", StringComparison.OrdinalIgnoreCase));
@@ -210,7 +212,7 @@ public static class NativeSmoke
     static long Gold(JsonObject snapshot) => snapshot["character"]!["attributes"]!["gold"]!.GetValue<long>();
     static long Experience(JsonObject snapshot) => snapshot["character"]!["experience"]!.GetValue<long>();
     static int SkillPoints(JsonObject snapshot, int id) => snapshot["skills"]!.AsArray().OfType<JsonObject>().Single(skill => skill["id"]!.GetValue<int>() == id)["points"]!.GetValue<int>();
-    static bool HasRunningWarning(JsonObject preview) => preview["validation"]!["warnings"]!.AsArray().Any(w => w?.GetValue<string>().Contains("Diablo II está abierto", StringComparison.Ordinal) == true);
+    static bool HasRunningWarning(JsonObject preview) => preview["validation"]!["warnings"]!.AsArray().Any(w => w?.GetValue<string>().Contains(L.IsSpanish?"Diablo II está abierto":"Diablo II is running", StringComparison.Ordinal) == true);
     static async Task CheckItemHoverAsync(MainViewModel vm, string sourcePath, string sourceHash, string evidenceRoot, List<string> checks)
     {
         void Require(bool value, string message) { if (!value) throw new InvalidOperationException(message); }
@@ -227,11 +229,11 @@ public static class NativeSmoke
         {
             var card = new ItemTooltipCard(item); LayoutCard(card, 320);
             var text = string.Join("\n", Descendants<System.Windows.Controls.TextBlock>(card).Select(line => line.Text));
-            Require(ReferenceEquals(card.Item, item) && text.Contains(item.Name, StringComparison.Ordinal) && text.Contains(item.BaseName, StringComparison.Ordinal) && text.Contains(item.QualityLabel, StringComparison.Ordinal) && text.Contains("Nivel de objeto " + item.Level, StringComparison.Ordinal), "Hover identity differs from real item: " + item.Code);
-            Require(!item.Ethereal || text.Contains("Etéreo", StringComparison.Ordinal), "Hover lost ethereal state: " + item.Code);
+            Require(ReferenceEquals(card.Item, item) && text.Contains(item.Name, StringComparison.Ordinal) && text.Contains(item.BaseName, StringComparison.Ordinal) && text.Contains(item.QualityLabel, StringComparison.Ordinal) && text.Contains(L.T("Nivel de objeto ") + item.Level, StringComparison.Ordinal), "Hover identity differs from real item: " + item.Code);
+            Require(!item.Ethereal || text.Contains(L.T("Etéreo"), StringComparison.Ordinal), "Hover lost ethereal state: " + item.Code);
             if (item.Sockets.Count > 0)
             {
-                string count = "Engarces: " + item.Sockets.Count(socket => socket is not null) + " / " + item.Sockets.Count;
+                string count = L.T("Engarces: ") + item.Sockets.Count(socket => socket is not null) + " / " + item.Sockets.Count;
                 Require(text.Contains(count, StringComparison.Ordinal) && item.Sockets.OfType<ItemViewModel>().All(socket => text.Contains(socket.Name, StringComparison.Ordinal)), "Hover lost native socket count or content: " + item.Code);
             }
             var expectedStats = item.VisibleStats.Concat(item.Sockets.OfType<ItemViewModel>().SelectMany(socket => socket.VisibleStats)).Concat(item.Data.Array("setBonusLists").OfType<JsonArray>().SelectMany(bonus => bonus.OfType<JsonObject>()).Select(TooltipStat).Where(stat => !stat.Hidden)).ToArray();

@@ -1,6 +1,7 @@
-<UserControl x:Class="Akara.Desktop.WorkbenchView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:Akara.Desktop.Controls" xmlns:vm="clr-namespace:Akara.Desktop.ViewModels" FontFamily="Segoe UI" FontSize="13" Foreground="{StaticResource TextBrush}" Background="{StaticResource WindowBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True" Validation.Error="OnInputValidationError" DataContextChanged="OnDataContextChanged" SizeChanged="OnSizeChanged">
+<UserControl x:Class="Akara.Desktop.WorkbenchView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:Akara.Desktop.Controls" xmlns:loc="clr-namespace:Akara.Desktop.Localization" xmlns:vm="clr-namespace:Akara.Desktop.ViewModels" FontFamily="Segoe UI" FontSize="13" Foreground="{StaticResource TextBrush}" Background="{StaticResource WindowBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True" Validation.Error="OnInputValidationError" DataContextChanged="OnDataContextChanged" SizeChanged="OnSizeChanged">
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolVis" />
+    <loc:LocalizedFormatConverter x:Key="LocalizedFormat" />
     <controls:InverseVisibilityConverter x:Key="NotVis" />
     <controls:SectionVisibilityConverter x:Key="SectionVis" />
     <controls:ItemImageConverter x:Key="ItemImage" />
@@ -83,74 +84,75 @@
     <Border Background="{StaticResource PanelBrush}" MouseLeftButtonDown="OnTitleDrag" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
       <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button Style="{StaticResource CaptionButton}" Content="" Click="OnMinimize" ToolTip="Minimizar" />
-          <Button Style="{StaticResource CaptionButton}" Content="" Click="OnMaximize" ToolTip="Maximizar o restaurar" />
-          <Button Style="{StaticResource CloseCaptionButton}" Content="" Click="OnClose" ToolTip="Cerrar Jamella · Tributo" />
+          <Button Style="{StaticResource CaptionButton}" Content="" Click="OnMinimize" ToolTip="{loc:Loc 'Minimizar' }" />
+          <Button Style="{StaticResource CaptionButton}" Content="" Click="OnMaximize" ToolTip="{loc:Loc 'Maximizar o restaurar' }" />
+          <Button Style="{StaticResource CloseCaptionButton}" Content="" Click="OnClose" ToolTip="{loc:Loc 'Cerrar Jamella · Tributo' }" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="14,0,24,0" VerticalAlignment="Center">
           <TextBlock Text="JAMELLA" FontFamily="{DynamicResource DisplayFont}" FontSize="24" Foreground="{StaticResource TextBrush}" />
-          <TextBlock Text="Tributo · D2R · 0.6.2" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="16,0,0,0" VerticalAlignment="Center" />
+          <TextBlock Text="Tributo · D2R · 0.7.0" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="16,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
         <Menu VerticalAlignment="Center" Background="Transparent" IsMainMenu="True" FontSize="13">
-          <MenuItem Header="_Archivo">
-            <MenuItem Header="Personajes locales…" Click="OnChooseSave" IsEnabled="{Binding CanChooseSave}" />
-            <MenuItem Header="Abrir archivo…" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O" />
-            <MenuItem Header="Nuevo personaje…" Command="{Binding CreateCommand}" InputGestureText="Ctrl+N" />
-            <MenuItem Header="Clonar personaje…" Command="{Binding CloneCommand}" />
+          <MenuItem x:Name="FileMenu" Header="{loc:Loc '_Archivo' }">
+            <MenuItem Header="{loc:Loc 'Personajes locales…' }" Click="OnChooseSave" IsEnabled="{Binding CanChooseSave}" />
+            <MenuItem Header="{loc:Loc 'Abrir archivo…' }" Command="{Binding OpenCommand}" InputGestureText="Ctrl+O" />
+            <MenuItem Header="{loc:Loc 'Nuevo personaje…' }" Command="{Binding CreateCommand}" InputGestureText="Ctrl+N" />
+            <MenuItem Header="{loc:Loc 'Clonar personaje…' }" Command="{Binding CloneCommand}" />
             <Separator/>
-            <MenuItem Header="Revisar cambios" Command="{Binding PreviewCommand}" InputGestureText="Ctrl+Shift+S" />
+            <MenuItem Header="{loc:Loc 'Revisar cambios' }" Command="{Binding PreviewCommand}" InputGestureText="Ctrl+Shift+S" />
             <MenuItem Header="{Binding SaveActionText}" Command="{Binding SaveCommand}" InputGestureText="Ctrl+S" ToolTip="{Binding SaveHint}" />
-            <MenuItem Header="Exportar copia…" Command="{Binding ExportCommand}" />
-            <Separator/><MenuItem Header="Cerrar" Click="OnClose" />
+            <MenuItem Header="{loc:Loc 'Exportar copia…' }" Command="{Binding ExportCommand}" />
+            <Separator/><MenuItem Header="{loc:Loc 'Cerrar' }" Click="OnClose" />
           </MenuItem>
-          <MenuItem Header="_Edición">
-            <MenuItem Header="Deshacer" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z" />
-            <MenuItem Header="Rehacer" Command="{Binding RedoCommand}" InputGestureText="Ctrl+Y" />
-            <Separator/><MenuItem Header="Descartar borrador" Command="{Binding ResetCommand}" />
+          <MenuItem Header="{loc:Loc '_Edición' }">
+            <MenuItem Header="{loc:Loc 'Deshacer' }" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z" />
+            <MenuItem Header="{loc:Loc 'Rehacer' }" Command="{Binding RedoCommand}" InputGestureText="Ctrl+Y" />
+            <Separator/><MenuItem Header="{loc:Loc 'Descartar borrador' }" Command="{Binding ResetCommand}" />
           </MenuItem>
-          <MenuItem Header="_Objetos">
-            <MenuItem Header="Crear objeto…" Command="{Binding NewItemCommand}" />
-            <MenuItem Header="Editar selección…" Command="{Binding DesignItemCommand}" />
-            <MenuItem Header="Duplicar selección" Command="{Binding CopyItemCommand}" />
-            <MenuItem Header="Mover selección…" Command="{Binding MoveItemCommand}" />
-            <MenuItem Header="Eliminar selección" Command="{Binding DeleteItemCommand}" />
+          <MenuItem Header="{loc:Loc '_Objetos' }">
+            <MenuItem Header="{loc:Loc 'Crear objeto…' }" Command="{Binding NewItemCommand}" />
+            <MenuItem Header="{loc:Loc 'Editar selección…' }" Command="{Binding DesignItemCommand}" />
+            <MenuItem Header="{loc:Loc 'Duplicar selección' }" Command="{Binding CopyItemCommand}" />
+            <MenuItem Header="{loc:Loc 'Mover selección…' }" Command="{Binding MoveItemCommand}" />
+            <MenuItem Header="{loc:Loc 'Eliminar selección' }" Command="{Binding DeleteItemCommand}" />
             <Separator/>
-            <MenuItem Header="Importar objeto…" Command="{Binding ImportBlueprintCommand}" />
-            <MenuItem Header="Exportar objeto…" Command="{Binding ExportBlueprintCommand}" />
+            <MenuItem Header="{loc:Loc 'Importar objeto…' }" Command="{Binding ImportBlueprintCommand}" />
+            <MenuItem Header="{loc:Loc 'Exportar objeto…' }" Command="{Binding ExportBlueprintCommand}" />
           </MenuItem>
-          <MenuItem Header="_Herramientas">
-            <MenuItem Header="Constructor" Command="{Binding SelectViewCommand}" CommandParameter="workshop" />
-            <MenuItem Header="Biblioteca de configuraciones" Command="{Binding SelectViewCommand}" CommandParameter="library" />
-            <MenuItem Header="Cambios y copias de seguridad" Command="{Binding SelectViewCommand}" CommandParameter="changes" />
-            <Separator/><MenuItem Header="Añadir perfil de datos…" Click="OnAddProfile" />
+          <MenuItem Header="{loc:Loc '_Herramientas' }">
+            <MenuItem Header="{loc:Loc 'Constructor' }" Command="{Binding SelectViewCommand}" CommandParameter="workshop" />
+            <MenuItem Header="{loc:Loc 'Biblioteca de configuraciones' }" Command="{Binding SelectViewCommand}" CommandParameter="library" />
+            <MenuItem Header="{loc:Loc 'Cambios y copias de seguridad' }" Command="{Binding SelectViewCommand}" CommandParameter="changes" />
+            <Separator/><MenuItem Header="{loc:Loc 'Añadir perfil de datos…' }" Click="OnAddProfile" />
           </MenuItem>
-          <MenuItem Header="A_yuda"><MenuItem Header="Sobre este tributo…" Click="OnAbout" /></MenuItem>
+          <MenuItem x:Name="LanguageMenu" Header="{loc:Loc 'Idioma' }" IsEnabled="{Binding CanChangeLanguage}"><MenuItem Header="English" IsCheckable="True" IsChecked="{Binding IsEnglish,Mode=OneWay}" Click="OnEnglish"/><MenuItem Header="Español" IsCheckable="True" IsChecked="{Binding IsSpanish,Mode=OneWay}" Click="OnSpanish"/></MenuItem>
+          <MenuItem Header="{loc:Loc 'A_yuda' }"><MenuItem Header="{loc:Loc 'Sobre este tributo…' }" Click="OnAbout" /></MenuItem>
         </Menu>
       </DockPanel>
     </Border>
     <Border Grid.Row="1" Background="{StaticResource HeaderBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="8,5">
       <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-          <Button Content="Revisar" Command="{Binding PreviewCommand}" Margin="0,0,6,0" />
+          <Button Content="{loc:Loc 'Revisar' }" Command="{Binding PreviewCommand}" Margin="0,0,6,0" />
           <Button Content="{Binding SaveActionText}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" MinWidth="150" ToolTip="{Binding SaveHint}" ToolTipService.ShowOnDisabled="True" />
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-          <Button Content="Abrir…" Command="{Binding OpenCommand}" Margin="0,0,5,0" />
-          <Button Content="↶" Command="{Binding UndoCommand}" ToolTip="Deshacer · Ctrl+Z" Margin="0,0,5,0" />
-          <Button Content="↷" Command="{Binding RedoCommand}" ToolTip="Rehacer · Ctrl+Y" Margin="0,0,12,0" />
-          <TextBlock Text="Personaje" FontSize="12" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
-          <Button Width="276" Click="OnChooseSave" IsEnabled="{Binding CanChooseSave}" ToolTip="{Binding SavesSummary}" AutomationProperties.Name="Elegir personaje local" HorizontalContentAlignment="Stretch">
+          <Button Content="{loc:Loc 'Abrir…' }" Command="{Binding OpenCommand}" Margin="0,0,5,0" />
+          <Button Content="↶" Command="{Binding UndoCommand}" ToolTip="{loc:Loc 'Deshacer · Ctrl+Z' }" Margin="0,0,5,0" />
+          <Button Content="↷" Command="{Binding RedoCommand}" ToolTip="{loc:Loc 'Rehacer · Ctrl+Y' }" Margin="0,0,12,0" />
+          <TextBlock Text="{loc:Loc 'Personaje' }" FontSize="12" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <Button Width="276" Click="OnChooseSave" IsEnabled="{Binding CanChooseSave}" ToolTip="{Binding SavesSummary}" AutomationProperties.Name="{loc:Loc 'Elegir personaje local' }" HorizontalContentAlignment="Stretch">
             <DockPanel><TextBlock DockPanel.Dock="Right" Text="⌄" Margin="10,0,0,0"/><TextBlock DockPanel.Dock="Right" Text="{Binding Saves.Count}" Foreground="{StaticResource MutedBrush}" Margin="8,0,0,0"/><TextBlock Text="{Binding SaveSelectionText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/></DockPanel>
           </Button>
           <TextBlock Text="{Binding ClassLabel}" Foreground="{StaticResource MutedBrush}" Margin="10,0,5,0" VerticalAlignment="Center"/>
           <TextBlock Text="{Binding LevelText,StringFormat=· {0}}" Foreground="{StaticResource MutedBrush}" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="{Binding HasCharacter,Converter={StaticResource BoolVis}}"/>
-          <Button Content="Clonar…" Command="{Binding CloneCommand}" Style="{StaticResource QuietButton}" />
+          <Button Content="{loc:Loc 'Clonar…' }" Command="{Binding CloneCommand}" Style="{StaticResource QuietButton}" />
         </StackPanel>
       </DockPanel>
     </Border>
     <Border Grid.Row="2" Background="{StaticResource WindowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
       <DockPanel>
-        <Button x:Name="CatalogToggle" DockPanel.Dock="Right" Content="Árbol de objetos" Click="OnToggleCatalog" Style="{StaticResource QuietButton}" Margin="0,2,8,2" />
+        <Button x:Name="CatalogToggle" DockPanel.Dock="Right" Content="{loc:Loc 'Árbol de objetos' }" Click="OnToggleCatalog" Style="{StaticResource QuietButton}" Margin="0,2,8,2" />
         <ListBox ItemsSource="{Binding NavItems}" SelectedValuePath="Key" SelectedValue="{Binding SelectedView,Mode=TwoWay}" IsEnabled="{Binding HasCharacter}" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled">
           <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ListBox.ItemsPanel>
           <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="Padding" Value="16,8"/><Setter Property="Foreground" Value="{StaticResource MutedBrush}"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Tab" Padding="{TemplateBinding Padding}" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Tab" Property="Background" Value="#353437"/><Setter TargetName="Tab" Property="BorderBrush" Value="{StaticResource AccentBrush}"/><Setter Property="Foreground" Value="{StaticResource TextBrush}"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tab" Property="Background" Value="#303033"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style></ListBox.ItemContainerStyle>
@@ -172,12 +174,12 @@
       <Border x:Name="CatalogPane" Grid.Column="0" Background="{StaticResource InsetBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
         <Grid>
           <Grid.RowDefinitions><RowDefinition Height="35"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <Border Style="{StaticResource DockHeader}"><TextBlock Text="Árbol de objetos" Style="{StaticResource DockTitle}"/></Border>
+          <Border Style="{StaticResource DockHeader}"><TextBlock Text="{loc:Loc 'Árbol de objetos' }" Style="{StaticResource DockTitle}"/></Border>
           <Grid Grid.Row="1" Margin="10">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="34"/></Grid.ColumnDefinitions>
-            <TextBox x:Name="CatalogSearchBox" Text="{Binding CatalogQuery,UpdateSourceTrigger=PropertyChanged}" ToolTip="Buscar por nombre en la categoría abierta" AutomationProperties.Name="Buscar objetos"><TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding SearchCatalogCommand}"/></TextBox.InputBindings></TextBox>
-            <TextBlock Text="Buscar objetos…" Margin="9,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=CatalogSearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
-            <Button Grid.Column="1" Content="" FontFamily="Segoe MDL2 Assets" Command="{Binding SearchCatalogCommand}" Padding="4" ToolTip="Buscar objetos"/>
+            <TextBox x:Name="CatalogSearchBox" Text="{Binding CatalogQuery,UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Loc 'Buscar por nombre en la categoría abierta' }" AutomationProperties.Name="{loc:Loc 'Buscar objetos' }"><TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding SearchCatalogCommand}"/></TextBox.InputBindings></TextBox>
+            <TextBlock Text="{loc:Loc 'Buscar objetos…' }" Margin="9,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=CatalogSearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+            <Button Grid.Column="1" Content="" FontFamily="Segoe MDL2 Assets" Command="{Binding SearchCatalogCommand}" Padding="4" ToolTip="{loc:Loc 'Buscar objetos' }"/>
           </Grid>
           <TreeView x:Name="CatalogTree" Grid.Row="2" SelectedItemChanged="OnCatalogNodeSelected" IsEnabled="{Binding CanEdit}" Background="Transparent" BorderThickness="0" Padding="5" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <TreeView.ItemContainerStyle><Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}"><Setter Property="IsExpanded" Value="{Binding IsExpanded,Mode=TwoWay}"/></Style></TreeView.ItemContainerStyle>
@@ -187,14 +189,14 @@
             </TreeView.Resources>
           </TreeView>
           <StackPanel Grid.Row="3" Margin="10">
-            <Button Content="Añadir selección al alijo" Command="{Binding AddCatalogItemCommand}" Margin="0,0,0,8"/>
-            <UniformGrid Columns="2"><Button Content="Crear…" Command="{Binding NewItemCommand}" Margin="0,0,4,0"/><Button Content="Importar…" Command="{Binding ImportBlueprintCommand}" Margin="4,0,0,0"/></UniformGrid>
+            <Button Content="{loc:Loc 'Añadir selección al alijo' }" Command="{Binding AddCatalogItemCommand}" Margin="0,0,0,8"/>
+            <UniformGrid Columns="2"><Button Content="{loc:Loc 'Crear…' }" Command="{Binding NewItemCommand}" Margin="0,0,4,0"/><Button Content="{loc:Loc 'Importar…' }" Command="{Binding ImportBlueprintCommand}" Margin="4,0,0,0"/></UniformGrid>
             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,13,0,9"/>
-            <Button Content="Biblioteca de configuraciones" Command="{Binding SelectViewCommand}" CommandParameter="library" Style="{StaticResource QuietButton}" HorizontalContentAlignment="Left" Padding="0,5"/>
+            <Button Content="{loc:Loc 'Biblioteca de configuraciones' }" Command="{Binding SelectViewCommand}" CommandParameter="library" Style="{StaticResource QuietButton}" HorizontalContentAlignment="Left" Padding="0,5"/>
           </StackPanel>
         </Grid>
       </Border>
-      <GridSplitter x:Name="CatalogSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" ToolTip="Ajustar catálogo" />
+      <GridSplitter x:Name="CatalogSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" ToolTip="{loc:Loc 'Ajustar catálogo' }" />
       <Grid x:Name="MainPane" Grid.Column="2" Margin="6,0" MinWidth="470" SizeChanged="OnWorkspaceSizeChanged">
         <Grid Visibility="{Binding HasCharacter,Converter={StaticResource BoolVis}}">
           <Grid Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=equipment}">
@@ -203,21 +205,21 @@
               <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="35"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                 <Border Style="{StaticResource DockHeader}">
-                  <DockPanel><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><TextBlock Text="{Binding ActiveWeaponSet,StringFormat=Activo: {0}}" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/><Button Content="Usar conjunto" Command="{Binding ActivateWeaponSetCommand}" CommandParameter="{Binding SelectedWeaponSet}" Padding="8,3" MinHeight="25"/></StackPanel><TextBlock Text="Equipo" Style="{StaticResource DockTitle}" Margin="0,0,14,0"/><StackPanel Orientation="Horizontal"><Button Content="I" Style="{StaticResource WeaponTab}" Command="{Binding SelectWeaponSetCommand}" CommandParameter="1" MinHeight="25" Padding="7,2"/><Button Content="II" Style="{StaticResource WeaponTab}" Command="{Binding SelectWeaponSetCommand}" CommandParameter="2" MinHeight="25" Padding="7,2" Margin="4,0,0,0"/></StackPanel></DockPanel>
+                  <DockPanel><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><TextBlock Text="{Binding ActiveWeaponSet,Converter={StaticResource LocalizedFormat},ConverterParameter=activeSet}" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/><Button Content="{loc:Loc 'Usar conjunto' }" Command="{Binding ActivateWeaponSetCommand}" CommandParameter="{Binding SelectedWeaponSet}" Padding="8,3" MinHeight="25"/></StackPanel><TextBlock Text="{loc:Loc 'Equipo' }" Style="{StaticResource DockTitle}" Margin="0,0,14,0"/><StackPanel Orientation="Horizontal"><Button Content="I" Style="{StaticResource WeaponTab}" Command="{Binding SelectWeaponSetCommand}" CommandParameter="1" MinHeight="25" Padding="7,2"/><Button Content="II" Style="{StaticResource WeaponTab}" Command="{Binding SelectWeaponSetCommand}" CommandParameter="2" MinHeight="25" Padding="7,2" Margin="4,0,0,0"/></StackPanel></DockPanel>
                 </Border>
                 <Grid x:Name="EquipmentCanvas" Grid.Row="1" Margin="8">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="0"/></Grid.ColumnDefinitions>
                   <controls:PaperDoll x:Name="EquipmentDoll" Width="386" Height="440" ItemsSource="{Binding EquipmentSlots}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" ItemInvoked="OnItemInvoked" VerticalAlignment="Top" Margin="0,0,12,0"/>
                   <StackPanel Grid.Column="1">
-                    <WrapPanel Margin="0,0,0,8"><Button Style="{StaticResource StorageTab}" Content="Inventario" Command="{Binding SelectStorageCommand}" CommandParameter="inventory"/><Button Style="{StaticResource StorageTab}" Content="Alijo" Command="{Binding SelectStorageCommand}" CommandParameter="stash"/><Button Style="{StaticResource StorageTab}" Content="Cubo" Command="{Binding SelectStorageCommand}" CommandParameter="cube"/><Button Style="{StaticResource StorageTab}" Content="Cinturón" Command="{Binding SelectStorageCommand}" CommandParameter="belt"/></WrapPanel>
+                    <WrapPanel Margin="0,0,0,8"><Button Style="{StaticResource StorageTab}" Content="{loc:Loc 'Inventario' }" Command="{Binding SelectStorageCommand}" CommandParameter="inventory"/><Button Style="{StaticResource StorageTab}" Content="{loc:Loc 'Alijo' }" Command="{Binding SelectStorageCommand}" CommandParameter="stash"/><Button Style="{StaticResource StorageTab}" Content="{loc:Loc 'Cubo' }" Command="{Binding SelectStorageCommand}" CommandParameter="cube"/><Button Style="{StaticResource StorageTab}" Content="{loc:Loc 'Cinturón' }" Command="{Binding SelectStorageCommand}" CommandParameter="belt"/></WrapPanel>
                     <Border BorderBrush="{StaticResource FaintBorderBrush}" BorderThickness="1" HorizontalAlignment="Left" Padding="3">
                       <Viewbox x:Name="ContainerViewport" Stretch="Uniform" StretchDirection="DownOnly" MaxWidth="540" MaxHeight="480"><controls:InventoryBoard x:Name="InventoryCells" ItemsSource="{Binding VisibleInventory}" Columns="{Binding GridColumns}" Rows="{Binding GridRows}" CellSize="48" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" ItemInvoked="OnItemInvoked"/></Viewbox>
                     </Border>
-                    <DockPanel Margin="0,9,0,0"><TextBlock Text="{Binding StorageLabel}" FontSize="12" Foreground="{StaticResource MutedBrush}"/><TextBlock Text="{Binding GoldText,StringFormat=Oro: {0}}" FontSize="12" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" Margin="16,0,0,0"/></DockPanel>
+                    <DockPanel Margin="0,9,0,0"><TextBlock Text="{Binding StorageLabel}" FontSize="12" Foreground="{StaticResource MutedBrush}"/><TextBlock Text="{Binding GoldText,Converter={StaticResource LocalizedFormat},ConverterParameter=gold}" FontSize="12" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" Margin="16,0,0,0"/></DockPanel>
                   </StackPanel>
                   <Grid x:Name="WideStashPane" Grid.Column="2" Margin="16,0,0,0" Visibility="Collapsed">
                     <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                    <TextBlock Text="Alijo · cuadrícula" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{loc:Loc 'Alijo · cuadrícula' }" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
                     <Border Grid.Row="1" BorderBrush="{StaticResource FaintBorderBrush}" BorderThickness="1" Padding="3" HorizontalAlignment="Left" VerticalAlignment="Top">
                       <Viewbox x:Name="WideStashViewport" Stretch="Uniform" StretchDirection="DownOnly"><controls:InventoryBoard ItemsSource="{Binding StashItems}" Columns="{Binding StashGridColumns}" Rows="{Binding StashGridRows}" CellSize="48" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" ItemInvoked="OnItemInvoked"/></Viewbox>
                     </Border>
@@ -225,10 +227,10 @@
                 </Grid>
               </Grid>
             </Border>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="Mover…" Command="{Binding MoveItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="Importar objeto…" Command="{Binding ImportBlueprintCommand}" Style="{StaticResource QuietButton}"/><Button Content="Tomos y pociones" Command="{Binding FillSuppliesCommand}" Style="{StaticResource QuietButton}"/></StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="{loc:Loc 'Mover…' }" Command="{Binding MoveItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="{loc:Loc 'Importar objeto…' }" Command="{Binding ImportBlueprintCommand}" Style="{StaticResource QuietButton}"/><Button Content="{loc:Loc 'Tomos y pociones' }" Command="{Binding FillSuppliesCommand}" Style="{StaticResource QuietButton}"/></StackPanel>
             <Border Grid.Row="2" Background="{StaticResource InsetBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" MinHeight="100">
               <Grid><Grid.RowDefinitions><RowDefinition Height="35"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                <Border Style="{StaticResource DockHeader}"><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding StashItems.Count,StringFormat={}{0} objetos}" Foreground="{StaticResource MutedBrush}" FontSize="12"/><TextBlock Text="Alijo personal" Style="{StaticResource DockTitle}"/></DockPanel></Border>
+                <Border Style="{StaticResource DockHeader}"><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding StashItems.Count,Converter={StaticResource LocalizedFormat},ConverterParameter=items}" Foreground="{StaticResource MutedBrush}" FontSize="12"/><TextBlock Text="{loc:Loc 'Alijo personal' }" Style="{StaticResource DockTitle}"/></DockPanel></Border>
                 <ListBox x:Name="StashTray" Grid.Row="1" ItemsSource="{Binding StashItems}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" MouseDoubleClick="OnStashDoubleClick" Padding="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                   <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
                   <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="Padding" Value="6"/><Setter Property="controls:ItemHover.Item" Value="{Binding}"/></Style></ListBox.ItemContainerStyle>
@@ -236,14 +238,14 @@
                 </ListBox>
               </Grid>
             </Border>
-            <Expander x:Name="ObjectListExpander" Grid.Row="3" Header="Lista completa de objetos" Margin="0,5,0,0" IsExpanded="False" Expanded="OnObjectListToggled" Collapsed="OnObjectListToggled">
-              <DataGrid x:Name="CharacterItemTable" Loaded="OnItemTableLoaded" SizeChanged="OnItemTableSizeChanged" IsVisibleChanged="OnItemTableVisibleChanged" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28" Height="160" RowStyle="{StaticResource ItemRowHover}"><DataGrid.Columns><DataGridTextColumn Header="Objeto" Binding="{Binding Name}" Width="300" MinWidth="160"/><DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130"/><DataGridTextColumn Header="Calidad" Binding="{Binding QualityLabel}" Width="90" MinWidth="90" MaxWidth="90"/></DataGrid.Columns></DataGrid>
+            <Expander x:Name="ObjectListExpander" Grid.Row="3" Header="{loc:Loc 'Lista completa de objetos' }" Margin="0,5,0,0" IsExpanded="False" Expanded="OnObjectListToggled" Collapsed="OnObjectListToggled">
+              <DataGrid x:Name="CharacterItemTable" Loaded="OnItemTableLoaded" SizeChanged="OnItemTableSizeChanged" IsVisibleChanged="OnItemTableVisibleChanged" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28" Height="160" RowStyle="{StaticResource ItemRowHover}"><DataGrid.Columns><DataGridTextColumn Header="{loc:Loc 'Objeto' }" Binding="{Binding Name}" Width="300" MinWidth="160"/><DataGridTextColumn Header="{loc:Loc 'Ubicación' }" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130"/><DataGridTextColumn Header="{loc:Loc 'Calidad' }" Binding="{Binding QualityLabel}" Width="90" MinWidth="90" MaxWidth="90"/></DataGrid.Columns></DataGrid>
             </Expander>
           </Grid>
           <ScrollViewer Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=character}">
             <StackPanel Style="{StaticResource Section}" Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=character}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-              <TextBlock Text="Tu personaje" Style="{StaticResource SectionTitle}" />
-              <TextBlock Text="Atributos, experiencia y recursos base." Style="{StaticResource Muted}" />
+              <TextBlock Text="{loc:Loc 'Tu personaje' }" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="{loc:Loc 'Atributos, experiencia y recursos base.' }" Style="{StaticResource Muted}" />
               <Grid Margin="0,22,0,0" IsEnabled="{Binding CanEdit}">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition />
@@ -251,25 +253,25 @@
                   <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                  <TextBlock Text="Nombre" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Nombre' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding CharacterName,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Nivel" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Nivel' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding LevelText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Experiencia" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Experiencia' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding ExperienceText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Oro encima" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Oro encima' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding GoldText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Oro del alijo" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Oro del alijo' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding StashGoldText,UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
-                  <TextBlock Text="Fuerza" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Fuerza' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding StrengthText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Destreza" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Destreza' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding DexterityText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Vitalidad" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Vitalidad' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding VitalityText,UpdateSourceTrigger=PropertyChanged}" />
-                  <TextBlock Text="Energía" Style="{StaticResource FieldLabel}" />
+                  <TextBlock Text="{loc:Loc 'Energía' }" Style="{StaticResource FieldLabel}" />
                   <TextBox Text="{Binding EnergyText,UpdateSourceTrigger=PropertyChanged}" />
                   <TextBlock Text="{Binding AttributePointsText}" Foreground="{StaticResource AccentBrush}" Margin="0,14,0,0" />
                 </StackPanel>
@@ -277,27 +279,27 @@
               <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,25,0,18" />
               <UniformGrid Columns="2">
                 <StackPanel>
-                  <TextBlock Text="VIDA BASE" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="{loc:Loc 'VIDA BASE' }" Style="{StaticResource Eyebrow}" />
                   <TextBlock Text="{Binding BaseLifeText}" FontFamily="Segoe UI" FontSize="18" />
                 </StackPanel>
                 <StackPanel>
-                  <TextBlock Text="MANÁ BASE" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="{loc:Loc 'MANÁ BASE' }" Style="{StaticResource Eyebrow}" />
                   <TextBlock Text="{Binding BaseManaText}" FontFamily="Segoe UI" FontSize="18" Foreground="{StaticResource BlueBrush}" />
                 </StackPanel>
               </UniformGrid>
-              <TextBlock Text="El juego aplica las bonificaciones del equipo al cargar la partida." Style="{StaticResource Muted}" Margin="0,14,0,0" FontSize="12" />
-              <TextBlock Text="Perfil de datos" Style="{StaticResource FieldLabel}" />
+              <TextBlock Text="{loc:Loc 'El juego aplica las bonificaciones del equipo al cargar la partida.' }" Style="{StaticResource Muted}" Margin="0,14,0,0" FontSize="12" />
+              <TextBlock Text="{loc:Loc 'Perfil de datos' }" Style="{StaticResource FieldLabel}" />
               <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name" />
-              <Button Content="Añadir otra carpeta de datos" Click="OnAddProfile" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Margin="0,9,0,0" />
+              <Button Content="{loc:Loc 'Añadir otra carpeta de datos' }" Click="OnAddProfile" Style="{StaticResource QuietButton}" HorizontalAlignment="Left" Margin="0,9,0,0" />
             </StackPanel>
           </ScrollViewer>
           <ScrollViewer Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=skills}" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="16">
               <DockPanel Margin="0,0,0,12">
-                <TextBlock Text="Habilidades" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
+                <TextBlock Text="{loc:Loc 'Habilidades' }" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
                 <TextBlock Text="{Binding SkillPointsText}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
               </DockPanel>
-              <TextBlock Text="Puntos invertidos; el juego suma las bonificaciones del equipo." FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
+              <TextBlock Text="{loc:Loc 'Puntos invertidos; el juego suma las bonificaciones del equipo.' }" FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
               <TextBlock Text="{Binding ValidationMessage}" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
               <ItemsControl x:Name="SkillColumnsControl" IsEnabled="{Binding CanEdit}">
                 <ItemsControl.ItemsPanel>
@@ -348,7 +350,7 @@
               <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <DockPanel>
-              <Button DockPanel.Dock="Right" Content="Cambiar mercenario" IsEnabled="{Binding CanEdit}" Click="OnMercenary" />
+              <Button DockPanel.Dock="Right" Content="{loc:Loc 'Cambiar mercenario' }" IsEnabled="{Binding CanEdit}" Click="OnMercenary" />
               <StackPanel>
                 <TextBlock Text="{Binding MercenaryName}" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
                 <TextBlock Text="{Binding MercenaryLevelText}" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
@@ -364,7 +366,7 @@
                 <controls:PaperDoll Width="300" Height="360" ItemsSource="{Binding MercenarySlots}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" ItemInvoked="OnItemInvoked" />
               </Border>
               <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                <TextBlock Text="Equipo del mercenario" Style="{StaticResource PaneTitle}" Margin="0,0,0,8" />
+                <TextBlock Text="{loc:Loc 'Equipo del mercenario' }" Style="{StaticResource PaneTitle}" Margin="0,0,0,8" />
                 <ListBox ItemsSource="{Binding MercenaryItems}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}">
                   <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -375,25 +377,25 @@
                     </DataTemplate>
                   </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Text="Un arma de dos manos reserva la mano secundaria." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,12,0,0" />
+                <TextBlock Text="{loc:Loc 'Un arma de dos manos reserva la mano secundaria.' }" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,12,0,0" />
               </StackPanel>
             </Grid>
           </Grid>
           <ScrollViewer Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=world}">
             <StackPanel Style="{StaticResource Section}" Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=world}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-              <TextBlock Text="Mundo" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="{loc:Loc 'Mundo' }" Style="{StaticResource SectionTitle}" />
               <TextBlock Text="{Binding CurrentDifficulty}" FontFamily="Segoe UI" FontSize="19" Foreground="{StaticResource AccentBrush}" />
               <StackPanel Orientation="Horizontal" Margin="0,18,0,22">
-                <Button Content="Desbloquear Infierno" Command="{Binding UnlockHellCommand}" />
-                <Button Content="Todos los transportadores" Command="{Binding UnlockWaypointsCommand}" Margin="8,0,0,0" />
+                <Button Content="{loc:Loc 'Desbloquear Infierno' }" Command="{Binding UnlockHellCommand}" />
+                <Button Content="{loc:Loc 'Todos los transportadores' }" Command="{Binding UnlockWaypointsCommand}" Margin="8,0,0,0" />
               </StackPanel>
               <TabControl>
-                <TabItem Header="Misiones">
+                <TabItem Header="{loc:Loc 'Misiones' }">
                   <DataGrid IsEnabled="{Binding CanEdit}" ItemsSource="{Binding WorldQuests}" MaxHeight="900">
                     <DataGrid.Columns>
-                      <DataGridTextColumn Header="Dificultad" Binding="{Binding DifficultyLabel}" IsReadOnly="True" Width="90" />
-                      <DataGridTextColumn Header="Misión" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
-                      <DataGridComboBoxColumn Header="Estado" SelectedValueBinding="{Binding State,UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Value" DisplayMemberPath="Label" Width="170">
+                      <DataGridTextColumn Header="{loc:Loc 'Dificultad' }" Binding="{Binding DifficultyLabel}" IsReadOnly="True" Width="90" />
+                      <DataGridTextColumn Header="{loc:Loc 'Misión' }" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
+                      <DataGridComboBoxColumn Header="{loc:Loc 'Estado' }" SelectedValueBinding="{Binding State,UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Value" DisplayMemberPath="Label" Width="170">
                         <DataGridComboBoxColumn.ElementStyle>
                           <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                             <Setter Property="ItemsSource" Value="{Binding DataContext.QuestStateChoices,RelativeSource={RelativeSource AncestorType=UserControl}}" />
@@ -408,12 +410,12 @@
                     </DataGrid.Columns>
                   </DataGrid>
                 </TabItem>
-                <TabItem Header="Transportadores">
+                <TabItem Header="{loc:Loc 'Transportadores' }">
                   <DataGrid IsEnabled="{Binding CanEdit}" ItemsSource="{Binding WorldWaypoints}" MaxHeight="900">
                     <DataGrid.Columns>
-                      <DataGridTextColumn Header="Dificultad" Binding="{Binding DifficultyLabel}" IsReadOnly="True" Width="95" />
-                      <DataGridTextColumn Header="Destino" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
-                      <DataGridCheckBoxColumn Header="Activo" Binding="{Binding Active,UpdateSourceTrigger=PropertyChanged}" Width="70" />
+                      <DataGridTextColumn Header="{loc:Loc 'Dificultad' }" Binding="{Binding DifficultyLabel}" IsReadOnly="True" Width="95" />
+                      <DataGridTextColumn Header="{loc:Loc 'Destino' }" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
+                      <DataGridCheckBoxColumn Header="{loc:Loc 'Activo' }" Binding="{Binding Active,UpdateSourceTrigger=PropertyChanged}" Width="70" />
                     </DataGrid.Columns>
                   </DataGrid>
                 </TabItem>
@@ -427,69 +429,69 @@
               <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <StackPanel>
-              <TextBlock Text="Constructor de objetos" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
-              <TextBlock Text="Selecciona una pieza del catálogo o crea un objeto con las bases de tu instalación." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,8,0,12" />
+              <TextBlock Text="{loc:Loc 'Constructor de objetos' }" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
+              <TextBlock Text="{loc:Loc 'Selecciona una pieza del catálogo o crea un objeto con las bases de tu instalación.' }" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,8,0,12" />
               <WrapPanel>
-                <Button Content="Crear objeto" Command="{Binding NewItemCommand}" Margin="0,0,8,0" />
-                <Button Content="Importar objeto" Command="{Binding ImportBlueprintCommand}" />
+                <Button Content="{loc:Loc 'Crear objeto' }" Command="{Binding NewItemCommand}" Margin="0,0,8,0" />
+                <Button Content="{loc:Loc 'Importar objeto' }" Command="{Binding ImportBlueprintCommand}" />
               </WrapPanel>
             </StackPanel>
             <StackPanel Grid.Row="1" Margin="0,20,0,14">
               <TextBlock Text="{Binding SelectedCatalogEntry.Name}" FontSize="18" FontWeight="SemiBold" FontFamily="{DynamicResource DisplayFont}" />
               <TextBlock Text="{Binding SelectedCatalogEntry.Code}" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
-              <Button Content="Añadir selección al alijo" Command="{Binding AddCatalogItemCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+              <Button Content="{loc:Loc 'Añadir selección al alijo' }" Command="{Binding AddCatalogItemCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
             </StackPanel>
             <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem,Mode=TwoWay}" IsReadOnly="True" MouseDoubleClick="OnItemTableInvoked" RowHeight="28" RowStyle="{StaticResource ItemRowHover}">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Objetos actuales" Binding="{Binding Name}" Width="2*" />
-                <DataGridTextColumn Header="Ubicación" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />
+                <DataGridTextColumn Header="{loc:Loc 'Objetos actuales' }" Binding="{Binding Name}" Width="2*" />
+                <DataGridTextColumn Header="{loc:Loc 'Ubicación' }" Binding="{Binding LocationLabel}" Width="130" MinWidth="130" MaxWidth="130" />
                 <DataGridTextColumn Header="Base" Binding="{Binding BaseName}" Width="*" />
               </DataGrid.Columns>
             </DataGrid>
           </Grid>
           <ScrollViewer Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=library}">
             <StackPanel Style="{StaticResource Section}" Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=library}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-              <TextBlock Text="Biblioteca" Style="{StaticResource SectionTitle}" />
-              <TextBlock Text="Configuraciones para volver a jugar a tu manera." Style="{StaticResource Muted}" />
-              <TextBlock Text="Plantillas de Reimagined" Style="{StaticResource FieldLabel}" />
+              <TextBlock Text="{loc:Loc 'Biblioteca' }" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="{loc:Loc 'Configuraciones para volver a jugar a tu manera.' }" Style="{StaticResource Muted}" />
+              <TextBlock Text="{loc:Loc 'Plantillas de Reimagined' }" Style="{StaticResource FieldLabel}" />
               <ComboBox ItemsSource="{Binding AvailablePresets}" SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" />
               <TextBlock Text="{Binding SelectedPreset.Description}" Style="{StaticResource Muted}" Margin="0,10,0,12" />
-              <Button Content="Preparar plantilla" Command="{Binding ApplyPresetCommand}" HorizontalAlignment="Left" />
-              <Expander IsExpanded="True" Header="Cómo jugar esta plantilla" Margin="0,16,0,0" Foreground="{StaticResource TextBrush}">
+              <Button Content="{loc:Loc 'Preparar plantilla' }" Command="{Binding ApplyPresetCommand}" HorizontalAlignment="Left" />
+              <Expander IsExpanded="True" Header="{loc:Loc 'Cómo jugar esta plantilla' }" Margin="0,16,0,0" Foreground="{StaticResource TextBrush}">
                 <TextBlock Text="{Binding SelectedPresetGuide}" TextWrapping="Wrap" Foreground="#B7BCAE" LineHeight="21" MaxWidth="880" HorizontalAlignment="Left" />
               </Expander>
               <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,24,0,18" />
-              <TextBlock Text="Tus configuraciones" FontFamily="Segoe UI" FontSize="18" />
+              <TextBlock Text="{loc:Loc 'Tus configuraciones' }" FontFamily="Segoe UI" FontSize="18" />
               <ListBox ItemsSource="{Binding Loadouts}" SelectedItem="{Binding SelectedLoadout}" MaxHeight="210" Margin="0,12">
                 <ListBox.ItemTemplate>
                   <DataTemplate>
                     <StackPanel>
                       <TextBlock Text="{Binding Name}" FontFamily="Segoe UI" FontSize="14" />
-                      <TextBlock Text="{Binding ItemCount,StringFormat={}{0} piezas}" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                      <TextBlock Text="{Binding ItemCount,Converter={StaticResource LocalizedFormat},ConverterParameter=pieces}" Foreground="{StaticResource MutedBrush}" FontSize="11" />
                     </StackPanel>
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
-              <CheckBox Content="Incluir nivel, atributos y habilidades" IsChecked="{Binding LoadoutIncludeCharacter}" />
-              <CheckBox Content="Conservar las piezas anteriores en el alijo" IsChecked="{Binding LoadoutKeepPrevious}" />
+              <CheckBox Content="{loc:Loc 'Incluir nivel, atributos y habilidades' }" IsChecked="{Binding LoadoutIncludeCharacter}" />
+              <CheckBox Content="{loc:Loc 'Conservar las piezas anteriores en el alijo' }" IsChecked="{Binding LoadoutKeepPrevious}" />
               <StackPanel Orientation="Horizontal">
-                <Button Content="Preparar configuración" Command="{Binding ApplyLoadoutCommand}" />
-                <Button Content="Eliminar" Command="{Binding DeleteLoadoutCommand}" Style="{StaticResource QuietButton}" Margin="9,0" />
+                <Button Content="{loc:Loc 'Preparar configuración' }" Command="{Binding ApplyLoadoutCommand}" />
+                <Button Content="{loc:Loc 'Eliminar' }" Command="{Binding DeleteLoadoutCommand}" Style="{StaticResource QuietButton}" Margin="9,0" />
               </StackPanel>
-              <TextBlock Text="Guardar la configuración actual" Style="{StaticResource FieldLabel}" />
+              <TextBlock Text="{loc:Loc 'Guardar la configuración actual' }" Style="{StaticResource FieldLabel}" />
               <TextBox Text="{Binding LoadoutName,UpdateSourceTrigger=PropertyChanged}" />
               <WrapPanel Margin="0,12,0,0">
-                <Button Content="Guardar en biblioteca" Command="{Binding SaveLoadoutCommand}" Margin="0,0,7,7" />
-                <Button Content="Exportar" Command="{Binding ExportLoadoutCommand}" Margin="0,0,7,7" />
-                <Button Content="Importar" Command="{Binding ImportLoadoutCommand}" Margin="0,0,7,7" />
+                <Button Content="{loc:Loc 'Guardar en biblioteca' }" Command="{Binding SaveLoadoutCommand}" Margin="0,0,7,7" />
+                <Button Content="{loc:Loc 'Exportar' }" Command="{Binding ExportLoadoutCommand}" Margin="0,0,7,7" />
+                <Button Content="{loc:Loc 'Importar' }" Command="{Binding ImportLoadoutCommand}" Margin="0,0,7,7" />
               </WrapPanel>
             </StackPanel>
           </ScrollViewer>
           <ScrollViewer Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=changes}">
             <StackPanel Style="{StaticResource Section}" Visibility="{Binding SelectedView,Converter={StaticResource SectionVis},ConverterParameter=changes}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
               <DockPanel>
-                <Button DockPanel.Dock="Right" Content="Descartar borrador" ToolTip="Vuelve a la partida abierta y descarta todos los cambios del borrador." Command="{Binding ResetCommand}" Style="{StaticResource QuietButton}" VerticalAlignment="Top" />
-                <TextBlock Text="Revisar los cambios" Style="{StaticResource SectionTitle}" />
+                <Button DockPanel.Dock="Right" Content="{loc:Loc 'Descartar borrador' }" ToolTip="{loc:Loc 'Vuelve a la partida abierta y descarta todos los cambios del borrador.' }" Command="{Binding ResetCommand}" Style="{StaticResource QuietButton}" VerticalAlignment="Top" />
+                <TextBlock Text="{loc:Loc 'Revisar los cambios' }" Style="{StaticResource SectionTitle}" />
               </DockPanel>
               <TextBlock Text="{Binding ValidationMessage}" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap" Margin="0,0,0,16" />
               <ItemsControl ItemsSource="{Binding Changes}">
@@ -507,57 +509,57 @@
               </ItemsControl>
               <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,22,0,18" />
               <DockPanel>
-                <TextBlock Text="Copias de seguridad" FontFamily="Segoe UI" FontSize="18" />
-                <Button Content="Actualizar" Command="{Binding RefreshBackupsCommand}" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" />
+                <TextBlock Text="{loc:Loc 'Copias de seguridad' }" FontFamily="Segoe UI" FontSize="18" />
+                <Button Content="{loc:Loc 'Actualizar' }" Command="{Binding RefreshBackupsCommand}" Style="{StaticResource QuietButton}" HorizontalAlignment="Right" />
               </DockPanel>
               <ListBox ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}" MaxHeight="150" DisplayMemberPath="DisplayDate" />
-              <Button Content="Restaurar copia elegida" Command="{Binding RestoreBackupCommand}" HorizontalAlignment="Left" Margin="0,12,0,0" />
+              <Button Content="{loc:Loc 'Restaurar copia elegida' }" Command="{Binding RestoreBackupCommand}" HorizontalAlignment="Left" Margin="0,12,0,0" />
             </StackPanel>
           </ScrollViewer>
         </Grid>
         <StackPanel Visibility="{Binding HasCharacter,Converter={StaticResource NotVis}}" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440" Margin="24">
-          <TextBlock Text="Abre un personaje local" FontSize="22" FontWeight="SemiBold" />
-          <TextBlock Text="Edita tu partida o crea un personaje con las bases de tu instalación." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,10,0,18" />
+          <TextBlock Text="{loc:Loc 'Abre un personaje local' }" FontSize="22" FontWeight="SemiBold" />
+          <TextBlock Text="{loc:Loc 'Edita tu partida o crea un personaje con las bases de tu instalación.' }" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,10,0,18" />
           <StackPanel Orientation="Horizontal">
-            <Button Command="{Binding OpenCommand}" Margin="0,0,8,0" AutomationProperties.Name="Abrir partida">
+            <Button Command="{Binding OpenCommand}" Margin="0,0,8,0" AutomationProperties.Name="{loc:Loc 'Abrir partida' }">
               <StackPanel Orientation="Horizontal">
                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="" FontSize="14" VerticalAlignment="Center" Margin="0,0,7,0" />
-                <TextBlock Text="Abrir partida" VerticalAlignment="Center" />
+                <TextBlock Text="{loc:Loc 'Abrir partida' }" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Content="Nuevo personaje" Command="{Binding CreateCommand}" Style="{StaticResource PrimaryButton}" />
+            <Button Content="{loc:Loc 'Nuevo personaje' }" Command="{Binding CreateCommand}" Style="{StaticResource PrimaryButton}" />
           </StackPanel>
         </StackPanel>
       </Grid>
-      <GridSplitter x:Name="InspectorSplitter" Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" ToolTip="Ajustar propiedades" />
+      <GridSplitter x:Name="InspectorSplitter" Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" ToolTip="{loc:Loc 'Ajustar propiedades' }" />
       <Border x:Name="InspectorPane" Grid.Column="4" Background="{StaticResource InsetBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
         <Grid><Grid.RowDefinitions><RowDefinition Height="35"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <Border Style="{StaticResource DockHeader}"><TextBlock Text="Objeto seleccionado" Style="{StaticResource DockTitle}"/></Border>
+          <Border Style="{StaticResource DockHeader}"><TextBlock Text="{loc:Loc 'Objeto seleccionado' }" Style="{StaticResource DockTitle}"/></Border>
           <ContentControl x:Name="InspectorCardHost" Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
-          <TextBlock Grid.Row="1" Text="Selecciona una pieza del equipo o de tus contenedores para ver sus propiedades." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="20" VerticalAlignment="Center" Visibility="{Binding HasSelectedItem,Converter={StaticResource NotVis}}"/>
+          <TextBlock Grid.Row="1" Text="{loc:Loc 'Selecciona una pieza del equipo o de tus contenedores para ver sus propiedades.' }" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="20" VerticalAlignment="Center" Visibility="{Binding HasSelectedItem,Converter={StaticResource NotVis}}"/>
           <StackPanel Grid.Row="2" Margin="12" Visibility="{Binding HasSelectedItem,Converter={StaticResource BoolVis}}">
-            <Button Content="Editar objeto…" Command="{Binding DesignItemCommand}" Margin="0,0,0,7"/>
-            <UniformGrid Columns="3"><Button Content="Mover…" Command="{Binding MoveItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="Duplicar" Command="{Binding CopyItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="Eliminar" Command="{Binding DeleteItemCommand}" Style="{StaticResource QuietButton}"/></UniformGrid>
-            <Button Content="Exportar objeto…" Command="{Binding ExportBlueprintCommand}" Style="{StaticResource QuietButton}"/>
+            <Button Content="{loc:Loc 'Editar objeto…' }" Command="{Binding DesignItemCommand}" Margin="0,0,0,7"/>
+            <UniformGrid Columns="3"><Button Content="{loc:Loc 'Mover…' }" Command="{Binding MoveItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="{loc:Loc 'Duplicar' }" Command="{Binding CopyItemCommand}" Style="{StaticResource QuietButton}"/><Button Content="{loc:Loc 'Eliminar' }" Command="{Binding DeleteItemCommand}" Style="{StaticResource QuietButton}"/></UniformGrid>
+            <Button Content="{loc:Loc 'Exportar objeto…' }" Command="{Binding ExportBlueprintCommand}" Style="{StaticResource QuietButton}"/>
           </StackPanel>
         </Grid>
       </Border>
     </Grid>
     <Grid Grid.Row="4" Visibility="{Binding HasCharacter,Converter={StaticResource NotVis}}" Margin="40,28" MaxWidth="1100" HorizontalAlignment="Stretch">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-      <StackPanel><TextBlock Text="Personajes locales" FontSize="26" FontWeight="SemiBold"/><TextBlock Text="{Binding SavesSummary}" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,18"/></StackPanel>
-      <DockPanel Grid.Row="1" Margin="0,0,0,16"><Button DockPanel.Dock="Right" Content="Abrir archivo…" Command="{Binding OpenCommand}" Margin="12,0,0,0"/><Button DockPanel.Dock="Right" Content="Nuevo personaje…" Command="{Binding CreateCommand}" Margin="12,0,0,0"/><Grid><TextBox x:Name="WelcomeSearch" TextChanged="OnWelcomeSearchChanged" ToolTip="Buscar personaje por nombre o carpeta" AutomationProperties.Name="Buscar personajes locales" Padding="10,8"/><TextBlock Text="Buscar por nombre o carpeta…" Margin="11,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=WelcomeSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid></DockPanel>
+      <StackPanel><TextBlock Text="{loc:Loc 'Personajes locales' }" FontSize="26" FontWeight="SemiBold"/><TextBlock Text="{Binding SavesSummary}" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,18"/></StackPanel>
+      <DockPanel Grid.Row="1" Margin="0,0,0,16"><Button DockPanel.Dock="Right" Content="{loc:Loc 'Abrir archivo…' }" Command="{Binding OpenCommand}" Margin="12,0,0,0"/><Button DockPanel.Dock="Right" Content="{loc:Loc 'Nuevo personaje…' }" Command="{Binding CreateCommand}" Margin="12,0,0,0"/><Grid><TextBox x:Name="WelcomeSearch" TextChanged="OnWelcomeSearchChanged" ToolTip="{loc:Loc 'Buscar personaje por nombre o carpeta' }" AutomationProperties.Name="{loc:Loc 'Buscar personajes locales' }" Padding="10,8"/><TextBlock Text="{loc:Loc 'Buscar por nombre o carpeta…' }" Margin="11,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text,ElementName=WelcomeSearch}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid></DockPanel>
       <ListBox x:Name="WelcomeSavesList" Grid.Row="2" ItemsSource="{Binding Saves}" MouseDoubleClick="OnWelcomeDoubleClick" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource InsetBrush}" IsEnabled="{Binding CanChooseSave}">
         <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="Padding" Value="15,11"/></Style></ListBox.ItemContainerStyle>
         <ListBox.ItemTemplate><DataTemplate><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding FolderLabel}" FontSize="13" Foreground="{StaticResource MutedBrush}" Margin="18,0,0,0" VerticalAlignment="Center"/></Grid></DataTemplate></ListBox.ItemTemplate>
       </ListBox>
-      <DockPanel Grid.Row="3" Margin="0,16,0,0"><Button DockPanel.Dock="Right" Content="Abrir personaje" Command="{Binding OpenSaveCommand}" CommandParameter="{Binding SelectedItem,ElementName=WelcomeSavesList}" Style="{StaticResource PrimaryButton}" MinWidth="180"/><TextBlock Text="Doble clic para abrir · Partidas de tu equipo" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"/></DockPanel>
+      <DockPanel Grid.Row="3" Margin="0,16,0,0"><Button DockPanel.Dock="Right" Content="{loc:Loc 'Abrir personaje' }" Command="{Binding OpenSaveCommand}" CommandParameter="{Binding SelectedItem,ElementName=WelcomeSavesList}" Style="{StaticResource PrimaryButton}" MinWidth="180"/><TextBlock Text="{loc:Loc 'Doble clic para abrir · Partidas de tu equipo' }" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center"/></DockPanel>
     </Grid>
     <Border Grid.Row="5" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="12,3">
       <DockPanel>
         <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
-          <TextBlock Text="Escala" FontSize="12" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
-          <ComboBox x:Name="AppearanceScalePicker" Width="76" Height="22" MinHeight="22" Padding="5,1" FontSize="12" SelectedIndex="0" SelectionChanged="OnAppearanceScaleChanged" ToolTip="Escala de la interfaz">
+          <TextBlock Text="{loc:Loc 'Escala' }" FontSize="12" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
+          <ComboBox x:Name="AppearanceScalePicker" Width="76" Height="22" MinHeight="22" Padding="5,1" FontSize="12" SelectedIndex="0" SelectionChanged="OnAppearanceScaleChanged" ToolTip="{loc:Loc 'Escala de la interfaz' }">
             <ComboBoxItem Content="Auto" Tag="auto" />
             <ComboBoxItem Content="100%" Tag="1" />
             <ComboBoxItem Content="125%" Tag="1.25" />

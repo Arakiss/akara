@@ -19,9 +19,9 @@ public sealed class PaperDoll : FrameworkElement
     internal void SelectItem(ItemViewModel? item)=>SetCurrentValue(SelectedItemProperty,item);
     public event EventHandler? ItemInvoked;
     static readonly Dictionary<string,Rect> Layout=new(){["helm"]=new(185,10,70,85),["amulet"]=new(262,66,62,56),["weapon"]=new(60,90,92,200),["shield"]=new(290,140,92,180),["armor"]=new(170,120,100,180),["gloves"]=new(64,335,80,90),["belt"]=new(172,325,96,60),["boots"]=new(295,335,80,90),["ring1"]=new(161,436,48,56),["ring2"]=new(231,436,48,56)};
-    public PaperDoll(){Focusable=true;Cursor=Cursors.Hand;UseLayoutRounding=true;SnapsToDevicePixels=true;Hover=new ItemHover(this);AutomationProperties.SetName(this,"Equipo. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla.");}
-    protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,"Equipo");
-    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?"Equipo: "+item.Name:"Equipo. Sin pieza seleccionada.");}
+    public PaperDoll(){Focusable=true;Cursor=Cursors.Hand;UseLayoutRounding=true;SnapsToDevicePixels=true;Hover=new ItemHover(this);AutomationProperties.SetName(this,L.T("Equipo. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla."));}
+    protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,L.T("Equipo"));
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?L.T("Equipo: ")+item.Name:L.T("Equipo. Sin pieza seleccionada."));}
     static void Changed(DependencyObject target,DependencyPropertyChangedEventArgs e){var doll=(PaperDoll)target;if(e.OldValue is INotifyCollectionChanged old)old.CollectionChanged-=doll.CollectionChanged;if(e.NewValue is INotifyCollectionChanged current)current.CollectionChanged+=doll.CollectionChanged;doll.Hover?.Invalidate();doll.InvalidateVisual();}
     void CollectionChanged(object? sender,NotifyCollectionChangedEventArgs e){Hover.Invalidate();InvalidateVisual();}
     protected override Size MeasureOverride(Size availableSize)=>new(Math.Min(440,availableSize.Width),Math.Min(500,availableSize.Height));
@@ -57,8 +57,8 @@ public sealed class PaperDoll : FrameworkElement
                 var ghost=new FormattedText(glyph,CultureInfo.InvariantCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),22,new SolidColorBrush(Color.FromRgb(68,61,51)),1);
                 d.DrawText(ghost,new(r.X+(r.Width-ghost.Width)/2,r.Y+(r.Height-ghost.Height)/2));
             }
-            string labelText=pair.Key switch{"ring1" or "ring2"=>"Anillo","shield"=>"Secundaria",_=>slot?.Label??Names.Slot(pair.Key)};
-            var label=new FormattedText(labelText,CultureInfo.GetCultureInfo("es-ES"),FlowDirection.LeftToRight,new Typeface("Segoe UI"),12/scale,new SolidColorBrush(Color.FromRgb(168,175,178)),1){MaxTextWidth=r.Width-6,Trimming=TextTrimming.CharacterEllipsis,TextAlignment=TextAlignment.Center};
+            string labelText=pair.Key switch{"ring1" or "ring2"=>L.T("Anillo"),"shield"=>L.T("Secundaria"),_=>slot?.Label??Names.Slot(pair.Key)};
+            var label=new FormattedText(labelText,L.Culture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),12/scale,new SolidColorBrush(Color.FromRgb(168,175,178)),1){MaxTextWidth=r.Width-6,Trimming=TextTrimming.CharacterEllipsis,TextAlignment=TextAlignment.Center};
             if(item is null)d.DrawText(label,new(r.X+3,r.Bottom-18/scale));
         }
         var twoHand=ItemsSource?.FirstOrDefault(s=>s.Slot=="weapon")?.Item;

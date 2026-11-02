@@ -24,6 +24,7 @@ foreach ($project in @($desktopProject,$cliProject)) {
     if ($LASTEXITCODE -ne 0) { throw ('No se pudo publicar ' + [IO.Path]::GetFileNameWithoutExtension($project) + '.') }
 }
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'LEEME.txt') -Destination $OutputDirectory -Force
+Copy-Item -LiteralPath (Join-Path $sourceRoot 'README.txt') -Destination $OutputDirectory -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'LICENSE') -Destination $OutputDirectory -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'licenses') -Destination $OutputDirectory -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $sourceRoot 'docs\cli.md') -Destination (Join-Path $OutputDirectory 'CLI.md') -Force

@@ -14,22 +14,22 @@ public sealed partial class MainViewModel
             var preview=await bridge.CallAsync(core=>core.Preview(request));
             return preview.Bool("canSave")?null:string.Join(Environment.NewLine,preview.Obj("validation").Array("errors").Select(error=>error?.GetValue<string>()));
         }
-        catch(Exception exception){return exception is ApiProblem problem?problem.Message:"No se puede aplicar este diseño: "+exception.Message;}
+        catch(Exception exception){return exception is ApiProblem problem?problem.Message:L.T("No se puede aplicar este diseño: ")+exception.Message;}
     }
     static string FormatGuide(JsonObject guide)
     {
         var parts = new List<string>();
         void Add(string label, string value) { if (!string.IsNullOrWhiteSpace(value)) parts.Add(label + Environment.NewLine + value); }
-        Add("Antes de combatir", guide.Text("opening"));
-        Add("Cómo jugar", guide.Text("strategy"));
+        Add(L.T("Antes de combatir"), guide.Text("opening"));
+        Add(L.T("Cómo jugar"), guide.Text("strategy"));
         var hotkeys = guide.Array("hotkeys").OfType<JsonObject>().Select(h => h.Text("key") + " · " + Names.Skill(h.Text("skill"))).ToArray();
-        if (hotkeys.Length > 0) Add("Controles", string.Join(Environment.NewLine, hotkeys));
-        Add("Talismanes", guide.Text("charms"));
-        Add("Resistencias", guide.Text("resists"));
+        if (hotkeys.Length > 0) Add(L.T("Controles"), string.Join(Environment.NewLine, hotkeys));
+        Add(L.T("Talismanes"), guide.Text("charms"));
+        Add(L.T("Resistencias"), guide.Text("resists"));
         var alternatives = guide.Array("alternatives").OfType<JsonObject>().Select(a => a.Text("name")).Where(n => n.Length > 0).ToArray();
-        if (alternatives.Length > 0) Add("Alternativas en el alijo", string.Join(", ", alternatives));
+        if (alternatives.Length > 0) Add(L.T("Alternativas en el alijo"), string.Join(", ", alternatives));
         var notes = guide.Array("notes").Select(n => n?.GetValue<string>()).Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
-        if (notes.Length > 0) Add("Ten en cuenta", string.Join(Environment.NewLine, notes));
+        if (notes.Length > 0) Add(L.T("Ten en cuenta"), string.Join(Environment.NewLine, notes));
         return string.Join(Environment.NewLine + Environment.NewLine, parts);
     }
 

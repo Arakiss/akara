@@ -11,8 +11,8 @@ namespace Akara.Desktop.Controls;
 public sealed class InventoryBoard : FrameworkElement
 {
     internal ItemHover Hover {get;}
-    protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,"Inventario");
-    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?"Inventario: "+item.Name:"Inventario. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla.");}
+    protected override AutomationPeer OnCreateAutomationPeer()=>new ItemBoardAutomationPeer(this,L.T("Inventario"));
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e){base.OnPropertyChanged(e);if(e.Property==SelectedItemProperty)AutomationProperties.SetName(this,SelectedItem is { } item?L.T("Inventario: ")+item.Name:L.T("Inventario. Usa las flechas para seleccionar una pieza y pulsa Intro para editarla."));}
     public static readonly DependencyProperty ItemsSourceProperty=DependencyProperty.Register(nameof(ItemsSource),typeof(IEnumerable<ItemViewModel>),typeof(InventoryBoard),new FrameworkPropertyMetadata(null,FrameworkPropertyMetadataOptions.AffectsRender,ItemsChanged));
     public static readonly DependencyProperty ColumnsProperty=DependencyProperty.Register(nameof(Columns),typeof(int),typeof(InventoryBoard),new FrameworkPropertyMetadata(10,FrameworkPropertyMetadataOptions.AffectsMeasure|FrameworkPropertyMetadataOptions.AffectsRender));
     public static readonly DependencyProperty RowsProperty=DependencyProperty.Register(nameof(Rows),typeof(int),typeof(InventoryBoard),new FrameworkPropertyMetadata(8,FrameworkPropertyMetadataOptions.AffectsMeasure|FrameworkPropertyMetadataOptions.AffectsRender));

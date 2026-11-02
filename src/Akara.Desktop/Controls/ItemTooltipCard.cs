@@ -26,7 +26,7 @@ public sealed class ItemTooltipCard : Border
         BorderThickness = new Thickness(1); CornerRadius = new CornerRadius(2);
         TextElement.SetFontFamily(this, new FontFamily("Segoe UI"));
         TextElement.SetForeground(this, Ivory); TextElement.SetFontSize(this, 13);
-        AutomationProperties.SetName(this, "Propiedades de " + item.Name);
+        AutomationProperties.SetName(this, L.T("Propiedades de ") + item.Name);
         var layout = new Grid();
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -44,8 +44,8 @@ public sealed class ItemTooltipCard : Border
         var name = Line(item.Name, BorderBrush, 21); name.SetResourceReference(TextBlock.FontFamilyProperty, "DisplayFont");
         identity.Children.Add(name);
         identity.Children.Add(Line(item.BaseName, Ivory, 13));
-        identity.Children.Add(Line(item.QualityLabel + (item.RuneWordName.Length > 0 ? " · Palabra rúnica" : ""), Muted, 12));
-        identity.Children.Add(Line("Nivel de objeto " + item.Level + (item.Ethereal ? " · Etéreo" : ""), Muted, 12));
+        identity.Children.Add(Line(item.QualityLabel + (item.RuneWordName.Length > 0 ? L.T(" · Palabra rúnica") : ""), Muted, 12));
+        identity.Children.Add(Line(L.T("Nivel de objeto ") + item.Level + (item.Ethereal ? L.T(" · Etéreo") : ""), Muted, 12));
         layout.Children.Add(header);
 
         var divider = new Border { Height = 1, Background = new SolidColorBrush(Color.FromRgb(87, 69, 47)), Margin = new Thickness(0, 0, 0, 10) };
@@ -54,43 +54,43 @@ public sealed class ItemTooltipCard : Border
         PropertiesViewport = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, CanContentScroll = false, Focusable = false };
         Grid.SetRow(PropertiesViewport, 2); layout.Children.Add(PropertiesViewport);
 
-        if (item.PersonalizedName.Length > 0) body.Children.Add(Line("Personalizado: " + item.PersonalizedName, Ivory));
+        if (item.PersonalizedName.Length > 0) body.Children.Add(Line(L.T("Personalizado: ") + item.PersonalizedName, Ivory));
         if (item.Data["identified"] is JsonValue identified && identified.TryGetValue<bool>(out bool known) && !known)
-            body.Children.Add(Line("Sin identificar", Muted));
-        if (item.TwoHanded) body.Children.Add(Line("Arma de dos manos", Ivory));
+            body.Children.Add(Line(L.T("Sin identificar"), Muted));
+        if (item.TwoHanded) body.Children.Add(Line(L.T("Arma de dos manos"), Ivory));
         // The save stores base defense, not the game's final defense after modifiers.
-        if (item.Data.NullableInt("defense") is { } defense) body.Children.Add(Line("Defensa base: " + defense, Ivory));
+        if (item.Data.NullableInt("defense") is { } defense) body.Children.Add(Line(L.T("Defensa base: ") + defense, Ivory));
         if (item.Data.NullableInt("maxDurability") is > 0 and var maximum)
-            body.Children.Add(Line("Durabilidad: " + item.Data.Int("durability") + " / " + maximum, Ivory));
-        if (item.Data.NullableInt("quantity") is > 1 and var quantity) body.Children.Add(Line("Cantidad: " + quantity, Ivory));
+            body.Children.Add(Line(L.T("Durabilidad: ") + item.Data.Int("durability") + " / " + maximum, Ivory));
+        if (item.Data.NullableInt("quantity") is > 1 and var quantity) body.Children.Add(Line(L.T("Cantidad: ") + quantity, Ivory));
 
         var requirements = item.Data.Obj("requirements");
         var required = new List<string>();
-        foreach (var (key, label) in new[] { ("level", "Nivel"), ("strength", "Fuerza"), ("dexterity", "Destreza") })
+        foreach (var (key, label) in new[] { ("level", L.T("Nivel")), ("strength", L.T("Fuerza")), ("dexterity", L.T("Destreza")) })
             if (requirements.Int(key) > 0) required.Add(label + " " + requirements.Int(key));
         if (required.Count > 0)
-            body.Children.Add(Line((requirements.Bool("estimated") ? "Requisitos estimados: " : "Requisitos: ") + string.Join(" · ", required), Muted, 12));
+            body.Children.Add(Line((requirements.Bool("estimated") ? L.T("Requisitos estimados: ") : L.T("Requisitos: ")) + string.Join(" · ", required), Muted, 12));
 
         if (item.VisibleStats.Count > 0)
         {
             foreach (var stat in item.VisibleStats) body.Children.Add(Property(stat.Text));
         }
-        else body.Children.Add(Line("Sin propiedades adicionales", Muted));
+        else body.Children.Add(Line(L.T("Sin propiedades adicionales"), Muted));
 
         foreach (var bonus in item.Data.Array("setBonusLists").OfType<JsonArray>())
         {
             var stats = bonus.OfType<JsonObject>().Select(Stat).Where(stat => !stat.Hidden).ToArray();
             if (stats.Length == 0) continue;
-            body.Children.Add(Section("Bonificación condicional de conjunto"));
+            body.Children.Add(Section(L.T("Bonificación condicional de conjunto")));
             foreach (var stat in stats) body.Children.Add(Property(stat.Text));
         }
         if (item.Sockets.Count > 0)
         {
-            body.Children.Add(Section("Engarces: " + item.Sockets.Count(socket => socket is not null) + " / " + item.Sockets.Count));
+            body.Children.Add(Section(L.T("Engarces: ") + item.Sockets.Count(socket => socket is not null) + " / " + item.Sockets.Count));
             for (int index = 0; index < item.Sockets.Count; index++)
             {
                 var socket = item.Sockets[index];
-                if (socket is null) { body.Children.Add(Line((index + 1) + " · Vacío", Muted)); continue; }
+                if (socket is null) { body.Children.Add(Line((index + 1) + L.T(" · Vacío"), Muted)); continue; }
                 var row = new DockPanel { Margin = new Thickness(0, 4, 0, 0) };
                 var icon = new Image { Source = ItemArt.GetPresentation(socket), Width = 20, Height = 24, Stretch = Stretch.Uniform, Margin = new Thickness(0, 0, 8, 0) };
                 row.Children.Add(icon); row.Children.Add(Line((index + 1) + " · " + socket.Name, Ivory)); body.Children.Add(row);

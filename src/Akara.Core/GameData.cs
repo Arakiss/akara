@@ -21,7 +21,7 @@ public sealed class GameData
     public GameData(string path, string? stringsPath = null, string? name = null)
     {
         ExcelPath = Path.GetFullPath(path);
-        if (!Directory.Exists(ExcelPath)) throw new ApiProblem("profile_missing", "No existe la carpeta de tablas seleccionada.");
+        if (!Directory.Exists(ExcelPath)) throw new ApiProblem("profile_missing", L.T("No existe la carpeta de tablas seleccionada."));
         Name = name ?? (ExcelPath.Contains("Reimagined", StringComparison.OrdinalIgnoreCase) ? "D2R Reimagined" : new DirectoryInfo(ExcelPath).Name);
         StringsPath = stringsPath is null ? Path.GetFullPath(Path.Combine(ExcelPath, "..", "..", "local", "lng", "strings")) : Path.GetFullPath(stringsPath);
         foreach (var file in new[] { "charstats.txt", "skills.txt", "itemstatcost.txt", "experience.txt", "inventory.txt", "properties.txt", "itemtypes.txt", "uniqueitems.txt", "setitems.txt", "runes.txt", "weapons.txt", "armor.txt", "misc.txt", "magicprefix.txt", "magicsuffix.txt", "automagic.txt" }) Read(file);
@@ -36,7 +36,7 @@ public sealed class GameData
     {
         foreach (var kv in fileHashes)
             if (!File.Exists(Path.Combine(ExcelPath, kv.Key)) || Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Path.Combine(ExcelPath, kv.Key)))) != kv.Value)
-                throw new ApiProblem("profile_changed", "Las tablas del juego han cambiado. Vuelve a abrir el perfil antes de editar o guardar.", 409);
+                throw new ApiProblem("profile_changed", L.T("Las tablas del juego han cambiado. Vuelve a abrir el perfil antes de editar o guardar."), 409);
     }
     public string Fingerprint() => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(string.Join("\n", fileHashes.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase).Select(kv => kv.Key + ":" + kv.Value)))));
     public IExternalData External(uint version) => externalData.GetOrAdd(version, v => new TxtFileExternalData(ExcelPath, v));
@@ -46,10 +46,10 @@ public sealed class GameData
     {
         if (tables.TryGetValue(file, out var value)) return value;
         var path = Path.Combine(ExcelPath, file);
-        if (!File.Exists(path)) throw new ApiProblem("table_missing", "Falta una tabla del perfil: " + file);
-        if (new FileInfo(path).Length > 64 * 1024 * 1024) throw new ApiProblem("table_too_large", "La tabla es demasiado grande: " + file);
+        if (!File.Exists(path)) throw new ApiProblem("table_missing", L.T("Falta una tabla del perfil: ") + file);
+        if (new FileInfo(path).Length > 64 * 1024 * 1024) throw new ApiProblem("table_too_large", L.T("La tabla es demasiado grande: ") + file);
         var lines = File.ReadAllLines(path);
-        if (lines.Length == 0) throw new ApiProblem("table_invalid", "La tabla está vacía: " + file);
+        if (lines.Length == 0) throw new ApiProblem("table_invalid", L.T("La tabla está vacía: ") + file);
         var keys = lines[0].TrimStart('\uFEFF').Split('\t');
         value = [];
         foreach (var line in lines.Skip(1))
@@ -62,14 +62,14 @@ public sealed class GameData
         tables[file] = value;
         return value;
     }
-    public Dictionary<string, string> Character(D2Save save) => Read("charstats.txt").SingleOrDefault(r => V(r, "class").Equals(save.Character.Class.ToString(), StringComparison.OrdinalIgnoreCase)) ?? throw new ApiProblem("class_unsupported", "Las tablas no contienen esta clase.");
+    public Dictionary<string, string> Character(D2Save save) => Read("charstats.txt").SingleOrDefault(r => V(r, "class").Equals(save.Character.Class.ToString(), StringComparison.OrdinalIgnoreCase)) ?? throw new ApiProblem("class_unsupported", L.T("Las tablas no contienen esta clase."));
     public static string V(Dictionary<string, string> row, string key) => row.TryGetValue(key, out var value) ? value : "";
     public static int I(Dictionary<string, string> row, string key, int fallback = 0) => int.TryParse(V(row, key), out var value) ? value : fallback;
-    public (int Width, int Height) Size(Item item) => Bases.TryGetValue(item.ItemCodeString, out var row) ? (I(row, "invwidth", 1), I(row, "invheight", 1)) : throw new ApiProblem("base_missing", "La base del objeto no existe en este perfil: " + item.ItemCodeString);
+    public (int Width, int Height) Size(Item item) => Bases.TryGetValue(item.ItemCodeString, out var row) ? (I(row, "invwidth", 1), I(row, "invheight", 1)) : throw new ApiProblem("base_missing", L.T("La base del objeto no existe en este perfil: ") + item.ItemCodeString);
     public (int Width, int Height) Grid(D2Save save, string page)
     {
         string key = page == "stash" ? "Big Bank Page 1" : page == "cube" ? "Transmogrify Box Page 1" : save.Character.Class.ToString();
-        var row = Read("inventory.txt").FirstOrDefault(r => V(r, "class") == key) ?? throw new ApiProblem("grid_missing", "Falta la cuadrícula nativa: " + key);
+        var row = Read("inventory.txt").FirstOrDefault(r => V(r, "class") == key) ?? throw new ApiProblem("grid_missing", L.T("Falta la cuadrícula nativa: ") + key);
         return (I(row, "gridX"), I(row, "gridY"));
     }
 }

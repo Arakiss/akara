@@ -19,7 +19,7 @@ public partial class WorkbenchView : UserControl
     readonly HashSet<ValidationError> inputErrors=[];
     bool objectContext,catalogExpanded=true,skillsQueued,catalogInitialized,catalogQueued;
     double catalogWidth=240,inspectorWidth=370;
-    readonly CatalogBranch[] catalogBranches=[new("unique","Únicos"),new("set","Conjuntos"),new("runeword","Palabras rúnicas"),new("base","Bases")];
+    readonly CatalogBranch[] catalogBranches=[new("unique",L.T("Únicos")),new("set",L.T("Conjuntos")),new("runeword",L.T("Palabras rúnicas")),new("base",L.T("Bases"))];
     CatalogBranch? activeBranch;
     ICollectionView? welcomeView;
     double presentationScale=1;
@@ -30,6 +30,14 @@ public partial class WorkbenchView : UserControl
         InitializeComponent();
         CatalogTree.ItemsSource=catalogBranches;
         CatalogTree.AddHandler(TreeViewItem.ExpandedEvent,new RoutedEventHandler(OnCatalogExpanded));
+    }
+    async void OnEnglish(object sender,RoutedEventArgs e) => await ChangeLanguageAsync("en");
+    async void OnSpanish(object sender,RoutedEventArgs e) => await ChangeLanguageAsync("es");
+    async Task ChangeLanguageAsync(string language)
+    {
+        if(attached is not { CanChangeLanguage: true } vm)return;
+        await vm.ChangeLanguageAsync(language);
+        if(Window.GetWindow(this) is MainWindow window)window.RefreshLanguage();
     }
     void OnDataContextChanged(object sender,DependencyPropertyChangedEventArgs e)
     {
@@ -125,14 +133,14 @@ public partial class WorkbenchView : UserControl
     // tables. Unknown classes/pages keep an explicit neutral numbered title.
     static string SkillTreeTitle(string className,int page,int index)=>(className,page) switch
     {
-        ("Sorceress",1)=>"Fuego",("Sorceress",2)=>"Rayos",("Sorceress",3)=>"Frío",
-        ("Amazon",1)=>"Arco y ballesta",("Amazon",2)=>"Pasivas y magia",("Amazon",3)=>"Jabalina y lanza",
-        ("Necromancer",1)=>"Maldiciones",("Necromancer",2)=>"Veneno y hueso",("Necromancer",3)=>"Invocación",
-        ("Paladin",1)=>"Combate",("Paladin",2)=>"Auras ofensivas",("Paladin",3)=>"Auras defensivas",
-        ("Barbarian",1)=>"Combate",("Barbarian",2)=>"Dominios",("Barbarian",3)=>"Gritos de guerra",
-        ("Druid",1)=>"Invocación",("Druid",2)=>"Cambio de forma",("Druid",3)=>"Elementales",
-        ("Assassin",1)=>"Trampas",("Assassin",2)=>"Disciplinas sombrías",("Assassin",3)=>"Artes marciales",
-        _=>"Árbol "+(index+1)
+        ("Sorceress",1)=>L.T("Fuego"),("Sorceress",2)=>L.T("Rayos"),("Sorceress",3)=>L.T("Frío"),
+        ("Amazon",1)=>L.T("Arco y ballesta"),("Amazon",2)=>L.T("Pasivas y magia"),("Amazon",3)=>L.T("Jabalina y lanza"),
+        ("Necromancer",1)=>L.T("Maldiciones"),("Necromancer",2)=>L.T("Veneno y hueso"),("Necromancer",3)=>L.T("Invocación"),
+        ("Paladin",1)=>L.T("Combate"),("Paladin",2)=>L.T("Auras ofensivas"),("Paladin",3)=>L.T("Auras defensivas"),
+        ("Barbarian",1)=>L.T("Combate"),("Barbarian",2)=>L.T("Dominios"),("Barbarian",3)=>L.T("Gritos de guerra"),
+        ("Druid",1)=>L.T("Invocación"),("Druid",2)=>L.T("Cambio de forma"),("Druid",3)=>L.T("Elementales"),
+        ("Assassin",1)=>L.T("Trampas"),("Assassin",2)=>L.T("Disciplinas sombrías"),("Assassin",3)=>L.T("Artes marciales"),
+        _=>L.T("Árbol ")+(index+1)
     };
     sealed record SkillColumn(string Title,IReadOnlyList<SkillViewModel> Skills);
     void UpdateContext()
@@ -214,7 +222,7 @@ public partial class WorkbenchView : UserControl
     }
     async void OnMercenary(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.MercenaryAsync(Window.GetWindow(this),attached);}
     async void OnChooseSave(object sender,RoutedEventArgs e){if(attached is not null)await NativeDialogs.ChooseCharacterAsync(Window.GetWindow(this),attached);}
-    async void OnAddProfile(object sender,RoutedEventArgs e){if(attached is null)return;var dialog=new Microsoft.Win32.OpenFolderDialog{Title="Carpeta de tablas del juego o del mod"};if(dialog.ShowDialog()==true)await attached.RegisterProfileAsync(dialog.FolderName);}
+    async void OnAddProfile(object sender,RoutedEventArgs e){if(attached is null)return;var dialog=new Microsoft.Win32.OpenFolderDialog{Title=L.T("Carpeta de tablas del juego o del mod")};if(dialog.ShowDialog()==true)await attached.RegisterProfileAsync(dialog.FolderName);}
     void OnTitleDrag(object sender,MouseButtonEventArgs e){for(DependencyObject? source=e.OriginalSource as DependencyObject;source is not null&&source!=sender;source=source is Visual?VisualTreeHelper.GetParent(source):null)if(source is ButtonBase or MenuItem)return;if(Window.GetWindow(this) is not { } window)return;if(e.ClickCount==2){window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;return;}try{window.DragMove();}catch(InvalidOperationException){}}
     void OnAbout(object sender,RoutedEventArgs e)=>NativeDialogs.About(Window.GetWindow(this));
     void OnMinimize(object sender,RoutedEventArgs e){if(Window.GetWindow(this) is { } window)SystemCommands.MinimizeWindow(window);}

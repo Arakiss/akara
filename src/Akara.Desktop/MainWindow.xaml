@@ -3,7 +3,7 @@
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:local="clr-namespace:Akara.Desktop"
  xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
- Title="Jamella · Tributo — 0.6.2" Width="1600" Height="1000" MinWidth="1160" MinHeight="800"
+ Title="Jamella · Tributo — 0.7.0" Width="1600" Height="1000" MinWidth="1160" MinHeight="800"
  WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResizeWithGrip">
  <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
  <local:WorkbenchView x:Name="Workbench" />

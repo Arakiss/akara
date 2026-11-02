@@ -7,12 +7,12 @@ namespace ForjaHoradrica;
 
 public sealed partial class EditorService
 {
-    private GameData ResolveProfile(string? id) => id is not null ? profiles.GetValueOrDefault(id) ?? throw new ApiProblem("profile_missing", "El perfil seleccionado no existe.") : profiles.Values.FirstOrDefault() ?? throw new ApiProblem("profile_required", "Selecciona un perfil de datos nativos.");
+    private GameData ResolveProfile(string? id) => id is not null ? profiles.GetValueOrDefault(id) ?? throw new ApiProblem("profile_missing", L.T("El perfil seleccionado no existe.")) : profiles.Values.FirstOrDefault() ?? throw new ApiProblem("profile_required", L.T("Selecciona un perfil de datos nativos."));
     public object Classes(string? profileId = null) => new { entries = ResolveProfile(profileId).Classes() };
     private object NewDraft(D2Save save, GameData profile)
     {
         profile.EnsureUnchanged(); var bytes = save.ToBytes(profile.External(save.Version), save.Version);
-        if (!D2Save.VerifyChecksum(bytes) || !bytes.AsSpan().SequenceEqual(Read(bytes, profile, save.Version).ToBytes(profile.External(save.Version), save.Version))) throw new ApiProblem("new_character_encoding", "El personaje nuevo no supera la verificación binaria.");
+        if (!D2Save.VerifyChecksum(bytes) || !bytes.AsSpan().SequenceEqual(Read(bytes, profile, save.Version).ToBytes(profile.External(save.Version), save.Version))) throw new ApiProblem("new_character_encoding", L.T("El personaje nuevo no supera la verificación binaria."));
         var s = new SaveSession { Id = Guid.NewGuid().ToString("N"), SourcePath = Path.Combine(dataRoot, "drafts", save.Character.Preview.Name + ".d2s"), Original = bytes, Hash = Hash(bytes), Profile = profile, Version = save.Version, Roundtrip = true, IsNew = true };
         sessions[s.Id] = s; return Inspect(s, Read(bytes, profile, save.Version));
     }
@@ -23,7 +23,7 @@ public sealed partial class EditorService
         if (request.Preset is null) return inspection;
         string id = JsonSerializer.SerializeToElement(inspection, ContractJson).GetProperty("sessionId").GetString()!;
         var preview = JsonSerializer.SerializeToElement(Preview(new() { SessionId = id, Preset = request.Preset }), ContractJson);
-        if (!preview.GetProperty("canSave").GetBoolean()) throw new ApiProblem("preset_invalid", "La plantilla no se puede aplicar al personaje nuevo.", 400, preview.GetProperty("validation"));
+        if (!preview.GetProperty("canSave").GetBoolean()) throw new ApiProblem("preset_invalid", L.T("La plantilla no se puede aplicar al personaje nuevo."), 400, preview.GetProperty("validation"));
         var session = Session(id); session.Original = session.Plan!.Bytes; session.Hash = Hash(session.Original); session.Plan = null;
         return Inspect(session, Read(session.Original, p, session.Version));
     }

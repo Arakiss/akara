@@ -8,15 +8,15 @@ public sealed partial class EditorService
 {
     private static object[] PresetEntries(GameData p, bool guide)
     {
-        var entries = new List<object> { new { id = "orbe-tal-oculus", name = "Orbe helado · Tal Rasha y Oculus", classId = 1, className = "Sorceress", description = "Orbe helado con tres piezas de Tal Rasha y equipo nativo.", level = 85, guide = guide ? (object)new { opening = "Activa la armadura de hielo y usa Teletransporte para colocarte.", strategy = "Orbe helado es el ataque principal; Campo estático reduce la vida de jefes. El equipo se conserva al cambiar de conjunto.", hotkeys = new[] { new { key = "F1", skill = "Frozen Orb" }, new { key = "F2", skill = "Teleport" }, new { key = "F3", skill = "Static Field" }, new { key = "F4", skill = "Frozen Armor" } } } : null } };
+        var entries = new List<object> { new { id = "orbe-tal-oculus", name = L.T("Orbe helado · Tal Rasha y Oculus"), classId = 1, className = "Sorceress", description = L.T("Orbe helado con tres piezas de Tal Rasha y equipo nativo."), level = 85, guide = guide ? (object)new { opening = L.T("Activa la armadura de hielo y usa Teletransporte para colocarte."), strategy = L.T("Orbe helado es el ataque principal; Campo estático reduce la vida de jefes. El equipo se conserva al cambiar de conjunto."), hotkeys = new[] { new { key = "F1", skill = "Frozen Orb" }, new { key = "F2", skill = "Teleport" }, new { key = "F3", skill = "Static Field" }, new { key = "F4", skill = "Frozen Armor" } } } : null } };
         entries.AddRange(PresetCatalog.List(p).Select(d => (object)new { d.Id, d.Name, d.ClassId, d.ClassName, d.Description, level = 85, guide = guide ? PresetCatalog.Guide(p, d.Id) : null }));
         return entries.ToArray();
     }
     public object Presets(string? profileId = null) => new { entries = PresetEntries(ResolveProfile(profileId), true) };
     private static PreviewRequest ApplyClassPreset(PreviewRequest request, D2Save save, GameData p)
     {
-        var definition = PresetCatalog.List(p).FirstOrDefault(d => d.Id == request.Preset) ?? throw new ApiProblem("preset_unknown", "La plantilla no existe en este perfil.");
-        if (definition.ClassId != (int)save.Character.Class) throw new ApiProblem("preset_class", "La plantilla corresponde a otra clase.");
+        var definition = PresetCatalog.List(p).FirstOrDefault(d => d.Id == request.Preset) ?? throw new ApiProblem("preset_unknown", L.T("La plantilla no existe en este perfil."));
+        if (definition.ClassId != (int)save.Character.Class) throw new ApiProblem("preset_class", L.T("La plantilla corresponde a otra clase."));
         var value = PresetCatalog.Create(p, definition.Id); value.SessionId = request.SessionId; value.Name = request.Name;
         value.Level = request.Level ?? value.Level;
         if (request.Attributes is not null) foreach (var kv in request.Attributes) value.Attributes![kv.Key] = kv.Value;

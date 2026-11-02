@@ -42,7 +42,7 @@ public static class PresetCatalog
 
     public static IReadOnlyList<PresetDefinition> List(GameData profile) => Builds
         .Where(b => profile.Read("charstats.txt").Any(r => GameData.V(r, "class") == b.Class))
-        .Select(b => new PresetDefinition(b.Id, b.Name, (int)Enum.Parse<CharacterClass>(b.Class), b.Class, b.Description)).ToArray();
+        .Select(b => new PresetDefinition(b.Id, L.T(b.Name), (int)Enum.Parse<CharacterClass>(b.Class), b.Class, L.T(b.Description))).ToArray();
 
     public static PreviewRequest Create(GameData profile, string id)
     {
@@ -53,18 +53,18 @@ public static class PresetCatalog
         int statBudget = 84 * GameData.I(chr, "StatPerLevel", 5) + 15;
         int energy = GameData.I(chr, "int") + b.EnergyExtra;
         int vitality = GameData.I(chr, "vit") + statBudget - (b.Strength - GameData.I(chr, "str")) - (b.Dexterity - GameData.I(chr, "dex")) - b.EnergyExtra;
-        if (statBudget != 435 || vitality < GameData.I(chr, "vit")) throw new ApiProblem("preset_attributes", "El perfil no admite el presupuesto de 435 de esta plantilla.");
+        if (statBudget != 435 || vitality < GameData.I(chr, "vit")) throw new ApiProblem("preset_attributes", L.T("El perfil no admite el presupuesto de 435 de esta plantilla."));
         int offset = SkillsSection.ClassSkillOffsets[(int)cls];
-        if (b.Skills.Values.Sum() != 96) throw new ApiProblem("preset_skills", "El catálogo no suma 96 puntos.");
+        if (b.Skills.Values.Sum() != 96) throw new ApiProblem("preset_skills", L.T("El catálogo no suma 96 puntos."));
         foreach (var skill in b.Skills)
         {
             var row = rows.Single(r => GameData.V(r, "skill").Equals(skill.Key, StringComparison.OrdinalIgnoreCase)); int skillId = GameData.I(row, "*Id", -1);
             if (skillId < offset || skillId >= offset + 30 || skill.Value > GameData.I(row, "maxlvl") || skill.Value > 85 - GameData.I(row, "reqlevel") + 1)
-                throw new ApiProblem("preset_skill_cap", "La habilidad no corresponde al perfil de la plantilla: " + skill.Key);
+                throw new ApiProblem("preset_skill_cap", L.T("La habilidad no corresponde al perfil de la plantilla: ") + skill.Key);
             foreach (string key in new[] { "reqskill1", "reqskill2", "reqskill3" })
             {
                 string dependency = GameData.V(row, key);
-                if (dependency.Length > 0 && (!b.Skills.TryGetValue(dependency, out int points) || points < 1)) throw new ApiProblem("preset_prerequisite", skill.Key + " necesita " + dependency);
+                if (dependency.Length > 0 && (!b.Skills.TryGetValue(dependency, out int points) || points < 1)) throw new ApiProblem("preset_prerequisite", skill.Key + L.T(" necesita ") + dependency);
             }
         }
         var request = new PreviewRequest
@@ -83,8 +83,8 @@ public static class PresetCatalog
         if(b.Class=="Paladin")request.HotkeySides=new(){[0]="left",[7]="left"};
         foreach (var gear in request.Gear)
         {
-            if (gear.Type == "unique" && !profile.Read("uniqueitems.txt").Any(r => GameData.V(r, "index").Equals(gear.Name, StringComparison.OrdinalIgnoreCase) && GameData.V(r, "disabled") != "1" && GameData.I(r, "lvl req") <= 85)) throw new ApiProblem("preset_item", "El objeto nativo no está disponible a nivel 85: " + gear.Name);
-            if (gear.Type == "set" && !profile.Read("setitems.txt").Any(r => GameData.V(r, "index").Equals(gear.Name, StringComparison.OrdinalIgnoreCase) && GameData.I(r, "lvl req") <= 85)) throw new ApiProblem("preset_item", "La pieza de conjunto no está disponible a nivel 85: " + gear.Name);
+            if (gear.Type == "unique" && !profile.Read("uniqueitems.txt").Any(r => GameData.V(r, "index").Equals(gear.Name, StringComparison.OrdinalIgnoreCase) && GameData.V(r, "disabled") != "1" && GameData.I(r, "lvl req") <= 85)) throw new ApiProblem("preset_item", L.T("El objeto nativo no está disponible a nivel 85: ") + gear.Name);
+            if (gear.Type == "set" && !profile.Read("setitems.txt").Any(r => GameData.V(r, "index").Equals(gear.Name, StringComparison.OrdinalIgnoreCase) && GameData.I(r, "lvl req") <= 85)) throw new ApiProblem("preset_item", L.T("La pieza de conjunto no está disponible a nivel 85: ") + gear.Name);
         }
         profile.EnsureUnchanged(); return request;
     }
@@ -151,27 +151,27 @@ public static class PresetCatalog
         var b = Find(id); var request = Create(profile, id);
         string strategy = b.Class switch
         {
-            "Sorceress" => "Activa Armadura de hielo con F4 y Tormenta con F5. Orbe helado(F1) alterna con Cadena de rayos(F6) para grupos y Relámpago(F7) contra objetivos resistentes al frío. Campo estático(F3) abre los combates con jefes; Teletransporte(F2) reúne al mercenario y coloca el Orbe. F8 abre portal.",
-            "Amazon" => "F1 contra grupos; F2 cuerpo a cuerpo contra jefes. F7 Jab es la alternativa física si una inmunidad eléctrica permanece. Invoca Valquiria con F3; F4 teletransporta.",
-            "Paladin" => "Deja Concentración(F2) en el botón derecho y Martillo en el izquierdo; usa Mayús+clic izquierdo para lanzar quieto. Activa Escudo sagrado(F3). Después de Teletransporte(F4), vuelve a Concentración. El mercenario cubre enemigos inmunes a magia.",
-            "Barbarian" => "Torbellino(F1) para grupos; Berserk(F2) convierte el ataque en daño mágico contra inmunidad física. Salto ofensivo(F4) desplaza; Grito(F5) antes de combatir y Hallar objeto(F3) al terminar. El mercenario aplica Decrepificar. Enigma queda como alternativa de movilidad.",
-            "Necromancer" => "Levanta esqueletos(F1), magos(F8), golem(F5) y resucitados(F6). Amplifica daño(F3); tras la primera baja, encadena Explosión de cadáveres(F2). Decrepificar(F7) controla jefes; Teletransporte(F4) reúne el ejército. Leoric sirve para preinvocar y Beast para Fanatismo alternativo.",
-            "Druid" => "Invoca Roble(F5), Oso(F6) y apoyo(F7/F8). Activa Huracán(F2) y Armadura de ciclón(F3), y renuévalos cuando expiren. Tornado(F1) es físico y Huracán es frío; el mercenario aplica Decrepificar para apoyar el daño físico.",
-            "Assassin" => "Invoca Maestra de las sombras(F3); Ráfaga de velocidad(F5) acelera la colocación de trampas. Pon Centinelas de rayos(F1) y añade Centinela mortal(F2) al caer el primer enemigo. La bomba de fuego(F8) aporta otro elemento. Fundido(F6) sustituye a Ráfaga como opción defensiva.",
-            _ => "Invoca Desolladores(F3) y activa Pacto de sangre(F5). Marca el objetivo con F6; Apocalipsis(F1) y Ola de llamas(F2) aportan fuego. Consumir(F7) y Vincular demonio(F8) están aprendidos: el vínculo se elige dentro del juego, no se entrega un demonio inventado. Los grimorios alternativos del alijo son nativos y uno concede Reducir resistencias."
+            "Sorceress" => L.T("Activa Armadura de hielo con F4 y Tormenta con F5. Orbe helado(F1) alterna con Cadena de rayos(F6) para grupos y Relámpago(F7) contra objetivos resistentes al frío. Campo estático(F3) abre los combates con jefes; Teletransporte(F2) reúne al mercenario y coloca el Orbe. F8 abre portal."),
+            "Amazon" => L.T("F1 contra grupos; F2 cuerpo a cuerpo contra jefes. F7 Jab es la alternativa física si una inmunidad eléctrica permanece. Invoca Valquiria con F3; F4 teletransporta."),
+            "Paladin" => L.T("Deja Concentración(F2) en el botón derecho y Martillo en el izquierdo; usa Mayús+clic izquierdo para lanzar quieto. Activa Escudo sagrado(F3). Después de Teletransporte(F4), vuelve a Concentración. El mercenario cubre enemigos inmunes a magia."),
+            "Barbarian" => L.T("Torbellino(F1) para grupos; Berserk(F2) convierte el ataque en daño mágico contra inmunidad física. Salto ofensivo(F4) desplaza; Grito(F5) antes de combatir y Hallar objeto(F3) al terminar. El mercenario aplica Decrepificar. Enigma queda como alternativa de movilidad."),
+            "Necromancer" => L.T("Levanta esqueletos(F1), magos(F8), golem(F5) y resucitados(F6). Amplifica daño(F3); tras la primera baja, encadena Explosión de cadáveres(F2). Decrepificar(F7) controla jefes; Teletransporte(F4) reúne el ejército. Leoric sirve para preinvocar y Beast para Fanatismo alternativo."),
+            "Druid" => L.T("Invoca Roble(F5), Oso(F6) y apoyo(F7/F8). Activa Huracán(F2) y Armadura de ciclón(F3), y renuévalos cuando expiren. Tornado(F1) es físico y Huracán es frío; el mercenario aplica Decrepificar para apoyar el daño físico."),
+            "Assassin" => L.T("Invoca Maestra de las sombras(F3); Ráfaga de velocidad(F5) acelera la colocación de trampas. Pon Centinelas de rayos(F1) y añade Centinela mortal(F2) al caer el primer enemigo. La bomba de fuego(F8) aporta otro elemento. Fundido(F6) sustituye a Ráfaga como opción defensiva."),
+            _ => L.T("Invoca Desolladores(F3) y activa Pacto de sangre(F5). Marca el objetivo con F6; Apocalipsis(F1) y Ola de llamas(F2) aportan fuego. Consumir(F7) y Vincular demonio(F8) están aprendidos: el vínculo se elige dentro del juego, no se entrega un demonio inventado. Los grimorios alternativos del alijo son nativos y uno concede Reducir resistencias.")
         };
         return new
         {
-            Id = b.Id, CharacterName = b.CharacterName, ClassName = b.Class, Build = b.Name, Level = 85,
+            Id = b.Id, CharacterName = b.CharacterName, ClassName = b.Class, Build = L.T(b.Name), Level = 85,
             HardSkillPoints = 96, AllocatedAttributePoints = 435, Skills = b.Skills, Attributes = request.Attributes,
             Hotkeys = b.Hotkeys.Select((name, index) => new { Key = "F" + (index + 1), Skill = name, Id = request.Hotkeys![index] }).Concat(new[] { new { Key = "F9", Skill = "Battle Command", Id = 155 }, new { Key = "F10", Skill = "Battle Orders", Id = 149 } }),
-            Opening = "Empieza en el equipo I. Pulsa W para cambiar al equipo II: lanza Comando de batalla (F9), después Órdenes de batalla (F10), y vuelve al I con W. Son buffs temporales; hay que lanzarlos al entrar y renovarlos cuando expiren.",
+            Opening = L.T("Empieza en el equipo I. Pulsa W para cambiar al equipo II: lanza Comando de batalla (F9), después Órdenes de batalla (F10), y vuelve al I con W. Son buffs temporales; hay que lanzarlos al entrar y renovarlos cuando expiren."),
             Strategy = strategy,
-            Charms = "Cuatro grandes de habilidades y dieciséis Ancient pequeños, más Annihilus, Torch y Gheed: peso nativo 34, inferior al límite 41. Deben permanecer en el inventario activo.",
-            Resists = "Los pequeños aportan 80 a todas las resistencias; Annihilus y Torch suman 20, y los tres pergaminos de Anya aportan 30. El equipo y las runas cubren el resto de la penalización de Infierno (−120). El cálculo final se verifica al generar cada partida.",
+            Charms = L.T("Cuatro grandes de habilidades y dieciséis Ancient pequeños, más Annihilus, Torch y Gheed: peso nativo 34, inferior al límite 41. Deben permanecer en el inventario activo."),
+            Resists = L.T("Los pequeños aportan 80 a todas las resistencias; Annihilus y Torch suman 20, y los tres pergaminos de Anya aportan 30. El equipo y las runas cubren el resto de la penalización de Infierno (−120). El cálculo final se verifica al generar cada partida."),
             Alternatives = request.Gear!.Where(g => g.Page == "stash").Select(g => new { g.Type, g.Name, g.BaseCode }),
-            Notes = new[] { "Todos los objetos nuevos tienen nivel 85, propiedades de las tablas instaladas y tiradas intermedias.", "No se añadieron afijos imposibles, corrupción ni mejoras ocultas.", "Hay tres Tokens of Absolution por personaje para redistribuir habilidades y atributos.", "Cambiar alternativas puede modificar bonificaciones, velocidad, bloqueo y resistencias; los requisitos se comprueban con el equipo y los talismanes presentes.", "La verificación binaria y de tablas no equivale a una prueba dentro del motor. El primer arranque de estas clases nuevas queda pendiente de comprobación en el juego." }
+            Notes = new[] { L.T("Todos los objetos nuevos tienen nivel 85, propiedades de las tablas instaladas y tiradas intermedias."), L.T("No se añadieron afijos imposibles, corrupción ni mejoras ocultas."), L.T("Hay tres Tokens of Absolution por personaje para redistribuir habilidades y atributos."), L.T("Cambiar alternativas puede modificar bonificaciones, velocidad, bloqueo y resistencias; los requisitos se comprueban con el equipo y los talismanes presentes."), L.T("La verificación binaria y de tablas no equivale a una prueba dentro del motor. El primer arranque de estas clases nuevas queda pendiente de comprobación en el juego.") }
         };
     }
-    private static Build Find(string id) => Builds.SingleOrDefault(b => b.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ?? throw new ApiProblem("preset_unknown", "La plantilla no existe: " + id);
+    private static Build Find(string id) => Builds.SingleOrDefault(b => b.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ?? throw new ApiProblem("preset_unknown", L.T("La plantilla no existe: ") + id);
 }

@@ -18,9 +18,9 @@ public sealed class ItemPropertyRow : ObservableModel
     public int Layer{get=>layer;set{if(Set(ref layer,value))Raise(nameof(Label));}}
     public ItemPropertyRow(ItemStatSpec source,CatalogEntry? metadata,double? human=null)
     {
-        original=source;layer=source.Layer;NativeName=metadata?.Name??"Propiedad "+source.Id;
-        value=(human??source.Value??source.RawValue??0).ToString("0.########",CultureInfo.GetCultureInfo("es-ES"));originalValue=value;
+        original=source;layer=source.Layer;NativeName=metadata?.Name??L.T("Propiedad ")+source.Id;
+        value=(human??source.Value??source.RawValue??0).ToString("0.########",L.Culture);originalValue=value;
     }
     public ItemStatSpec ToSpec()=>Value==originalValue&&Layer==original.Layer?original:new(Id,Layer,Parse(Value));
-    static double Parse(string text)=>double.TryParse(text,NumberStyles.Float,CultureInfo.GetCultureInfo("es-ES"),out double value)?value:double.Parse(text,NumberStyles.Float,CultureInfo.InvariantCulture);
+    static double Parse(string text)=>double.TryParse(text,NumberStyles.Float,L.Culture,out double value)?value:double.Parse(text,NumberStyles.Float,CultureInfo.InvariantCulture);
 }

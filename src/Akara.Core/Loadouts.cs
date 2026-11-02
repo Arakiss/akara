@@ -41,13 +41,13 @@ public sealed partial class EditorService
     }
     private static string ValidLoadoutName(string name)
     {
-        if(string.IsNullOrWhiteSpace(name)||name.Length>100||name.Any(char.IsControl))throw new ApiProblem("loadout_name","Escribe un nombre de biblioteca de hasta100 caracteres.");return name.Trim();
+        if(string.IsNullOrWhiteSpace(name)||name.Length>100||name.Any(char.IsControl))throw new ApiProblem("loadout_name",L.T("Escribe un nombre de biblioteca de hasta100 caracteres."));return name.Trim();
     }
     private static PreviewRequest ExpandLoadout(PreviewRequest request,D2Save save,GameData profile)
     {
         var doc=request.Loadout!;ValidateLoadout(doc,profile,save.Version);
-        if(request.Preset is not null)throw new ApiProblem("loadout_preset","Aplica una plantilla o una biblioteca en cada borrador, no ambas a la vez.");
-        if(!doc.ClassName.Equals(save.Character.Class.ToString(),StringComparison.OrdinalIgnoreCase))throw new ApiProblem("loadout_class","La biblioteca corresponde a otra clase de personaje.");
+        if(request.Preset is not null)throw new ApiProblem("loadout_preset",L.T("Aplica una plantilla o una biblioteca en cada borrador, no ambas a la vez."));
+        if(!doc.ClassName.Equals(save.Character.Class.ToString(),StringComparison.OrdinalIgnoreCase))throw new ApiProblem("loadout_class",L.T("La biblioteca corresponde a otra clase de personaje."));
         var operations=new List<ItemOperation>();
         foreach(var item in save.Items.Select((item,index)=>new{item,index}).Where(x=>x.item.Position.Mode==ItemMode.Equipped||x.item.Position.Mode==ItemMode.Stored&&x.item.Position.StorePage==StorePage.Inventory&&x.item.ItemCodeString is "cm1" or "cm2" or "cm3"))operations.Add(new(){Operation=request.LoadoutKeepPrevious?"move":"delete",ItemId="i"+item.index,Destination=new(){Page="stash"}});
         if(save.MercItems is not null)for(int i=0;i<save.MercItems.Items.Count;i++)operations.Add(new(){Operation=request.LoadoutKeepPrevious?"move":"delete",ItemId="m"+i,Destination=new(){Page="stash"}});
@@ -63,7 +63,7 @@ public sealed partial class EditorService
     }
     private static void ValidateLoadout(LoadoutDocument doc,GameData profile,uint version)
     {
-        if(doc is null||doc.SchemaVersion!=1||doc.SaveVersion!=version||doc.ProfileFingerprint!=profile.Fingerprint()||doc.Entries is null||doc.Entries.Count>400||doc.Entries.Any(e=>e is null||e.Blueprint is null||e.Destination is null))throw new ApiProblem("loadout_format","La biblioteca no coincide con la versión o los datos nativos seleccionados.");
+        if(doc is null||doc.SchemaVersion!=1||doc.SaveVersion!=version||doc.ProfileFingerprint!=profile.Fingerprint()||doc.Entries is null||doc.Entries.Count>400||doc.Entries.Any(e=>e is null||e.Blueprint is null||e.Destination is null))throw new ApiProblem("loadout_format",L.T("La biblioteca no coincide con la versión o los datos nativos seleccionados."));
         ValidLoadoutName(doc.Name);
         foreach(var entry in doc.Entries)ImportBlueprintItem(entry.Blueprint,profile,version);
     }
@@ -73,10 +73,10 @@ public sealed partial class EditorService
         foreach(var file in Directory.EnumerateFiles(dir,"*.json").Take(1000))try{var doc=JsonSerializer.Deserialize<LoadoutDocument>(File.ReadAllText(file),ContractJson);if(doc is not null)entries.Add(new{id=Path.GetFileNameWithoutExtension(file),doc.Name,doc.ClassName,doc.Level,itemCount=doc.Entries.Count,hasCharacterBuild=doc.Skills is not null});}catch(JsonException){}
         return new{entries};
     }
-    private string LoadoutPath(string id){if(!Guid.TryParseExact(id,"N",out _))throw new ApiProblem("loadout_id","El identificador de biblioteca no es válido.");return Path.Combine(dataRoot,"loadouts",id+".json");}
-    public LoadoutDocument GetLoadout(string id){string path=LoadoutPath(id);if(!File.Exists(path))throw new ApiProblem("loadout_missing","La biblioteca ya no existe.",404);if(new FileInfo(path).Length>16*1024*1024)throw new ApiProblem("loadout_size","La biblioteca es demasiado grande.");return JsonSerializer.Deserialize<LoadoutDocument>(File.ReadAllText(path),ContractJson)??throw new ApiProblem("loadout_format","La biblioteca está vacía.");}
+    private string LoadoutPath(string id){if(!Guid.TryParseExact(id,"N",out _))throw new ApiProblem("loadout_id",L.T("El identificador de biblioteca no es válido."));return Path.Combine(dataRoot,"loadouts",id+".json");}
+    public LoadoutDocument GetLoadout(string id){string path=LoadoutPath(id);if(!File.Exists(path))throw new ApiProblem("loadout_missing",L.T("La biblioteca ya no existe."),404);if(new FileInfo(path).Length>16*1024*1024)throw new ApiProblem("loadout_size",L.T("La biblioteca es demasiado grande."));return JsonSerializer.Deserialize<LoadoutDocument>(File.ReadAllText(path),ContractJson)??throw new ApiProblem("loadout_format",L.T("La biblioteca está vacía."));}
     public object SaveLoadout(SaveLoadoutRequest request)=>StoreLoadout(ExportLoadout(request.SessionId,request.Name,request.PlanId,request.IncludeCharacter));
     public object ImportLoadout(ImportLoadoutRequest request){var s=Session(request.SessionId);ValidateLoadout(request.Document,s.Profile,s.Version);return StoreLoadout(request.Document);}
     private object StoreLoadout(LoadoutDocument document){string id=Guid.NewGuid().ToString("N"),path=LoadoutPath(id);WriteNewAtomic(path,JsonSerializer.SerializeToUtf8Bytes(document,ContractJson));return new{id,path,document};}
-    public object DeleteLoadout(string id){string path=LoadoutPath(id);if(!File.Exists(path))throw new ApiProblem("loadout_missing","La biblioteca ya no existe.",404);File.Delete(path);return new{deleted=true};}
+    public object DeleteLoadout(string id){string path=LoadoutPath(id);if(!File.Exists(path))throw new ApiProblem("loadout_missing",L.T("La biblioteca ya no existe."),404);File.Delete(path);return new{deleted=true};}
 }

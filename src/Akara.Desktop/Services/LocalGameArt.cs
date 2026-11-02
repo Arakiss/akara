@@ -51,14 +51,14 @@ public static class LocalGameArt
     static ImportResult Import(string gameRoot, string excel, JsonObject[] items, string? dataRoot, CancellationToken ct)
     {
         var missing = new List<string>();
-        if (!Directory.Exists(gameRoot) || !Directory.Exists(excel)) { displayFont = null; return new(0, 0, ["No hay una instalación y perfil disponibles."], ""); }
+        if (!Directory.Exists(gameRoot) || !Directory.Exists(excel)) { displayFont = null; return new(0, 0, [L.T("No hay una instalación y perfil disponibles.")], ""); }
         string modData = Directory.GetParent(Directory.GetParent(Path.GetFullPath(excel))!.FullName)!.FullName;
         string[] dependencies = [Path.Combine(gameRoot, ".build.info"), Path.Combine(modData, "global/ui/layouts/globaldatahd.json"), ..new[]{"items","uniques","sets"}.Select(n=>Path.Combine(modData,"hd/items/"+n+".json")), ..new[]{"uniqueitems","setitems","magicprefix","magicsuffix","automagic","itemtypes"}.Select(n=>Path.Combine(excel,n+".txt"))];
         string stamp = RendererVersion + "|" + gameRoot + "|" + excel + "|" + string.Join("|", dependencies.Select(LastWrite));
         string source = Hash(Encoding.UTF8.GetBytes(stamp))[..24];
         string cache = Path.GetFullPath(Path.Combine(dataRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AKARA"), "game-art", source));
         if (activeSource != cache) { Images.Clear(); Skills.Clear(); UiArt.Clear(); displayFont = null; activeSource = cache; }
-        if (Inside(cache, gameRoot)) throw new IOException("La caché de imágenes debe estar fuera del juego.");
+        if (Inside(cache, gameRoot)) throw new IOException(L.T("La caché de imágenes debe estar fuera del juego."));
         Directory.CreateDirectory(cache);
         if (Flatten(items).All(n => Images.ContainsKey(Key(n))) && Skills.Count > 0 && displayFont is not null && UiArt.Count == UiPaths.Count) return new(Images.Count, Skills.Count, missing, cache);
         using var reader = new GameReader(gameRoot, modData);
@@ -103,11 +103,11 @@ public static class LocalGameArt
                         if (matching.Key is not null) alternative = bases.GetValueOrDefault(matching.Key, "");
                     }
                     if (alternative.Length > 0) asset = alternative;
-                    else throw new InvalidDataException("Variante de inventario nativa no resuelta: " + inventory);
+                    else throw new InvalidDataException(L.T("Variante de inventario nativa no resuelta: ") + inventory);
                 }
-                if (asset.Length == 0) throw new InvalidDataException("Sin correspondencia HD nativa.");
+                if (asset.Length == 0) throw new InvalidDataException(L.T("Sin correspondencia HD nativa."));
                 string path = FindSprite(reader, asset, node.Text("itemType"));
-                if (path.Length == 0) throw new FileNotFoundException("No se encuentra el sprite nativo: " + asset);
+                if (path.Length == 0) throw new FileNotFoundException(L.T("No se encuentra el sprite nativo: ") + asset);
                 byte[] raw = reader.Read(path); var frame = DecodeSprite(raw, 0);
                 // D2R's item JSON chooses the authentic image. A color transform is applied
                 // only from installed engine presets, never from an invented color filter.
@@ -132,7 +132,7 @@ public static class LocalGameArt
                 string prefix = cls switch { "Amazon"=>"aam", "Sorceress"=>"sso", "Necromancer"=>"ne", "Paladin"=>"pa", "Barbarian"=>"ba", "Druid"=>"dr", "Assassin"=>"aas", _=>"wa" };
                 path = "data/hd/global/ui/spells/" + prefix + "skillicon.sprite"; bytes = reader.TryRead(path);
             }
-            if (bytes is null) { missing.Add("Iconos de " + cls + " no disponibles."); continue; }
+            if (bytes is null) { missing.Add(L.T("Iconos de ") + cls + L.T(" no disponibles.")); continue; }
             try
             {
                 int count = checked((int)U32(bytes, 20));
@@ -243,12 +243,12 @@ public static class LocalGameArt
     public sealed record SpriteFrame(int Width, int Height, byte[] Pixels);
     public static SpriteFrame DecodeSprite(byte[] bytes, int frame)
     {
-        if(bytes.Length<40 || Encoding.ASCII.GetString(bytes,0,4) is not ("SpA1" or "SPa1")) throw new InvalidDataException("Cabecera sprite inválida.");
+        if(bytes.Length<40 || Encoding.ASCII.GetString(bytes,0,4) is not ("SpA1" or "SPa1")) throw new InvalidDataException(L.T("Cabecera sprite inválida."));
         int version=BitConverter.ToUInt16(bytes,4), fw=BitConverter.ToUInt16(bytes,6), w=checked((int)U32(bytes,8)), h=checked((int)U32(bytes,12)), count=checked((int)U32(bytes,20));
-        if(w<=0||h<=0||w>16384||h>8192||count<1||count>256||frame<0||frame>=count) throw new InvalidDataException("Dimensiones sprite inválidas.");
+        if(w<=0||h<=0||w>16384||h>8192||count<1||count>256||frame<0||frame>=count) throw new InvalidDataException(L.T("Dimensiones sprite inválidas."));
         int stride=w/count; if(fw<=0||fw>stride) fw=stride;
-        if(version!=31) throw new InvalidDataException("Formato sprite no compatible: "+version);
-        if(40L+(long)w*h*4>bytes.LongLength) throw new InvalidDataException("Sprite truncado.");
+        if(version!=31) throw new InvalidDataException(L.T("Formato sprite no compatible: ")+version);
+        if(40L+(long)w*h*4>bytes.LongLength) throw new InvalidDataException(L.T("Sprite truncado."));
         var rgba=new byte[checked(fw*h*4)]; for(int y=0;y<h;y++) Buffer.BlockCopy(bytes,checked(40+(y*w+frame*stride)*4),rgba,y*fw*4,fw*4);
         return new(fw,h,rgba);
     }
@@ -285,14 +285,14 @@ public static class LocalGameArt
         using var doc=JsonDocument.Parse(raw,new JsonDocumentOptions{AllowTrailingCommas=true,CommentHandling=JsonCommentHandling.Skip});
         var fields=doc.RootElement.GetProperty("children").EnumerateArray().First(n=>n.TryGetProperty("type",out var t)&&t.GetString()=="SpriteColoringHelper").GetProperty("fields");
         JsonElement preset=fields.GetProperty("colorTransform").EnumerateArray().FirstOrDefault(n=>n.GetProperty("comment").GetString()?.EndsWith(" "+color,StringComparison.Ordinal)==true);
-        if(preset.ValueKind!=JsonValueKind.Object)throw new InvalidDataException("Preset de color no disponible: "+color);
+        if(preset.ValueKind!=JsonValueKind.Object)throw new InvalidDataException(L.T("Preset de color no disponible: ")+color);
         string path=Regex.Replace(sprite,@"(?:\.lowend)?\.sprite$","");
         if(fields.TryGetProperty("colorTransformOverride",out var transformOverrides))foreach(var row in transformOverrides.EnumerateArray())if(row[0].GetString()==path&&row[1].GetString()==color)preset=row[2];
         JsonElement range=default;
         var ranges=fields.GetProperty("colorRange");if(transform>=0&&transform<ranges.GetArrayLength())range=ranges[transform];
         if(fields.TryGetProperty("colorRangeOverride",out var rangeOverrides))foreach(var row in rangeOverrides.EnumerateArray())if(row[0].GetString()==path)range=row[1];
         if(range.ValueKind==JsonValueKind.String&&range.GetString()=="$EmptyColorRange")return;
-        if(range.ValueKind!=JsonValueKind.Object)throw new InvalidDataException("Máscara de color nativa no disponible: "+transform);
+        if(range.ValueKind!=JsonValueKind.Object)throw new InvalidDataException(L.T("Máscara de color nativa no disponible: ")+transform);
         double[] hsv=preset.GetProperty("hsvTransform").EnumerateArray().Select(n=>n.GetDouble()).ToArray(), tint=preset.GetProperty("tintTransform").EnumerateArray().Select(n=>n.GetDouble()).ToArray();
         double[] hr=Pair("hue"),sr=Pair("saturation"),vr=Pair("value");
         double[] Pair(string key)=>range.GetProperty(key).EnumerateArray().Select(n=>n.GetDouble()).ToArray();
@@ -328,9 +328,9 @@ public static class LocalGameArt
         public byte[]? TryRead(string path) { try{return Read(path);}catch(IOException){return null;} }
         public byte[] Read(string path)
         {
-            string loose=Loose(path);if(File.Exists(loose)){if(new FileInfo(loose).Length>64*1024*1024)throw new InvalidDataException("Asset demasiado grande.");return File.ReadAllBytes(loose);}
+            string loose=Loose(path);if(File.Exists(loose)){if(new FileInfo(loose).Length>64*1024*1024)throw new InvalidDataException(L.T("Asset demasiado grande."));return File.ReadAllBytes(loose);}
             if(storage==IntPtr.Zero||!CascOpenFile(storage,"data:"+path.Replace('/','\\'),0,0,out var file))throw new FileNotFoundException(path);
-            try{if(!CascGetFileSize64(file,out ulong size)||size>64*1024*1024)throw new InvalidDataException("Tamaño CASC inválido.");var bytes=new byte[(int)size];if(!CascReadFile(file,bytes,(uint)size,out uint count)||count!=(uint)size)throw new IOException("Lectura CASC incompleta.");return bytes;}finally{CascCloseFile(file);}
+            try{if(!CascGetFileSize64(file,out ulong size)||size>64*1024*1024)throw new InvalidDataException(L.T("Tamaño CASC inválido."));var bytes=new byte[(int)size];if(!CascReadFile(file,bytes,(uint)size,out uint count)||count!=(uint)size)throw new IOException(L.T("Lectura CASC incompleta."));return bytes;}finally{CascCloseFile(file);}
         }
         public void Dispose(){if(storage!=IntPtr.Zero){CascCloseStorage(storage);storage=IntPtr.Zero;}}
     }

@@ -11,7 +11,7 @@ public sealed partial class EditorService
     {
         public QuestFlags Flags { get => (QuestFlags)Property.GetValue(Container)!; set => Property.SetValue(Container, value); }
     }
-    private static int DifficultyIndex(string value) => value.ToLowerInvariant() switch { "normal" => 0, "nightmare" => 1, "hell" => 2, _ => throw new ApiProblem("difficulty_invalid", "Dificultad no válida.") };
+    private static int DifficultyIndex(string value) => value.ToLowerInvariant() switch { "normal" => 0, "nightmare" => 1, "hell" => 2, _ => throw new ApiProblem("difficulty_invalid", L.T("Dificultad no válida.")) };
     private static readonly string[] DifficultyNames = ["normal", "nightmare", "hell"];
     private static string QuestState(QuestFlags flags) => Reward(flags) ? "rewarded" : (flags & QuestFlags.PrimaryGoalAchieved) != 0 ? "completed" : flags == 0 ? "notStarted" : "started";
     private static IEnumerable<QuestAccess> QuestEntries(QuestsDifficulty q)
@@ -44,33 +44,33 @@ public sealed partial class EditorService
     private static void ApplyWorld(D2Save save, WorldChange? change, List<ChangeEntry> diff)
     {
         if (change is null) return;
-        if (change.Quests is null || change.Waypoints is null || change.Quests.Count > 300 || change.Waypoints.Count > 117) throw new ApiProblem("world_operations", "La lista de cambios del mundo no es válida.");
+        if (change.Quests is null || change.Waypoints is null || change.Quests.Count > 300 || change.Waypoints.Count > 117) throw new ApiProblem("world_operations", L.T("La lista de cambios del mundo no es válida."));
         int beforeBirds = Difficulties(save).Count(q => Reward(q.ActIII.TheGoldenBird));
         foreach (var patch in change.Quests)
         {
-            var q = Difficulties(save)[DifficultyIndex(patch.Difficulty)]; var entry = QuestEntries(q).FirstOrDefault(e => e.Id == patch.QuestId) ?? throw new ApiProblem("quest_unknown", "La misión no existe: " + patch.QuestId);
-            if (patch.Flags.HasValue == (patch.State is not null)) throw new ApiProblem("quest_state", "Indica state o flags para la misión.");
+            var q = Difficulties(save)[DifficultyIndex(patch.Difficulty)]; var entry = QuestEntries(q).FirstOrDefault(e => e.Id == patch.QuestId) ?? throw new ApiProblem("quest_unknown", L.T("La misión no existe: ") + patch.QuestId);
+            if (patch.Flags.HasValue == (patch.State is not null)) throw new ApiProblem("quest_state", L.T("Indica state o flags para la misión."));
             var before = entry.Flags;
             if (patch.Flags.HasValue) entry.Flags = (QuestFlags)patch.Flags.Value;
-            else entry.Flags = patch.State switch { "notStarted" => QuestFlags.None, "started" => QuestFlags.Started, "completed" => QuestFlags.PrimaryGoalAchieved | QuestFlags.RewardPending | QuestFlags.QuestLog, "rewarded" => Completed(entry.Flags), _ => throw new ApiProblem("quest_state", "Estado de misión no válido.") };
+            else entry.Flags = patch.State switch { "notStarted" => QuestFlags.None, "started" => QuestFlags.Started, "completed" => QuestFlags.PrimaryGoalAchieved | QuestFlags.RewardPending | QuestFlags.QuestLog, "rewarded" => Completed(entry.Flags), _ => throw new ApiProblem("quest_state", L.T("Estado de misión no válido.")) };
             if (entry.Property.Name == "PrisonOfIce" && patch.State == "rewarded") entry.Flags |= QuestFlags.Custom3 | QuestFlags.Custom4;
             if(before!=entry.Flags)diff.Add(new("world", entry.Name + " · " + patch.Difficulty, patch.Flags.HasValue ? (object)(ushort)before : QuestState(before), patch.Flags.HasValue ? (object)(ushort)entry.Flags : QuestState(entry.Flags)));
-            if (entry.Property.Name == "PrisonOfIce" && (before & QuestFlags.Custom3) != (entry.Flags & QuestFlags.Custom3)) diff.Add(new("world", "Resistencias de Anya · " + patch.Difficulty, (before & QuestFlags.Custom3) != 0 ? 10 : 0, (entry.Flags & QuestFlags.Custom3) != 0 ? 10 : 0));
+            if (entry.Property.Name == "PrisonOfIce" && (before & QuestFlags.Custom3) != (entry.Flags & QuestFlags.Custom3)) diff.Add(new("world", L.T("Resistencias de Anya · ") + patch.Difficulty, (before & QuestFlags.Custom3) != 0 ? 10 : 0, (entry.Flags & QuestFlags.Custom3) != 0 ? 10 : 0));
         }
         int lifeChange = (Difficulties(save).Count(q => Reward(q.ActIII.TheGoldenBird)) - beforeBirds) * 20 * 256;
-        if (lifeChange != 0) { foreach (int id in new[] { 6, 7 }) { long value = save.Stats.GetStat((StatId)id) + lifeChange; if (value <= 0) throw new ApiProblem("quest_life", "No se puede retirar esa recompensa de vida del personaje actual."); save.Stats.SetStat((StatId)id, value); } }
+        if (lifeChange != 0) { foreach (int id in new[] { 6, 7 }) { long value = save.Stats.GetStat((StatId)id) + lifeChange; if (value <= 0) throw new ApiProblem("quest_life", L.T("No se puede retirar esa recompensa de vida del personaje actual.")); save.Stats.SetStat((StatId)id, value); } }
         var waypoints = new[] { save.Waypoints.Normal, save.Waypoints.Nightmare, save.Waypoints.Hell };
-        foreach (var patch in change.Waypoints) { if (patch.Id < 0 || patch.Id >= 39) throw new ApiProblem("waypoint_unknown", "El punto de ruta no existe."); int difficulty = DifficultyIndex(patch.Difficulty); bool before = waypoints[difficulty].IsWaypointActive(patch.Id); waypoints[difficulty].SetWaypoint(patch.Id, patch.Active); if(before!=patch.Active)diff.Add(new("world", WaypointNames[patch.Id] + " · " + patch.Difficulty, before, patch.Active)); }
-        if (change.MaxDifficulty is not null) { int acts = save.Character.Preview.GameVersion == GameVersion.Classic ? 4 : 5; int before=Math.Min(2,(int)(((uint)save.Character.Flags>>8)&31)/acts),target=DifficultyIndex(change.MaxDifficulty);if(before!=target){int progression=target*acts;save.Character.Flags=(CharacterFlags)(((uint)save.Character.Flags&~0x1F00u)|((uint)progression<<8));diff.Add(new("world","Dificultad máxima",DifficultyNames[before],change.MaxDifficulty));} }
+        foreach (var patch in change.Waypoints) { if (patch.Id < 0 || patch.Id >= 39) throw new ApiProblem("waypoint_unknown", L.T("El punto de ruta no existe.")); int difficulty = DifficultyIndex(patch.Difficulty); bool before = waypoints[difficulty].IsWaypointActive(patch.Id); waypoints[difficulty].SetWaypoint(patch.Id, patch.Active); if(before!=patch.Active)diff.Add(new("world", WaypointNames[patch.Id] + " · " + patch.Difficulty, before, patch.Active)); }
+        if (change.MaxDifficulty is not null) { int acts = save.Character.Preview.GameVersion == GameVersion.Classic ? 4 : 5; int before=Math.Min(2,(int)(((uint)save.Character.Flags>>8)&31)/acts),target=DifficultyIndex(change.MaxDifficulty);if(before!=target){int progression=target*acts;save.Character.Flags=(CharacterFlags)(((uint)save.Character.Flags&~0x1F00u)|((uint)progression<<8));diff.Add(new("world",L.T("Dificultad máxima"),DifficultyNames[before],change.MaxDifficulty));} }
         if (change.ActiveDifficulty is not null || change.Act.HasValue)
         {
             int index = change.ActiveDifficulty is null ? Array.FindIndex(save.Character.TownDifficulty, b => (b & 0x80) != 0) : DifficultyIndex(change.ActiveDifficulty); if (index < 0) index = 0;
             int act = change.Act ?? ((save.Character.TownDifficulty[index] & 7) + 1), maxAct = save.Character.Preview.GameVersion == GameVersion.Classic ? 4 : 5;
-            if (act < 1 || act > maxAct) throw new ApiProblem("act_invalid", "El acto está fuera de los límites del modo seleccionado.");
+            if (act < 1 || act > maxAct) throw new ApiProblem("act_invalid", L.T("El acto está fuera de los límites del modo seleccionado."));
             int beforeIndex=Array.FindIndex(save.Character.TownDifficulty,b=>(b&0x80)!=0),beforeAct=beforeIndex<0?1:(save.Character.TownDifficulty[beforeIndex]&7)+1;
             for (int i = 0; i < 3; i++) save.Character.TownDifficulty[i] &= 0x7F;
             save.Character.TownDifficulty[index] = (byte)((save.Character.TownDifficulty[index]&0x78)|0x80|(act-1));
-            if(beforeIndex!=index||beforeAct!=act)diff.Add(new("world", "Lugar de inicio",beforeIndex<0?null:DifficultyNames[beforeIndex]+" · acto "+beforeAct,DifficultyNames[index] + " · acto " + act));
+            if(beforeIndex!=index||beforeAct!=act)diff.Add(new("world", L.T("Lugar de inicio"),beforeIndex<0?null:DifficultyNames[beforeIndex]+L.T(" · acto ")+beforeAct,DifficultyNames[index] + L.T(" · acto ") + act));
         }
     }
 }

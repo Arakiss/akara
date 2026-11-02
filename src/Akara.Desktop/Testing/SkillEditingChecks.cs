@@ -24,7 +24,7 @@ internal static class SkillEditingChecks
             var input=Descendants<TextBox>(view).Single(box=>ReferenceEquals(box.DataContext,skill));
             input.SetCurrentValue(TextBox.TextProperty,(original-1).ToString(CultureInfo.InvariantCulture));
             await Dispatcher.Yield(DispatcherPriority.DataBind);
-            Require(skill.Points==original-1&&vm.IsDirty&&vm.SkillPointsText==(available+1)+" disponibles","Typing skill points did not update the draft and available points before leaving the field.");
+            Require(skill.Points==original-1&&vm.IsDirty&&vm.SkillPointsText==(available+1)+L.T(" disponibles"),"Typing skill points did not update the draft and available points before leaving the field.");
             Require(vm.SaveCommand.CanExecute(null),"A detected skill edit left the save action unavailable.");
             await Dispatcher.Yield(DispatcherPriority.ContextIdle);view.UpdateLayout();
             var saveButton=Descendants<Button>(view).Single(button=>ReferenceEquals(button.Command,vm.SaveCommand));
@@ -32,7 +32,7 @@ internal static class SkillEditingChecks
             checks.Add("native-skill-typing-detects-draft-and-enables-save-action-without-focus-loss");
             Capture(view,Path.Combine(evidenceRoot,"skill-edit-detected.png"));
             await ((NativeCommand)vm.SaveCommand).ExecuteAsync();view.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ContextIdle);
-            Require(vm.ErrorText.Length==0&&vm.CanCommit&&vm.SelectedView=="changes"&&vm.SaveActionText=="Guardar"&&Hash(vm.SourcePath)==before,"The first save action did not review the skill edit without writing.");
+            Require(vm.ErrorText.Length==0&&vm.CanCommit&&vm.SelectedView=="changes"&&vm.SaveActionText==L.T("Guardar")&&Hash(vm.SourcePath)==before,"The first save action did not review the skill edit without writing.");
             checks.Add("native-save-action-reviews-unreviewed-skill-edit-before-any-write");
 
             vm.SelectedView="skills";view.UpdateLayout();await Dispatcher.Yield(DispatcherPriority.ContextIdle);view.UpdateLayout();
@@ -41,7 +41,7 @@ internal static class SkillEditingChecks
             input.SetCurrentValue(TextBox.TextProperty,"invalid");await Dispatcher.Yield(DispatcherPriority.DataBind);
             Require(vm.HasInputErrors&&vm.HasErrors&&!vm.CanCommit&&!vm.SaveCommand.CanExecute(null),"An invalid skill field left a stale reviewed value saveable.");
             await Dispatcher.Yield(DispatcherPriority.ContextIdle);view.UpdateLayout();
-            Require(!saveButton.IsEnabled&&vm.ValidationMessage.Contains("Corrige",StringComparison.Ordinal),"The actual toolbar or status still offered saving invalid skill text.");
+            Require(!saveButton.IsEnabled&&vm.ValidationMessage.Contains(L.IsSpanish?"Corrige":"Correct",StringComparison.Ordinal),"The actual toolbar or status still offered saving invalid skill text.");
             Capture(view,Path.Combine(evidenceRoot,"skill-edit-invalid.png"));
             await vm.SaveAsync();Require(Hash(vm.SourcePath)==before,"Invalid skill input wrote the previous reviewed value.");
             input.SetCurrentValue(TextBox.TextProperty,"");await Dispatcher.Yield(DispatcherPriority.DataBind);

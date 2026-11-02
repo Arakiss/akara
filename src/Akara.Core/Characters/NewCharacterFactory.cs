@@ -10,19 +10,19 @@ public sealed class NewCharacterFactory(GameData profile)
 {
     public D2Save Create(string className, string name, int level = 1, uint version = 105)
     {
-        if (version != 105) throw new ApiProblem("create_version", "La creación está verificada para partidas de versión 105.");
+        if (version != 105) throw new ApiProblem("create_version", L.T("La creación está verificada para partidas de versión 105."));
         if (!Enum.TryParse<CharacterClass>(className, true, out var characterClass) || !Enum.IsDefined(characterClass))
-            throw new ApiProblem("create_class", "Selecciona una de las ocho clases nativas.");
+            throw new ApiProblem("create_class", L.T("Selecciona una de las ocho clases nativas."));
         if (name.Length is < 2 or > 15 || name.Any(c => !(char.IsAsciiLetter(c) || c is '-' or '_')))
-            throw new ApiProblem("create_name", "El nombre debe tener entre 2 y 15 letras ASCII, guiones o guiones bajos.");
+            throw new ApiProblem("create_name", L.T("El nombre debe tener entre 2 y 15 letras ASCII, guiones o guiones bajos."));
         var row = profile.Read("charstats.txt").SingleOrDefault(r => GameData.V(r, "class").Equals(characterClass.ToString(), StringComparison.OrdinalIgnoreCase))
-            ?? throw new ApiProblem("create_class", "El perfil no contiene los atributos iniciales de esta clase.");
+            ?? throw new ApiProblem("create_class", L.T("El perfil no contiene los atributos iniciales de esta clase."));
         var maximum = profile.Read("experience.txt").Single(r => GameData.V(r, "Level") == "MaxLvl");
-        if (level < 1 || level > GameData.I(maximum, characterClass.ToString())) throw new ApiProblem("create_level", "El nivel no corresponde al límite nativo de esta clase.");
+        if (level < 1 || level > GameData.I(maximum, characterClass.ToString())) throw new ApiProblem("create_level", L.T("El nivel no corresponde al límite nativo de esta clase."));
         int offset = SkillsSection.ClassSkillOffsets[(int)characterClass];
         var classSkills = profile.Read("skills.txt").Where(r => GameData.I(r, "*Id", -1) >= offset && GameData.I(r, "*Id", -1) < offset + 30).ToList();
         if (classSkills.Count != 30 || classSkills.Any(r => GameData.V(r, "charclass").Length == 0))
-            throw new ApiProblem("create_skill_layout", "El perfil no contiene las 30 habilidades canónicas de esta clase.");
+            throw new ApiProblem("create_skill_layout", L.T("El perfil no contiene las 30 habilidades canónicas de esta clase."));
         uint now = checked((uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         uint seed; do { seed = BitConverter.ToUInt32(RandomNumberGenerator.GetBytes(4)); } while (seed == 0);
         var save = new D2Save
@@ -73,9 +73,9 @@ public sealed class NewCharacterFactory(GameData profile)
         var bytes = save.ToBytes(profile.External(version), version);
         var readback = D2Save.Read(bytes, profile.External(version));
         if (!D2Save.VerifyChecksum(bytes) || !bytes.AsSpan().SequenceEqual(readback.ToBytes(profile.External(version), version)))
-            throw new ApiProblem("create_roundtrip", "La nueva partida no superó la comprobación de lectura y escritura.");
+            throw new ApiProblem("create_roundtrip", L.T("La nueva partida no superó la comprobación de lectura y escritura."));
         if (readback.Character.Class != characterClass || readback.Character.Preview.Name != name || readback.Skills.SkillLevels.Length != 30)
-            throw new ApiProblem("create_identity", "La identidad nueva no sobrevivió a la codificación nativa.");
+            throw new ApiProblem("create_identity", L.T("La identidad nueva no sobrevivió a la codificación nativa."));
         return readback;
     }
 
@@ -96,6 +96,6 @@ public sealed class NewCharacterFactory(GameData profile)
             item.Position = new ItemPosition { Mode = ItemMode.Stored, StorePage = StorePage.Inventory, InvX = (byte)x, InvY = (byte)y };
             save.Items.Add(item); return;
         }
-        throw new ApiProblem("create_inventory", "No caben los objetos iniciales del perfil.");
+        throw new ApiProblem("create_inventory", L.T("No caben los objetos iniciales del perfil."));
     }
 }

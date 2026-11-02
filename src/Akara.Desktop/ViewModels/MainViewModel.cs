@@ -11,15 +11,15 @@ namespace Akara.Desktop.ViewModels;
 
 public sealed partial class MainViewModel : ObservableModel
 {
-    const string SaveFilter = "Personajes de Diablo II (*.d2s)|*.d2s";
-    const string JsonFilter = "Archivos de AKARA (*.json)|*.json";
+    static string SaveFilter => L.T("Personajes de Diablo II (*.d2s)|*.d2s");
+    static string JsonFilter => L.T("Archivos de AKARA (*.json)|*.json");
     readonly NativeEditorBridge bridge;
     readonly IFileDialogs dialogs;
     readonly List<EditorState> undo = [], redo = [];
     readonly HashSet<string> discoveredSavePaths = new(StringComparer.OrdinalIgnoreCase);
     PreviewRequest draft = new();
     bool loading, busy, dirty, reviewed, validPlan, basicTouched, skillsTouched;
-    string planId = "", sessionId = "", error = "", status = "Elige un personaje para empezar.", selectedView = "equipment", selectedStorage = "inventory";
+    string planId = "", sessionId = "", error = "", status = L.T("Elige un personaje para empezar."), selectedView = "equipment", selectedStorage = "inventory";
     string characterName = "", levelText = "1", experienceText = "0", strengthText = "0", dexterityText = "0", vitalityText = "0", energyText = "0", goldText = "0", stashGoldText = "0";
     int selectedWeaponSet = 1;
     ItemViewModel? selectedItem;
@@ -40,7 +40,7 @@ public sealed partial class MainViewModel : ObservableModel
     public MainViewModel(string? dataRoot = null, EditorService? core = null, IFileDialogs? fileDialogs = null)
     {
         bridge = new(dataRoot, core); dialogs = fileDialogs ?? new WindowsFileDialogs(); artworkDataRoot = dataRoot;
-        OpenCommand = Command(async parameter => { var path = parameter as string ?? dialogs.OpenFile("Abrir personaje", SaveFilter); if (path is not null) await OpenPathAsync(path); });
+        OpenCommand = Command(async parameter => { var path = parameter as string ?? dialogs.OpenFile(L.T("Abrir personaje"), SaveFilter); if (path is not null) await OpenPathAsync(path); });
         OpenSaveCommand = Command(parameter => parameter is SaveEntry save ? OpenSaveAsync(save) : SelectedSave is { } selected ? OpenSaveAsync(selected) : Task.CompletedTask, parameter => parameter is SaveEntry || SelectedSave is not null);
         RefreshCommand = Command(_ => InitializeAsync());
         CreateCommand = Command(async parameter => { if (parameter is CreateRequest request) await CreateCharacterAsync(request); else RequestCreate?.Invoke(); });
@@ -59,7 +59,7 @@ public sealed partial class MainViewModel : ObservableModel
         MoveItemCommand = Command(async parameter => { if (parameter is ItemDestination destination && SelectedItem is not null) await MoveItemAsync(SelectedItem, destination); else if (SelectedItem is not null) RequestMove?.Invoke(SelectedItem); }, _ => SelectedItem is not null);
         MoveToStashCommand = Command(_ => SelectedItem is null ? Task.CompletedTask : MoveItemAsync(SelectedItem, new() { Page = "stash" }), _ => SelectedItem is not null);
         CopyItemCommand = Command(_ => SelectedItem is null ? Task.CompletedTask : CopyItemAsync(SelectedItem), _ => SelectedItem is not null);
-        DeleteItemCommand = Command(async _ => { if (SelectedItem is { } item && dialogs.Confirm("Eliminar del borrador", "¿Eliminar «" + item.Name + "»? Podrás deshacerlo antes de guardar.")) await DeleteItemAsync(item); }, _ => SelectedItem is not null);
+        DeleteItemCommand = Command(async _ => { if (SelectedItem is { } item && dialogs.Confirm(L.T("Eliminar del borrador"), L.T("¿Eliminar «") + item.Name + L.T("»? Podrás deshacerlo antes de guardar."))) await DeleteItemAsync(item); }, _ => SelectedItem is not null);
         DesignItemCommand = Command(_ => { RequestDesign?.Invoke(SelectedItem); return Task.CompletedTask; }, _ => HasCharacter);
         NewItemCommand = Command(_ => { RequestDesign?.Invoke(null); return Task.CompletedTask; }, _ => HasCharacter);
         ApplyPresetCommand = Command(_ => SelectedPreset is null ? Task.CompletedTask : ApplyPresetAsync(SelectedPreset.Id), _ => HasCharacter && SelectedPreset is not null);
@@ -87,7 +87,7 @@ public sealed partial class MainViewModel : ObservableModel
     public JsonObject Snapshot { get; private set; } = new();
     public JsonObject SourceSnapshot { get; private set; } = new();
     public PreviewRequest Draft => NativeEditorBridge.Clone(draft);
-    public ObservableCollection<NavEntry> NavItems { get; } = [new("character", "Personaje", "\uE77B"), new("skills", "Habilidades", "\uE734"), new("equipment", "Equipo", "\uE8B7"), new("mercenary", "Mercenario", "\uE716"), new("world", "Mundo", "\uE909"), new("workshop", "Taller", "\uE90F"), new("library", "Biblioteca", "\uE8F1"), new("changes", "Cambios", "\uE9D9")];
+    public ObservableCollection<NavEntry> NavItems { get; } = Navigation();
     public ObservableCollection<SaveEntry> Saves { get; } = [];
     public ObservableCollection<ProfileEntry> Profiles { get; } = [];
     public ObservableCollection<PresetEntry> Presets { get; } = [];
@@ -108,7 +108,7 @@ public sealed partial class MainViewModel : ObservableModel
     public ObservableCollection<DiffViewModel> Changes { get; } = [];
     public IReadOnlyList<string> StorageOptions { get; } = ["inventory", "stash", "cube", "belt"];
     public IReadOnlyList<string> QuestStates { get; } = ["notStarted", "started", "completed", "rewarded"];
-    public IReadOnlyList<ChoiceEntry> QuestStateChoices { get; } = [new("notStarted", "Sin empezar"), new("started", "En curso"), new("completed", "Completada"), new("rewarded", "Recompensa recibida")];
+    public IReadOnlyList<ChoiceEntry> QuestStateChoices => [new("notStarted", L.T("Sin empezar")), new("started", L.T("En curso")), new("completed", L.T("Completada")), new("rewarded", L.T("Recompensa recibida"))];
     public SaveEntry? SelectedSave
     {
         get => selectedSave;
@@ -124,8 +124,8 @@ public sealed partial class MainViewModel : ObservableModel
         }
     }
     public bool HasSaves => Saves.Count > 0;
-    public string SavesSummary => Saves.Count == 1 ? "1 personaje local" : Saves.Count + " personajes locales";
-    public string SaveSelectionText => SelectedSave?.Name ?? (HasCharacter ? CharacterName : "Elegir personaje");
+    public string SavesSummary => Saves.Count == 1 ? L.T("1 personaje local") : Saves.Count + L.T(" personajes locales");
+    public string SaveSelectionText => SelectedSave?.Name ?? (HasCharacter ? CharacterName : L.T("Elegir personaje"));
     public ProfileEntry? SelectedProfile { get => selectedProfile; set { Set(ref selectedProfile, value); Raise(nameof(ProfileLabel)); } }
     public PresetEntry? SelectedPreset { get => selectedPreset; set { Set(ref selectedPreset, value); Raise(nameof(SelectedPresetGuide)); Requery(); } }
     public string SelectedPresetGuide => SelectedPreset?.GuideText ?? "";
@@ -138,11 +138,11 @@ public sealed partial class MainViewModel : ObservableModel
     public string SelectedStorage { get => selectedStorage; set { if (Set(ref selectedStorage, value)) RefreshInventory(); foreach (var name in new[] { nameof(StorageLabel), nameof(GridColumns), nameof(GridRows), nameof(StorageColumns), nameof(StorageRows), nameof(GridWidth), nameof(GridHeight) }) Raise(name); } }
     public string StorageLabel => Names.Storage(SelectedStorage);
     public int SelectedWeaponSet { get => selectedWeaponSet; set { if (Set(ref selectedWeaponSet, value is 2 ? 2 : 1)) RefreshInventory(); } }
-    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); RaiseSaveState(); Raise(nameof(CanEdit)); Raise(nameof(CanChooseSave)); Raise(nameof(SaveSelectionText)); Requery(); } }
+    public bool IsBusy { get => busy; private set { Set(ref busy, value); UpdateRowLocks(); RaiseSaveState(); Raise(nameof(CanEdit)); Raise(nameof(CanChooseSave)); Raise(nameof(SaveSelectionText)); Raise(nameof(CanChangeLanguage)); Requery(); } }
     public bool CanChooseSave => !IsBusy;
     public bool IsDirty { get => dirty; private set { Set(ref dirty, value); RaiseSaveState(); Raise(nameof(DraftLabel)); Requery(); } }
     public bool IsSyntheticDemo { get; private set; }
-    public string DemoLabel => IsSyntheticDemo ? "Vista de diseño · sin partida abierta" : "";
+    public string DemoLabel => IsSyntheticDemo ? L.T("Vista de diseño · sin partida abierta") : "";
     public bool HasCharacter => IsSyntheticDemo || sessionId.Length > 0;
     public bool CanEdit => HasCharacter && !IsSyntheticDemo && !IsBusy;
     public bool IsCharacterSelected => HasCharacter;
@@ -152,22 +152,22 @@ public sealed partial class MainViewModel : ObservableModel
     public bool CanCommit => CanSave && reviewed && validPlan;
     public bool HasErrors => ErrorText.Length > 0 || HasInputErrors;
     public string ErrorText { get => error; private set { Set(ref error, value); Raise(nameof(HasErrors)); Raise(nameof(DisplayErrorText)); } }
-    public string ValidationMessage { get; private set; } = "Sin cambios pendientes.";
+    public string ValidationMessage { get; private set; } = L.T("Sin cambios pendientes.");
     public string StatusText { get => status; private set { Set(ref status, value); Raise(nameof(Status)); } }
     public string Status => StatusText;
-    public string DraftLabel => IsDirty ? "Borrador sin guardar" : IsNew ? "Personaje nuevo" : "Partida local";
+    public string DraftLabel => IsDirty ? L.T("Borrador sin guardar") : IsNew ? L.T("Personaje nuevo") : L.T("Partida local");
     public string ClassName => Snapshot.Obj("character").Text("className");
     public string ClassLabel => Names.Class(ClassName);
-    public string ProfileLabel => SelectedProfile?.Name ?? "Datos locales de Reimagined";
+    public string ProfileLabel => SelectedProfile?.Name ?? L.T("Datos locales de Reimagined");
     public string SourcePath => SourceSnapshot.Text("sourcePath");
     public string SourceHash => SourceSnapshot.Text("sourceHash");
     public int ActiveWeaponSet => Snapshot.Int("activeWeaponSet", 1);
     public string BaseLifeText => Number(Snapshot.Obj("character").Obj("vitals").Double("maxLife"));
     public string BaseManaText => Number(Snapshot.Obj("character").Obj("vitals").Double("maxMana"));
-    public string SkillPointsText => (Snapshot.Obj("character").Obj("attributes").Long("unspentSkills") + Snapshot.Array("skills").OfType<JsonObject>().Sum(skill => (long)skill.Int("points")) - Skills.Sum(skill => (long)skill.Points)) + " disponibles";
-    public string AttributePointsText => Snapshot.Obj("character").Obj("attributes").Long("unspentStats") + " disponibles";
-    public string MercenaryName => Names.MercenaryType(Snapshot.Obj("mercenary").Text("typeName", "Mercenario"));
-    public string MercenaryLevelText => "Nivel " + Snapshot.Obj("mercenary").Int("level");
+    public string SkillPointsText => (Snapshot.Obj("character").Obj("attributes").Long("unspentSkills") + Snapshot.Array("skills").OfType<JsonObject>().Sum(skill => (long)skill.Int("points")) - Skills.Sum(skill => (long)skill.Points)) + L.T(" disponibles");
+    public string AttributePointsText => Snapshot.Obj("character").Obj("attributes").Long("unspentStats") + L.T(" disponibles");
+    public string MercenaryName => Names.MercenaryType(Snapshot.Obj("mercenary").Text("typeName", L.T("Mercenario")));
+    public string MercenaryLevelText => L.T("Nivel ") + Snapshot.Obj("mercenary").Int("level");
     public string MercenaryAura => Names.Aura(Snapshot.Obj("mercenary").Text("aura"));
     public bool HasMercenary => Snapshot.Obj("mercenary").Bool("exists");
     public string CurrentDifficulty => Names.Difficulty(WorldSnapshot.Text("activeDifficulty"));
@@ -191,7 +191,7 @@ public sealed partial class MainViewModel : ObservableModel
     public string StashGoldText { get => stashGoldText; set => Edit(ref stashGoldText, value); }
     public string CatalogType { get; set; } = "unique";
     public string CatalogQuery { get; set; } = "";
-    public string LoadoutName { get; set; } = "Mi configuración";
+    public string LoadoutName { get; set; } = L.T("Mi configuración");
     public bool LoadoutIncludeCharacter { get; set; } = true;
     public bool LoadoutKeepPrevious { get; set; } = true;
     public string LastOutputPath { get; private set; } = "";
@@ -204,7 +204,7 @@ public sealed partial class MainViewModel : ObservableModel
     public ICommand ExportBlueprintCommand { get; } public ICommand ImportBlueprintCommand { get; } public ICommand RefreshLibraryCommand { get; } public ICommand SaveLoadoutCommand { get; } public ICommand ExportLoadoutCommand { get; } public ICommand ImportLoadoutCommand { get; } public ICommand ApplyLoadoutCommand { get; } public ICommand DeleteLoadoutCommand { get; }
     public ICommand RefreshBackupsCommand { get; } public ICommand RestoreBackupCommand { get; } public ICommand UnlockWaypointsCommand { get; } public ICommand UnlockHellCommand { get; } public ICommand FillSuppliesCommand { get; }
 
-    public Task InitializeAsync() => RunAsync(async () => { await RefreshBootstrapCoreAsync(); await RefreshLibraryCoreAsync(); StatusText = "Personajes locales disponibles."; });
+    public Task InitializeAsync() => RunAsync(async () => { await RefreshBootstrapCoreAsync(); await RefreshLibraryCoreAsync(); StatusText = L.T("Personajes locales disponibles."); });
     async Task RefreshBootstrapCoreAsync()
     {
         var boot = await bridge.CallAsync(c => c.Bootstrap());
@@ -231,7 +231,7 @@ public sealed partial class MainViewModel : ObservableModel
     public Task OpenPathAsync(string path) => OpenPathAsync(path, null);
     Task OpenPathAsync(string path, string? profileId) => RunAsync(async () =>
     {
-        if ((IsDirty || HasInputErrors) && !dialogs.Confirm("Cambiar de personaje", "Hay un borrador sin guardar. ¿Quieres abrir otra partida y descartarlo?")) return;
+        if ((IsDirty || HasInputErrors) && !dialogs.Confirm(L.T("Cambiar de personaje"), L.T("Hay un borrador sin guardar. ¿Quieres abrir otra partida y descartarlo?"))) return;
         string fullPath = Path.GetFullPath(path);
         var knownSave = Saves.FirstOrDefault(s => string.Equals(Path.GetFullPath(s.Path), fullPath, StringComparison.OrdinalIgnoreCase));
         string? selectedProfileId = profileId ?? knownSave?.ProfileId ?? SelectedProfile?.Id;
@@ -239,19 +239,19 @@ public sealed partial class MainViewModel : ObservableModel
         try { opened = await bridge.CallAsync(c => c.Open(new(fullPath, selectedProfileId))); }
         catch (Exception exception) when (exception is InvalidDataException or EndOfStreamException)
         {
-            string profileName = Profiles.FirstOrDefault(p => p.Id == selectedProfileId)?.Name ?? "seleccionado";
-            throw new ApiProblem("save_profile_read", "No se pudo leer «" + Path.GetFileName(fullPath) + "» con el perfil «" + profileName + "». El archivo puede estar incompleto o pertenecer a otra versión del juego o del mod. Para abrirlo se necesitan sus tablas compatibles.", details: new { profileId = selectedProfileId, technicalError = exception.Message });
+            string profileName = Profiles.FirstOrDefault(p => p.Id == selectedProfileId)?.Name ?? L.T("seleccionado");
+            throw new ApiProblem("save_profile_read", L.T("No se pudo leer «") + Path.GetFileName(fullPath) + L.T("» con el perfil «") + profileName + L.T("». El archivo puede estar incompleto o pertenecer a otra versión del juego o del mod. Para abrirlo se necesitan sus tablas compatibles."), details: new { profileId = selectedProfileId, technicalError = exception.Message });
         }
-        await AcceptOpenedAsync(opened); StatusText = "Partida abierta. Los cambios se guardan al revisar y confirmar.";
+        await AcceptOpenedAsync(opened); StatusText = L.T("Partida abierta. Los cambios se guardan al revisar y confirmar.");
     });
     public Task RegisterProfileAsync(string excelPath, string? name = null) => RunAsync(async () =>
-    { await bridge.CallAsync(c => c.AddProfile(new(excelPath, null, name))); await RefreshBootstrapCoreAsync(); StatusText = "Perfil de datos añadido."; });
+    { await bridge.CallAsync(c => c.AddProfile(new(excelPath, null, name))); await RefreshBootstrapCoreAsync(); StatusText = L.T("Perfil de datos añadido."); });
     public Task CreateCharacterAsync(CreateRequest request) => RunAsync(async () =>
     {
-        if ((IsDirty || HasInputErrors) && !IsSyntheticDemo && !dialogs.Confirm("Crear otro personaje", "Hay un borrador sin guardar. ¿Quieres descartarlo para crear otro personaje?")) return;
+        if ((IsDirty || HasInputErrors) && !IsSyntheticDemo && !dialogs.Confirm(L.T("Crear otro personaje"), L.T("Hay un borrador sin guardar. ¿Quieres descartarlo para crear otro personaje?"))) return;
         request.ProfileId ??= SelectedProfile?.Id;
         var opened = await bridge.CallAsync(c => c.Create(request)); await AcceptOpenedAsync(opened); IsDirty = true;
-        StatusText = "Personaje creado en memoria. Revisa los cambios para guardarlo.";
+        StatusText = L.T("Personaje creado en memoria. Revisa los cambios para guardarlo.");
     });
     public Task CreateDemoAsync() => Profiles.Count > 0 ? CreateCharacterAsync(new() { Name = "Akara-Demo", ClassName = "Sorceress", Preset = "squad-sorceress", ProfileId = SelectedProfile?.Id }) : RunAsync(() => { LoadSyntheticDemo(); return Task.CompletedTask; });
     public Task CreateSyntheticDemoAsync() => RunAsync(() => { LoadSyntheticDemo(); return Task.CompletedTask; });
@@ -260,7 +260,7 @@ public sealed partial class MainViewModel : ObservableModel
         if (!HasCharacter) return;
         if (IsDirty) { await PreviewCoreAsync(false); if (!validPlan) return; }
         var opened = await bridge.CallAsync(c => c.Clone(new(sessionId, name, validPlan ? planId : null))); await AcceptOpenedAsync(opened); IsDirty = true;
-        StatusText = "Copia preparada en memoria. El personaje original sigue guardado.";
+        StatusText = L.T("Copia preparada en memoria. El personaje original sigue guardado.");
     });
     async Task AcceptOpenedAsync(JsonObject opened)
     {
@@ -293,54 +293,54 @@ public sealed partial class MainViewModel : ObservableModel
     async Task PreviewCoreAsync(bool review)
     {
         if (!HasCharacter) return;
-        if (HasInputErrors) { StatusText = "Corrige los campos señalados antes de revisar o guardar."; return; }
+        if (HasInputErrors) { StatusText = L.T("Corrige los campos señalados antes de revisar o guardar."); return; }
         var request = BuildRequest();
         var preview = await bridge.CallAsync(c => c.Preview(request));
         if (!preview.Bool("canSave"))
         {
             validPlan = reviewed = false; planId = "";
             ErrorText = string.Join(Environment.NewLine, preview.Obj("validation").Array("errors").Select(n => n?.GetValue<string>()));
-            ValidationMessage = "Revisa los valores del borrador."; Raise(nameof(ValidationMessage)); RaiseSaveState(); return;
+            ValidationMessage = L.T("Revisa los valores del borrador."); Raise(nameof(ValidationMessage)); RaiseSaveState(); return;
         }
         validPlan = true; reviewed = review; planId = preview.Text("planId");
         await PrepareArtworkAsync(preview.Obj("summary")); ApplySnapshot(preview.Obj("summary"), true);
         Replace(Changes, preview.Array("diff").OfType<JsonObject>().Select(d => new DiffViewModel(d.Text("section"), d.Text("label"), Describe(d["before"]), Describe(d["after"]))));
         ValidationMessage = review && GameRunning
-            ? "Validación correcta. Cierra Diablo II para usar «Guardar con copia». Puedes exportar una copia fuera de Saved Games."
+            ? L.T("Validación correcta. Cierra Diablo II para usar «Guardar con copia». Puedes exportar una copia fuera de Saved Games.")
             : !IsDirty && !IsNew
-                ? "Sin cambios pendientes."
+                ? L.T("Sin cambios pendientes.")
                 : review
-                    ? "Validación correcta. Puedes guardar con copia de seguridad."
+                    ? L.T("Validación correcta. Puedes guardar con copia de seguridad.")
                     : IsNew
-                        ? "Personaje nuevo válido. Revisa los cambios antes de guardarlo."
-                        : "Borrador válido. Revisa los cambios antes de guardar.";
+                        ? L.T("Personaje nuevo válido. Revisa los cambios antes de guardarlo.")
+                        : L.T("Borrador válido. Revisa los cambios antes de guardar.");
         Raise(nameof(ValidationMessage)); RaiseSaveState(); ErrorText = "";
         await RefreshWorldCoreAsync();
-        if (review) { SelectedView = "changes"; StatusText = "Cambios revisados · " + Changes.Count + " entradas."; }
+        if (review) { SelectedView = "changes"; StatusText = L.T("Cambios revisados · ") + Changes.Count + L.T(" entradas."); }
     }
     public Task SaveAsync(string? destination = null) => RunAsync(async () =>
     {
-        if (HasInputErrors) { StatusText = "Corrige los campos señalados antes de guardar."; return; }
+        if (HasInputErrors) { StatusText = L.T("Corrige los campos señalados antes de guardar."); return; }
         if (!HasCharacter || IsSyntheticDemo || (!IsDirty && !IsNew)) return;
         if (!reviewed || !validPlan) { await PreviewCoreAsync(true); return; }
-        if (GameRunning) { ErrorText = "Cierra Diablo II y revisa los cambios antes de guardar."; return; }
-        if (IsNew) { destination ??= dialogs.SaveFile("Guardar personaje nuevo", CharacterName + ".d2s", SaveFilter); if (destination is null) return; }
+        if (GameRunning) { ErrorText = L.T("Cierra Diablo II y revisa los cambios antes de guardar."); return; }
+        if (IsNew) { destination ??= dialogs.SaveFile(L.T("Guardar personaje nuevo"), CharacterName + ".d2s", SaveFilter); if (destination is null) return; }
         var result = await bridge.CallAsync(c => c.Commit(new(sessionId, planId, SourceHash, destination)));
         LastOutputPath = result.Text("outputPath"); Raise(nameof(LastOutputPath)); OutputCreated?.Invoke(LastOutputPath);
-        await AcceptOpenedAsync(result.Obj("summary")); StatusText = "Partida guardada y verificada" + (result.Text("backupPath").Length > 0 ? " · copia de seguridad creada." : ".");
+        await AcceptOpenedAsync(result.Obj("summary")); StatusText = L.T("Partida guardada y verificada") + (result.Text("backupPath").Length > 0 ? L.T(" · copia de seguridad creada.") : ".");
         await RefreshBootstrapCoreAsync();
     });
     public Task ExportAsync(string? path = null) => RunAsync(async () =>
     {
         await PreviewCoreAsync(true); if (!validPlan) return;
-        path ??= dialogs.SaveFile("Exportar una copia", CharacterName + ".d2s", SaveFilter); if (path is null) return;
+        path ??= dialogs.SaveFile(L.T("Exportar una copia"), CharacterName + ".d2s", SaveFilter); if (path is null) return;
         var result = await bridge.CallAsync(c => c.Export(new(sessionId, planId, Path.GetFullPath(path))));
-        LastOutputPath = result.Text("outputPath"); Raise(nameof(LastOutputPath)); OutputCreated?.Invoke(LastOutputPath); StatusText = "Copia exportada: " + LastOutputPath;
+        LastOutputPath = result.Text("outputPath"); Raise(nameof(LastOutputPath)); OutputCreated?.Invoke(LastOutputPath); StatusText = L.T("Copia exportada: ") + LastOutputPath;
         await RefreshBootstrapCoreAsync();
     });
-    public Task ResetAsync() => RunAsync(async () => { draft = new() { SessionId = sessionId }; undo.Clear(); redo.Clear(); basicTouched = skillsTouched = reviewed = validPlan = false; IsDirty = IsNew; ApplySnapshot((JsonObject)SourceSnapshot.DeepClone(), true); await RefreshWorldCoreAsync(); ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage)); StatusText = "Borrador restaurado a la partida abierta."; });
-    public Task UndoAsync() => RunAsync(async () => { if (undo.Count == 0) return; redo.Add(Capture()); var state = undo[^1]; undo.RemoveAt(undo.Count - 1); Restore(state); await PreviewCoreAsync(false); StatusText = "Cambio deshecho."; });
-    public Task RedoAsync() => RunAsync(async () => { if (redo.Count == 0) return; undo.Add(Capture()); var state = redo[^1]; redo.RemoveAt(redo.Count - 1); Restore(state); await PreviewCoreAsync(false); StatusText = "Cambio rehecho."; });
+    public Task ResetAsync() => RunAsync(async () => { draft = new() { SessionId = sessionId }; undo.Clear(); redo.Clear(); basicTouched = skillsTouched = reviewed = validPlan = false; IsDirty = IsNew; ApplySnapshot((JsonObject)SourceSnapshot.DeepClone(), true); await RefreshWorldCoreAsync(); ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage)); StatusText = L.T("Borrador restaurado a la partida abierta."); });
+    public Task UndoAsync() => RunAsync(async () => { if (undo.Count == 0) return; redo.Add(Capture()); var state = undo[^1]; undo.RemoveAt(undo.Count - 1); Restore(state); await PreviewCoreAsync(false); StatusText = L.T("Cambio deshecho."); });
+    public Task RedoAsync() => RunAsync(async () => { if (redo.Count == 0) return; undo.Add(Capture()); var state = redo[^1]; redo.RemoveAt(redo.Count - 1); Restore(state); await PreviewCoreAsync(false); StatusText = L.T("Cambio rehecho."); });
     public Task MoveItemAsync(ItemViewModel item, ItemDestination destination) => MutateAndPreviewAsync(r => (r.ItemOperations ??= []).Add(new() { Operation = "move", ItemId = item.Id, Destination = destination }));
     public Task CopyItemAsync(ItemViewModel item) => MutateAndPreviewAsync(r => (r.ItemOperations ??= []).Add(new() { Operation = "copy", ItemId = item.Id, ClientId = "desktop-" + Guid.NewGuid().ToString("N"), Destination = new() { Page = "stash" } }));
     public Task DeleteItemAsync(ItemViewModel item) => MutateAndPreviewAsync(r => (r.ItemOperations ??= []).Add(new() { Operation = "delete", ItemId = item.Id }));
@@ -352,7 +352,7 @@ public sealed partial class MainViewModel : ObservableModel
         CatalogType = type ?? CatalogType; CatalogQuery = query ?? CatalogQuery;
         var entries = await GetCatalogAsync(CatalogType, CatalogQuery, allPages: true);
         Replace(CatalogEntries, entries);
-        StatusText = CatalogEntries.Count + " objetos en el catálogo local.";
+        StatusText = CatalogEntries.Count + L.T(" objetos en el catálogo local.");
     });
     public async Task AddCatalogItemAsync(CatalogEntry item, ItemDestination? destination = null)
     {
@@ -363,7 +363,7 @@ public sealed partial class MainViewModel : ObservableModel
         }
         await MutateAndPreviewAsync(r =>
         {
-        if (!item.Supported) throw new ApiProblem("catalog_unsupported", "Las tablas locales no permiten generar este objeto.");
+        if (!item.Supported) throw new ApiProblem("catalog_unsupported", L.T("Las tablas locales no permiten generar este objeto."));
         (r.ItemOperations ??= []).Add(new() { Operation = "create", ClientId = "desktop-" + Guid.NewGuid().ToString("N"), Gear = new() { Type = item.Type, Name = item.Name, BaseCode = item.Code }, Destination = destination ?? new() { Page = "stash" } });
         });
     }
@@ -371,12 +371,12 @@ public sealed partial class MainViewModel : ObservableModel
     {
         if (SelectedItem is null) return; var id = SelectedItem.Id; await PreviewCoreAsync(false); if (!validPlan) return;
         var document = await bridge.CallAsync(c => c.ExportBlueprint(sessionId, id, planId));
-        path ??= dialogs.SaveFile("Exportar objeto", "objeto.akara-item.json", JsonFilter); if (path is null) return;
-        WriteNew(path, document); StatusText = "Objeto exportado."; LastOutputPath = path; Raise(nameof(LastOutputPath));
+        path ??= dialogs.SaveFile(L.T("Exportar objeto"), "objeto.akara-item.json", JsonFilter); if (path is null) return;
+        WriteNew(path, document); StatusText = L.T("Objeto exportado."); LastOutputPath = path; Raise(nameof(LastOutputPath));
     });
     public Task ImportBlueprintAsync(string? path = null) => RunAsync(async () =>
     {
-        path ??= dialogs.OpenFile("Importar objeto", JsonFilter); if (path is null) return;
+        path ??= dialogs.OpenFile(L.T("Importar objeto"), JsonFilter); if (path is null) return;
         var document = ReadDocument<ItemBlueprintDocument>(path); Remember(); (draft.ItemOperations ??= []).Add(new() { Operation = "create", ClientId = "desktop-" + Guid.NewGuid().ToString("N"), Blueprint = document, Destination = new() { Page = "stash" } }); MarkDirty(); await PreviewCoreAsync(false);
     });
     public Task RefreshLibraryAsync() => RunAsync(RefreshLibraryCoreAsync);
@@ -385,24 +385,24 @@ public sealed partial class MainViewModel : ObservableModel
         var result = await bridge.CallAsync(c => c.Loadouts());
         Replace(Loadouts, result.Array("entries").OfType<JsonObject>().Select(n => new LibraryEntry(n.Text("id"), n.Text("name"), n.Text("className"), n.NullableInt("level"), n.Int("itemCount"))));
     }
-    public Task SaveLoadoutAsync(string name) => RunAsync(async () => { await PreviewCoreAsync(false); if (!validPlan) return; await bridge.CallAsync(c => c.SaveLoadout(new(sessionId, name, planId, LoadoutIncludeCharacter))); await RefreshLibraryCoreAsync(); StatusText = "Configuración guardada en tu biblioteca."; });
+    public Task SaveLoadoutAsync(string name) => RunAsync(async () => { await PreviewCoreAsync(false); if (!validPlan) return; await bridge.CallAsync(c => c.SaveLoadout(new(sessionId, name, planId, LoadoutIncludeCharacter))); await RefreshLibraryCoreAsync(); StatusText = L.T("Configuración guardada en tu biblioteca."); });
     public Task ExportLoadoutAsync(string? path = null) => RunAsync(async () =>
     {
         await PreviewCoreAsync(false); if (!validPlan) return;
         var document = await bridge.CallAsync(c => c.ExportLoadout(sessionId, LoadoutName, planId, LoadoutIncludeCharacter));
-        path ??= dialogs.SaveFile("Exportar configuración", "build.akara-loadout.json", JsonFilter); if (path is null) return;
-        WriteNew(path, document); StatusText = "Configuración exportada."; LastOutputPath = path; Raise(nameof(LastOutputPath));
+        path ??= dialogs.SaveFile(L.T("Exportar configuración"), "build.akara-loadout.json", JsonFilter); if (path is null) return;
+        WriteNew(path, document); StatusText = L.T("Configuración exportada."); LastOutputPath = path; Raise(nameof(LastOutputPath));
     });
-    public Task ImportLoadoutAsync(string? path = null) => RunAsync(async () => { path ??= dialogs.OpenFile("Importar configuración", JsonFilter); if (path is null) return; var document = ReadDocument<LoadoutDocument>(path); await bridge.CallAsync(c => c.ImportLoadout(new(sessionId, document))); await RefreshLibraryCoreAsync(); StatusText = "Configuración añadida a la biblioteca."; });
+    public Task ImportLoadoutAsync(string? path = null) => RunAsync(async () => { path ??= dialogs.OpenFile(L.T("Importar configuración"), JsonFilter); if (path is null) return; var document = ReadDocument<LoadoutDocument>(path); await bridge.CallAsync(c => c.ImportLoadout(new(sessionId, document))); await RefreshLibraryCoreAsync(); StatusText = L.T("Configuración añadida a la biblioteca."); });
     public Task ApplyLoadoutAsync(string id) => RunAsync(async () => { var document = await bridge.CallAsync(c => c.GetLoadout(id)); Remember(); draft.Loadout = document; draft.LoadoutIncludeCharacter = LoadoutIncludeCharacter; draft.LoadoutKeepPrevious = LoadoutKeepPrevious; basicTouched = skillsTouched = false; MarkDirty(); await PreviewCoreAsync(false); });
-    public Task DeleteLoadoutAsync(string id) => RunAsync(async () => { if (!dialogs.Confirm("Eliminar configuración", "¿Eliminar esta configuración de la biblioteca local? Las partidas guardadas seguirán disponibles.")) return; await bridge.CallAsync(c => c.DeleteLoadout(id)); await RefreshLibraryCoreAsync(); StatusText = "Configuración eliminada de la biblioteca."; });
+    public Task DeleteLoadoutAsync(string id) => RunAsync(async () => { if (!dialogs.Confirm(L.T("Eliminar configuración"), L.T("¿Eliminar esta configuración de la biblioteca local? Las partidas guardadas seguirán disponibles."))) return; await bridge.CallAsync(c => c.DeleteLoadout(id)); await RefreshLibraryCoreAsync(); StatusText = L.T("Configuración eliminada de la biblioteca."); });
     public Task RefreshBackupsAsync() => RunAsync(RefreshBackupsCoreAsync);
     async Task RefreshBackupsCoreAsync()
     {
         if (!HasCharacter || IsNew) { Backups.Clear(); return; }
         var result = await bridge.CallAsync(c => c.GetBackups(sessionId)); Replace(Backups, result.Array("entries").OfType<JsonObject>().Select(n => new BackupViewModel(n.Text("id"), n.Text("path"), n.Text("hash"), n.Text("createdAt"))));
     }
-    public Task RestoreBackupAsync(string id) => RunAsync(async () => { if (!dialogs.Confirm("Restaurar copia", "Se restaurará la copia elegida y se conservará otra del estado actual. ¿Continuar?")) return; var result = await bridge.CallAsync(c => c.Restore(new(sessionId, id, SourceHash))); await AcceptOpenedAsync(result.Obj("summary")); StatusText = "Copia restaurada y verificada."; });
+    public Task RestoreBackupAsync(string id) => RunAsync(async () => { if (!dialogs.Confirm(L.T("Restaurar copia"), L.T("Se restaurará la copia elegida y se conservará otra del estado actual. ¿Continuar?"))) return; var result = await bridge.CallAsync(c => c.Restore(new(sessionId, id, SourceHash))); await AcceptOpenedAsync(result.Obj("summary")); StatusText = L.T("Copia restaurada y verificada."); });
 
     async Task MutateAndPreviewAsync(Action<PreviewRequest> action) => await RunAsync(async () => { if (!HasCharacter) return; Remember(); action(draft); MarkDirty(); await PreviewCoreAsync(false); });
     async Task RunAsync(Func<Task> action)
@@ -413,7 +413,7 @@ public sealed partial class MainViewModel : ObservableModel
         catch (Exception exception) { ShowError(exception); }
         finally { IsBusy = false; Requery(); }
     }
-    void ShowError(Exception exception) { ErrorText = exception is ApiProblem problem ? problem.Message : "No se pudo completar la operación: " + exception.Message; StatusText = "La operación no se ha completado."; reviewed = false; RaiseSaveState(); }
+    void ShowError(Exception exception) { ErrorText = exception is ApiProblem problem ? problem.Message : L.T("No se pudo completar la operación: ") + exception.Message; StatusText = L.T("La operación no se ha completado."); reviewed = false; RaiseSaveState(); }
     PreviewRequest BuildRequest()
     {
         if (HasInputErrors) throw new ApiProblem("input_invalid", DisplayErrorText);
@@ -421,11 +421,11 @@ public sealed partial class MainViewModel : ObservableModel
         if (basicTouched)
         {
             request.Name = CharacterName;
-            request.Level = checked((int)Parse(LevelText, "nivel"));
-            long experience = Parse(ExperienceText, "experiencia");
+            request.Level = checked((int)Parse(LevelText, L.T("nivel")));
+            long experience = Parse(ExperienceText, L.T("experiencia"));
             // Level is the primary control. Supplying the unchanged XP would otherwise override a requested level.
             request.Experience = experience != SourceSnapshot.Obj("character").Long("experience") ? experience : null;
-            request.Attributes = new() { ["strength"] = Parse(StrengthText, "fuerza"), ["dexterity"] = Parse(DexterityText, "destreza"), ["vitality"] = Parse(VitalityText, "vitalidad"), ["energy"] = Parse(EnergyText, "energía"), ["gold"] = Parse(GoldText, "oro"), ["stashGold"] = Parse(StashGoldText, "oro del alijo") };
+            request.Attributes = new() { ["strength"] = Parse(StrengthText, L.T("fuerza")), ["dexterity"] = Parse(DexterityText, L.T("destreza")), ["vitality"] = Parse(VitalityText, L.T("vitalidad")), ["energy"] = Parse(EnergyText, L.T("energía")), ["gold"] = Parse(GoldText, L.T("oro")), ["stashGold"] = Parse(StashGoldText, L.T("oro del alijo")) };
         }
         if (skillsTouched) request.Skills = Skills.Select(s => new SkillChange(s.Id, s.Points)).ToList();
         return request;
@@ -436,7 +436,7 @@ public sealed partial class MainViewModel : ObservableModel
         if (field == value) return; if (!loading && HasCharacter) Remember(); field = value; Raise(property);
         if (!loading && HasCharacter) { basicTouched = true; MarkDirty(); }
     }
-    string PendingValidationText => IsNew ? "Personaje nuevo pendiente de revisión y guardado." : IsDirty ? "Cambios pendientes de revisar." : "Sin cambios pendientes.";
+    string PendingValidationText => IsNew ? L.T("Personaje nuevo pendiente de revisión y guardado.") : IsDirty ? L.T("Cambios pendientes de revisar.") : L.T("Sin cambios pendientes.");
     void MarkDirty() { IsDirty = true; reviewed = validPlan = false; planId = ""; ValidationMessage = PendingValidationText; Raise(nameof(ValidationMessage)); RaiseSaveState(); }
     void ApplySnapshot(JsonObject snapshot, bool fields)
     {
@@ -521,12 +521,12 @@ public sealed partial class MainViewModel : ObservableModel
         finally { loading = false; }
         basicTouched = state.BasicTouched; skillsTouched = state.SkillsTouched; IsDirty = state.Dirty; reviewed = validPlan = false;
     }
-    static long Parse(string value, string label) => long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : throw new ApiProblem("number_invalid", "Introduce un número entero válido para " + label + ".");
-    static string Number(double value) => value.ToString("N1", CultureInfo.GetCultureInfo("es-ES")).TrimEnd('0').TrimEnd(',');
-    static string Describe(JsonNode? value) => value switch { null => "—", JsonValue v when v.TryGetValue<string>(out var s) => s, JsonValue v => v.ToJsonString(), JsonArray array => array.Count + " elementos", _ => "Configuración" };
+    static long Parse(string value, string label) => long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : throw new ApiProblem("number_invalid", L.T("Introduce un número entero válido para ") + label + ".");
+    static string Number(double value) => value.ToString("N1", L.Culture).TrimEnd('0').TrimEnd(L.Culture.NumberFormat.NumberDecimalSeparator[0]);
+    static string Describe(JsonNode? value) => value switch { null => "—", JsonValue v when v.TryGetValue<string>(out var s) => s, JsonValue v => v.ToJsonString(), JsonArray array => array.Count + L.T(" elementos"), _ => L.T("Configuración") };
     static void Replace<T>(ObservableCollection<T> collection, IEnumerable<T> values) { var copy = values.ToArray(); collection.Clear(); foreach (var value in copy) collection.Add(value); }
     static void WriteNew(string path, object value) { using var stream = new FileStream(Path.GetFullPath(path), FileMode.CreateNew, FileAccess.Write, FileShare.None); JsonSerializer.Serialize(stream, value, NativeEditorBridge.Json); stream.Flush(true); }
-    static T ReadDocument<T>(string path) { if (new FileInfo(path).Length > 16 * 1024 * 1024) throw new ApiProblem("document_size", "El archivo supera el tamaño admitido."); return JsonSerializer.Deserialize<T>(File.ReadAllText(path), NativeEditorBridge.Json) ?? throw new ApiProblem("document_invalid", "El archivo está vacío o no es válido."); }
+    static T ReadDocument<T>(string path) { if (new FileInfo(path).Length > 16 * 1024 * 1024) throw new ApiProblem("document_size", L.T("El archivo supera el tamaño admitido.")); return JsonSerializer.Deserialize<T>(File.ReadAllText(path), NativeEditorBridge.Json) ?? throw new ApiProblem("document_invalid", L.T("El archivo está vacío o no es válido.")); }
     static void Requery() => CommandManager.InvalidateRequerySuggested();
     void UpdateRowLocks()
     {

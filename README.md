@@ -2,7 +2,7 @@
 
 A native Windows character editor for Diablo II: Resurrected, inspired by Jamella's 2001 editor. This independent tribute uses WPF and .NET 10: its Spanish interface opens as a desktop window and calls the character-editing Core directly. The repository, executable and CLI keep their AKARA identifiers for compatibility. See the [tribute and attribution](docs/JAMELLA-TRIBUTE.md).
 
-Version **0.6.1**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
+Version **0.6.2**. Developed against **D2R Reimagined 3.1**, using data from your own installation. The portable package includes its runtime; no browser, WebView, Node.js or local web server is required.
 
 ![The native equipment editor with a fictional demonstration character](assets/screenshots/native-equipment.png)
 
@@ -19,6 +19,7 @@ Version **0.6.1**. Developed against **D2R Reimagined 3.1**, using data from you
 - Arranges inventory, personal stash, cube, belt, both weapon sets, and mercenary equipment. Reimagined supports nine equipped mercenary pieces; a two-handed weapon reserves the off hand without adding a duplicate item. Inventory actions have controls that do not require dragging.
 - Edits quests and waypoints by difficulty, progression, and rewards through **Mundo**.
 - Builds items in **Constructor** using native bases, qualities, affixes, property values and layers, sockets, ethereal flags, and personalization. Imports and exports individual item blueprints.
+- Opens existing items directly on **Propiedades**, with readable property names and an explicit **Valor** field. Add or remove native properties from the installed profile; invalid designs stay open for correction before entering the draft.
 - Saves reusable loadouts in a local library, with JSON import/export and optional character progression. Applying a loadout keeps previous equipment in the personal stash by default. At the same level, it preserves the destination character's experience; changing level uses that level's native starting XP. Clone a character to retain its exact XP.
 - Prepares a validated preview and readable diff before writing. Undo/redo changes the draft; backup restoration recovers an earlier saved file.
 - Exports a new copy without overwriting a destination. Replacement and restoration require Diablo II to be closed and use verified backups, source-hash checks, and atomic replacement.
@@ -40,6 +41,16 @@ Custom items use existing native bases and properties. Adding new game definitio
 AKARA trabaja en tu equipo, sin cuenta ni envío de partidas a un servicio externo. Las tablas del juego y del mod deben estar disponibles en tu instalación; no se incluyen. La interfaz muestra atributos y recursos **base**: el juego calcula las bonificaciones del equipo. Si la partida cambia mientras editas, vuelve a abrirla y prepara de nuevo los cambios.
 
 Consulta también [LEEME.txt](LEEME.txt).
+
+### Cambiar un objeto
+
+1. En **Equipo**, selecciona una pieza y pulsa **Editar objeto…**. Se abre directamente **Propiedades**.
+2. Selecciona una propiedad en la tabla y escribe su nuevo **Valor** en el campo inferior. El cambio se recoge al escribir, sin hacer doble clic en una celda.
+3. Para añadir una, despliega **Añadir una propiedad**, busca su nombre, selecciónala y pulsa **Añadir propiedad**. Después escribe el valor. **Quitar propiedad seleccionada** elimina la fila del diseño.
+4. Pulsa **Preparar cambios**. Los valores y la codificación se validan antes de cerrar la ventana; un error te permite corregir el diseño. El inspector muestra el resultado en el borrador.
+5. Pulsa **Revisar y guardar…**, comprueba las diferencias y confirma con **Guardar**. Al volver a abrir el archivo, las propiedades guardadas siguen en la pieza.
+
+Por ejemplo, puedes cambiar **Velocidad de lanzamiento** de 25 a 35 y añadir **Oro encontrado** con valor 20. Los porcentajes están indicados junto al campo. **Usar propiedades automáticas del catálogo** regenera las propiedades del objeto y sustituye la tabla personalizada; déjalo desmarcado al editar valores propios. El **Parámetro avanzado** conserva la capa nativa que identifica una habilidad o clase: no necesitas cambiarlo para ajustar el valor de una propiedad existente.
 
 ## Compatibility
 

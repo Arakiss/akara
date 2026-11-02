@@ -89,7 +89,7 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal" Margin="14,0,24,0" VerticalAlignment="Center">
           <TextBlock Text="JAMELLA" FontFamily="{DynamicResource DisplayFont}" FontSize="24" Foreground="{StaticResource TextBrush}" />
-          <TextBlock Text="Tributo · D2R · 0.6.1" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="16,0,0,0" VerticalAlignment="Center" />
+          <TextBlock Text="Tributo · D2R · 0.6.2" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="16,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
         <Menu VerticalAlignment="Center" Background="Transparent" IsMainMenu="True" FontSize="13">
           <MenuItem Header="_Archivo">

@@ -5,6 +5,17 @@ namespace Akara.Desktop.ViewModels;
 
 public sealed partial class MainViewModel
 {
+    internal async Task<string?> CheckItemDesignAsync(ItemDesignRequest design,ItemViewModel? item)
+    {
+        try
+        {
+            var request=BuildRequest();
+            (request.ItemOperations??=[]).Add(new(){Operation=item is null?"create":"edit",ItemId=item?.Id??"",ClientId=item is null?"validation-"+Guid.NewGuid().ToString("N"):null,Design=design,Destination=item is null?new(){Page="stash"}:null});
+            var preview=await bridge.CallAsync(core=>core.Preview(request));
+            return preview.Bool("canSave")?null:string.Join(Environment.NewLine,preview.Obj("validation").Array("errors").Select(error=>error?.GetValue<string>()));
+        }
+        catch(Exception exception){return exception is ApiProblem problem?problem.Message:"No se puede aplicar este diseño: "+exception.Message;}
+    }
     static string FormatGuide(JsonObject guide)
     {
         var parts = new List<string>();

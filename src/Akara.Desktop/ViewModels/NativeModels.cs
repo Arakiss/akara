@@ -200,6 +200,8 @@ public static class Names
 {
     static readonly Dictionary<string, string> StatLabels = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["strength"]="Fuerza", ["dexterity"]="Destreza", ["vitality"]="Vitalidad", ["energy"]="Energía", ["maxhp"]="Vida máxima", ["maxmana"]="Maná máximo", ["maxstamina"]="Resistencia máxima",
+        ["item_singleskill"]="Habilidad de clase", ["item_nonclassskill"]="Habilidad adicional", ["item_skillongethit"]="Efecto al recibir un golpe", ["item_skillonhit"]="Efecto al golpear", ["item_skillonattack"]="Efecto al atacar", ["item_skillondeath"]="Efecto al morir", ["item_skillonkill"]="Efecto al matar", ["item_charged_skill"]="Cargas de habilidad",
         ["passive_fire_mastery"]="Daño de habilidades de fuego", ["passive_ltng_mastery"]="Daño de habilidades de rayos", ["passive_cold_mastery"]="Daño de habilidades de frío", ["passive_pois_mastery"]="Daño de habilidades de veneno",
         ["passive_fire_pierce"]="Penetración de resistencia al fuego", ["passive_ltng_pierce"]="Penetración de resistencia a los rayos", ["passive_cold_pierce"]="Penetración de resistencia al frío", ["passive_pois_pierce"]="Penetración de resistencia al veneno",
         ["item_manaafterkill"]="Maná tras cada muerte", ["item_healafterkill"]="Vida tras cada muerte", ["item_replenish_durability"]="Reparación de durabilidad", ["item_replenish_quantity"]="Reponer cantidad",

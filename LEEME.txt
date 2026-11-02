@@ -1,4 +1,4 @@
-Jamella · Tributo 0.6.1 (proyecto AKARA)
+Jamella · Tributo 0.6.2 (proyecto AKARA)
 Editor nativo de personajes de Diablo II: Resurrected para Windows
 
 Abre Akara.exe. Se abre la aplicación de escritorio en su propia ventana.
@@ -50,6 +50,19 @@ destino. Si cambia, se usa la experiencia inicial de ese nivel. Para
 copiar también la experiencia exacta del original, usa Clonar.
 
 TALLER Y PLANOS DE OBJETOS
+
+En Equipo, selecciona una pieza y pulsa Editar objeto… Se abre Propiedades.
+Selecciona una fila y cambia el Valor en el campo inferior; se actualiza
+al escribir. Añadir una propiedad permite buscarla por nombre, seleccionarla,
+añadirla y escribir su valor. También puedes quitar la fila seleccionada.
+Por ejemplo: Velocidad de lanzamiento 25 -> 35, y Oro encontrado 20.
+
+Preparar cambios valida el diseño antes de cerrar la ventana. Si hay un
+error, puedes corregirlo ahí mismo. Después, Revisar y guardar… muestra
+las diferencias y Guardar confirma la escritura con copia de seguridad.
+Deja desmarcado Usar propiedades automáticas del catálogo para conservar
+tu tabla personalizada. No cambies el Parámetro avanzado si sólo quieres
+ajustar el valor de una propiedad existente.
 
 El Taller usa bases y propiedades existentes en las tablas del perfil.
 Permite elegir calidad, afijos, propiedades y parámetros, engarces,

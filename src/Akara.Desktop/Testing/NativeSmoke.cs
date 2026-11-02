@@ -84,6 +84,7 @@ public static class NativeSmoke
                 Check(vm.HasCharacter && !vm.CanCommit, "private-fixture-open-is-read-only");
                 await WorkbenchChecks.EquipmentAsync(vm,checks); Healthy(vm,"production workbench");
                 await SkillEditingChecks.RunAsync(vm,root,checks); Healthy(vm,"skill input");
+                await ItemEditingChecks.RunAsync(vm,root,checks); Healthy(vm,"item input");
                 Check(Hash(await File.ReadAllBytesAsync(copy)) == fixtureHash, "opening-keeps-source-bytes");
                 await CheckOriginalGameArtAsync(vm, excelPath, root, checks, omissions);
                 await CheckItemHoverAsync(vm, copy, fixtureHash, root, checks);
